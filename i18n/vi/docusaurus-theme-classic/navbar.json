@@ -1,0 +1,18 @@
+{
+  "title": {
+    "message": "Technical Docs",
+    "description": "The title in the navbar"
+  },
+  "item.label.Topics": {
+    "message": "Topics",
+    "description": "Navbar item with label Topics"
+  },
+  "item.label.Blogs": {
+    "message": "Blogs",
+    "description": "Navbar item with label Blogs"
+  },
+  "item.label.GitHub": {
+    "message": "GitHub",
+    "description": "Navbar item with label GitHub"
+  }
+}

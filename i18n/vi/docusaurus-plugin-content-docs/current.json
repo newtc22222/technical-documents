@@ -1,0 +1,38 @@
+{
+  "version.label": {
+    "message": "Next",
+    "description": "The label for version current"
+  },
+  "sidebar.tutorialSidebar.category.Building App": {
+    "message": "Building App",
+    "description": "The label for category 'Building App' in sidebar 'tutorialSidebar'"
+  },
+  "sidebar.tutorialSidebar.category.Building App.link.generated-index.description": {
+    "message": "System Design knowledge",
+    "description": "The generated-index page description for category 'Building App' in sidebar 'tutorialSidebar'"
+  },
+  "sidebar.tutorialSidebar.category.Libraries and Features": {
+    "message": "Libraries and Features",
+    "description": "The label for category 'Libraries and Features' in sidebar 'tutorialSidebar'"
+  },
+  "sidebar.tutorialSidebar.category.Libraries and Features.link.generated-index.description": {
+    "message": "How to use ... in application?",
+    "description": "The generated-index page description for category 'Libraries and Features' in sidebar 'tutorialSidebar'"
+  },
+  "sidebar.tutorialSidebar.category.LLM Prompting": {
+    "message": "LLM Prompting",
+    "description": "The label for category 'LLM Prompting' in sidebar 'tutorialSidebar'"
+  },
+  "sidebar.tutorialSidebar.category.LLM Prompting.link.generated-index.description": {
+    "message": "Expand what you should show for the THING not be human",
+    "description": "The generated-index page description for category 'LLM Prompting' in sidebar 'tutorialSidebar'"
+  },
+  "sidebar.tutorialSidebar.category.Version Control": {
+    "message": "Version Control",
+    "description": "The label for category 'Version Control' in sidebar 'tutorialSidebar'"
+  },
+  "sidebar.tutorialSidebar.category.Version Control.link.generated-index.description": {
+    "message": "How to manage your project the right way?",
+    "description": "The generated-index page description for category 'Version Control' in sidebar 'tutorialSidebar'"
+  }
+}
