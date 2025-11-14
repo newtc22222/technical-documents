@@ -1,10 +1,10 @@
-# 📄 Consolidated Design Document
+# Consolidated Design Document
 
 This document summarizes and categorizes the key architectural, database, and business-logic decisions made during the development of the Laptech E-commerce application.
 
 ---
 
-## 1. 💾 Database Design & Analysis
+## 1. Database Design & Analysis
 
 ### 1.1. Optimization of the Initial Database Design
 
@@ -26,7 +26,7 @@ Includes 17 core tables, grouped by domain:
 
 ---
 
-## 2. 🏗️ Architecture & Folder Structure (Spring Boot)
+## 2. Architecture & Folder Structure (Spring Boot)
 
 ### 2.1. Recommended Folder Structure (Modular Monolith)
 
@@ -54,7 +54,7 @@ src/main/java/com/laptech/
 
 ---
 
-## 3. 🎯 Entity Design & JPA Best Practices
+## 3. Entity Design & JPA Best Practices
 
 ### 3.1. Base Entity & Audit Trail
 
@@ -85,7 +85,7 @@ src/main/java/com/laptech/
 
 ---
 
-## 4. ⚙️ Business Logic & Development Best Practices
+## 4. Business Logic & Development Best Practices
 
 ### 4.1. Inventory Management & Transactions
 
@@ -109,7 +109,7 @@ src/main/java/com/laptech/
 
 ---
 
-## 5. 🧪 Testing
+## 5. Testing
 
 ### 5.1. Tools & Strategies
 
@@ -130,7 +130,7 @@ src/main/java/com/laptech/
 
 ---
 
-## 6. 🔗 Integrations & Environments
+## 6. Integrations & Environments
 
 * **Database Configuration**: Use HikariCP for connection pooling (`maximum-pool-size: 10`, `minimum-idle: 5`).
 * **OpenAPI/Swagger UI**: Add OpenAPI 3.x dependency for automatic API docs.
@@ -139,7 +139,7 @@ src/main/java/com/laptech/
 
 ---
 
-## 7. 🚀 Transition to Microservices (Future Plan)
+## 7. Transition to Microservices (Future Plan)
 
 ### 7.1. Domain Breakdown
 
