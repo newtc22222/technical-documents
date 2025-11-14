@@ -12,7 +12,7 @@ const config: Config = {
   // FOR DEPLOY
   baseUrl: "/",
   organizationName: "newtc22222",
-  projectName: "technical-docs",
+  projectName: "technical-documents",
   deploymentBranch: "gh-pages",
 
   // Future flags, see https://docusaurus.io/docs/api/docusaurus-config#future
