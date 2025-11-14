@@ -150,9 +150,9 @@ FLUSH PRIVILEGES;
 * Mặc định trong `application.yml` → `spring.profiles.active=dev`
 * Ghi đè bằng:
 
-    * **ENV**: `SPRING_PROFILES_ACTIVE=staging`
-    * **Program args**: `--spring.profiles.active=staging`
-    * **JVM args**: `-Dspring.profiles.active=staging`
+  * **ENV**: `SPRING_PROFILES_ACTIVE=staging`
+  * **Program args**: `--spring.profiles.active=staging`
+  * **JVM args**: `-Dspring.profiles.active=staging`
 
 Hồ sơ (profile) dùng khi chạy:
 
@@ -222,7 +222,7 @@ curl http://localhost:8080/actuator/metrics
 
 * Thêm file SQL ở `src/main/resources/db/migration`, ví dụ:
 
-    * `V1__init.sql`, `V2__add_user_table.sql`
+  * `V1__init.sql`, `V2__add_user_table.sql`
 * Khi app start, Flyway sẽ auto migrate (theo `spring.flyway.enabled=true`).
 
 Ví dụ `V1__init.sql`:
@@ -255,28 +255,28 @@ CREATE TABLE IF NOT EXISTS sample (
 
 * ❌ `Communications link failure` (MySQL)
 
-    * DB chưa sẵn sàng → chờ thêm, kiểm tra `docker compose logs -f mysql`
-    * Sai host/port/user/pass → đối chiếu `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`
-    * `allowPublicKeyRetrieval=true` cần cho MySQL 8 nếu dùng caching-sha2
+  * DB chưa sẵn sàng → chờ thêm, kiểm tra `docker compose logs -f mysql`
+  * Sai host/port/user/pass → đối chiếu `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`
+  * `allowPublicKeyRetrieval=true` cần cho MySQL 8 nếu dùng caching-sha2
 
 * ❌ `Access denied for user`
 
-    * User chưa có quyền trên DB → chạy `GRANT ALL PRIVILEGES ...` như phần 4.1
+  * User chưa có quyền trên DB → chạy `GRANT ALL PRIVILEGES ...` như phần 4.1
 
 * ❌ `Cannot connect to Redis`
 
-    * Kiểm tra `REDIS_HOST`, `REDIS_PORT`
-    * Nếu dùng container: app chạy **trong Docker** thì host là `redis`; chạy **ngoài Docker** thì là `localhost`
+  * Kiểm tra `REDIS_HOST`, `REDIS_PORT`
+  * Nếu dùng container: app chạy **trong Docker** thì host là `redis`; chạy **ngoài Docker** thì là `localhost`
 
 * ❌ Swagger 404
 
-    * Dev/Staging: đường dẫn `/swagger`
-    * Prod: swagger bị tắt theo config mẫu
+  * Dev/Staging: đường dẫn `/swagger`
+  * Prod: swagger bị tắt theo config mẫu
 
 * ❌ Flyway lỗi migrate
 
-    * Kiểm tra thứ tự file `V1__*.sql`, `V2__*.sql`
-    * Không đổi tên file đã chạy rồi (hoặc reset schema `flyway_schema_history` cẩn thận)
+  * Kiểm tra thứ tự file `V1__*.sql`, `V2__*.sql`
+  * Không đổi tên file đã chạy rồi (hoặc reset schema `flyway_schema_history` cẩn thận)
 
 ---
 

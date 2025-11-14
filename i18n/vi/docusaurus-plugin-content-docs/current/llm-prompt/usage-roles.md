@@ -36,7 +36,7 @@ Trước khi bắt đầu, hãy thay đổi cách bạn tương tác với LLM. 
 * Chỉ rõ cách bạn muốn câu trả lời được trình bày.
 * **Ví dụ**: "Hãy trả lời bằng một đoạn code Python. Đảm bảo code có comments giải thích từng bước. Kết quả cuối cùng là một hàm duy nhất."
 
-### **Kết hợp lại**:
+### **Kết hợp lại**
 
 ```markdown
 Hãy đóng vai trò là một lập trình viên Python giàu kinh nghiệm. Mục tiêu của tôi là tạo một hàm đọc file CSV và làm sạch dữ liệu. File CSV có 5 cột: `ID`, `Tên`, `Email`, `Ngày_sinh`, `Số_điện_thoại`. Cột `Email` và `Số_điện_thoại` có thể chứa các giá trị bị thiếu hoặc không hợp lệ. Hãy trả lời bằng một đoạn code Python. Đảm bảo code có comments giải thích từng bước. Kết quả cuối cùng là một hàm duy nhất.
@@ -49,13 +49,14 @@ Hãy đóng vai trò là một lập trình viên Python giàu kinh nghiệm. M�
 Áp dụng các kỹ thuật sau để tối đa hóa hiệu quả của LLM.
 
 * **Prompt Chained (Chuỗi Lệnh)**: Xây dựng một cuộc trò chuyện từng bước. Sau khi LLM trả lời, bạn tiếp tục cung cấp thông tin hoặc điều chỉnh yêu cầu để tinh chỉnh kết quả.
-    * **Ví dụ**:
-        1.  **Bạn**: "Viết một hàm Python để kết nối với cơ sở dữ liệu MySQL."
-        2.  **LLM**: *Đưa ra code.*
-        3.  **Bạn**: "Tuyệt vời. Bây giờ, hãy thêm chức năng kiểm tra kết nối trước khi thực hiện truy vấn."
+  * **Ví dụ**:
+        1. **Bạn**: "Viết một hàm Python để kết nối với cơ sở dữ liệu MySQL."
+        2. **LLM**: *Đưa ra code.*
+        3. **Bạn**: "Tuyệt vời. Bây giờ, hãy thêm chức năng kiểm tra kết nối trước khi thực hiện truy vấn."
 * **Few-shot Prompting (Tạo Mẫu)**: Cung cấp một vài ví dụ nhỏ để LLM hiểu rõ định dạng và phong cách mà bạn mong muốn.
-    * **Ví dụ**:
-      ```
+  * **Ví dụ**:
+
+      ```markdown
       Dữ liệu đầu vào:
       - "Cần tạo một ứng dụng quản lý công việc."
       - "Phải có tính năng nhắc nhở."
@@ -70,8 +71,9 @@ Hãy đóng vai trò là một lập trình viên Python giàu kinh nghiệm. M�
       Đầu ra:
       - ...
       ```
+
 * **Reflection (Phản ánh)**: Yêu cầu LLM tự đánh giá câu trả lời của nó trước khi đưa ra.
-    * **Ví dụ**: "Hãy đưa ra câu trả lời cho vấn đề trên. Sau đó, hãy tự đánh giá lại xem liệu có cách nào khác tốt hơn không và tại sao."
+  * **Ví dụ**: "Hãy đưa ra câu trả lời cho vấn đề trên. Sau đó, hãy tự đánh giá lại xem liệu có cách nào khác tốt hơn không và tại sao."
 
 -----
 

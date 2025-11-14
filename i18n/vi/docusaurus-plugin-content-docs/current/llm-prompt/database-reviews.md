@@ -1,6 +1,6 @@
 # Database Design
 
-## 1) Những gì mình cần (ưu tiên theo mức độ ảnh hưởng)
+## 1. Những gì mình cần (ưu tiên theo mức độ ảnh hưởng)
 
 ### **A. Kiến trúc & lược đồ**
 
@@ -12,7 +12,7 @@
 ### **B. Workload thực tế**
 
 * Top 50–100 query theo tần suất/thời gian (có tham số hóa).
-* Kế hoạch thực thi (EXPLAIN/EXPLAIN ANALYZE) cho các query chậm.
+* Kế hoạch thực thi (EXPLAIN/EXPLAIN ANALYZE). cho các query chậm.
 * Mẫu dữ liệu ẩn danh (10–1000 dòng/bảng, tùy kích cỡ).
 * Mẫu giao dịch: tần suất, độ dài, isolation level, pattern khóa/lock.
 
@@ -38,7 +38,7 @@
 
 ---
 
-## 2) Cách đóng gói & định dạng (để copy–paste là chạy)
+## 2. Cách đóng gói & định dạng (để copy–paste là chạy)
 
 ### **Thư mục mẫu**
 
@@ -77,7 +77,7 @@ db-assessment/
   * Kích thước bảng:
 
       ```sql
-      SELECT relname AS table, pg_total_relation_size(relid) AS bytes
+      SELECT relname AS table, pg_total_relation_size(relid. AS bytes
       FROM pg_catalog.pg_statio_user_tables
       ORDER BY 2 DESC;
       ```
@@ -99,7 +99,7 @@ db-assessment/
 
 ---
 
-## 3) Template điền nhanh (copy mẫu này vào `context.md`)
+## 3. Template điền nhanh (copy mẫu này vào `context.md`)
 
 ```md
 ## Context nhanh
@@ -128,17 +128,17 @@ db-assessment/
 
 ---
 
-## 4) Bạn bận? Đây là “gói tối thiểu” vẫn đủ để mình tư vấn
+## 4. Bạn bận? Đây là “gói tối thiểu” vẫn đủ để mình tư vấn
 
 1. `schema_ddl.sql`
-2. Top 50 query (đã tham số hóa) + `EXPLAIN ANALYZE` cho 10 query chậm nhất
+2. Top 50 query (đã tham số hóa. + `EXPLAIN ANALYZE` cho 10 query chậm nhất)
 3. Bảng kích thước + tăng trưởng 3 tháng
 4. `db_config.txt` (toàn bộ tham số server)
 5. Known issues + mục tiêu (p95, chi phí, RPO/RTO)
 
 ---
 
-## 5) Sau khi nhận được, mình sẽ làm gì?
+## 5. Sau khi nhận được, mình sẽ làm gì?
 
 * Đọc schema → phát hiện anti-pattern (N+1, khóa tổng hợp, FK thiếu index, bloat…).
 * Phân tích plan & stats → đề xuất index/partial index/covering, partitioning, rewrite query.

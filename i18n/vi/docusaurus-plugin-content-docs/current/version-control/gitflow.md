@@ -1,4 +1,4 @@
-# Chiến lược Branching cho Dự án Laptech (Gitflow)
+# Chiến lược Branching cho Dự án (Gitflow)
 
 ## 1. Giới thiệu về Gitflow
 

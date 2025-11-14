@@ -2,7 +2,7 @@
 
 ## Traefik
 
-### 1) Cập nhật `docker-compose.yml`
+### 1. Cập nhật `docker-compose.yml`
 
 ```yaml
 version: '3.8'
@@ -112,9 +112,9 @@ networks:
 
 ---
 
-### 2) `.env` mẫu (bổ sung domain & email)
+### 2. `.env` mẫu (bổ sung domain & email)
 
-```env
+```ini
 # App domain (trỏ DNS về server này)
 APP_DOMAIN=app.example.com
 # Email để đăng ký Let's Encrypt
@@ -138,24 +138,23 @@ APP_JWT_SECRET=your_jwt_secret_here
 
 ---
 
-### 3) Chuẩn bị trước khi chạy
+### 3. Chuẩn bị trước khi chạy
 
-1. Tạo file lưu chứng chỉ:
+Tạo file lưu chứng chỉ:
 
-```bash
-docker volume create traefik_letsencrypt
-# Nếu muốn xem trực tiếp trên host:
-# mkdir -p /opt/traefik && touch /opt/traefik/acme.json && chmod 600 /opt/traefik/acme.json
-# rồi bind mount vào /letsencrypt thay vì volume (tuỳ bạn).
-```
+  ```bash
+  docker volume create traefik_letsencrypt
+  # Nếu muốn xem trực tiếp trên host:
+  # mkdir -p /opt/traefik && touch /opt/traefik/acme.json && chmod 600 /opt/traefik/acme.json
+  # rồi bind mount vào /letsencrypt thay vì volume (tuỳ bạn).
+  ```
 
-2. DNS: trỏ bản ghi `A` của `APP_DOMAIN` về IP máy chủ (public).
-
-3. Mở port 80 & 443 trên firewall/security group.
+1. DNS: trỏ bản ghi `A` của `APP_DOMAIN` về IP máy chủ (public).
+2. Mở port 80 & 443 trên firewall/security group.
 
 ---
 
-### 4) Chạy
+### 4. Chạy
 
 ```bash
 docker compose up -d --build
@@ -286,7 +285,7 @@ networks:
 
 ### `.env` mẫu
 
-```env
+```ini
 # Domain app (trỏ DNS A/AAAA về IP server)
 APP_DOMAIN=app.example.com
 # Email nhận thông báo từ Let's Encrypt
