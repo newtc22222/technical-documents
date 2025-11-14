@@ -1,18 +1,18 @@
 {
   "title": {
-    "message": "Technical Docs",
-    "description": "The title in the navbar"
+    "message": "Tài liệu Kỹ thuật",
+    "description": "Tiêu đề trong thanh điều hướng"
   },
   "item.label.Topics": {
-    "message": "Topics",
-    "description": "Navbar item with label Topics"
+    "message": "Chủ đề",
+    "description": "Mục trong thanh điều hướng với nhãn 'Chủ đề'"
   },
   "item.label.Blogs": {
-    "message": "Blogs",
-    "description": "Navbar item with label Blogs"
+    "message": "Blog",
+    "description": "Mục trong thanh điều hướng với nhãn 'Blog'"
   },
   "item.label.GitHub": {
     "message": "GitHub",
-    "description": "Navbar item with label GitHub"
+    "description": "Mục trong thanh điều hướng với nhãn 'GitHub'"
   }
 }

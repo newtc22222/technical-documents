@@ -1,10 +1,10 @@
-# 📄 Tài liệu Tổng hợp Thiết kế Ứng dụng
+# Tài liệu Tổng hợp Thiết kế Ứng dụng
 
 Tài liệu này tổng hợp và phân loại các quyết định chính về thiết kế kiến trúc, cơ sở dữ liệu và nghiệp vụ đã được thảo luận trong quá trình xây dựng ứng dụng E-commerce Laptech.
 
 -----
 
-## 1\. 💾 Thiết kế & Phân tích Cơ sở Dữ liệu (CSDL)
+## 1. Thiết kế & Phân tích Cơ sở Dữ liệu (CSDL)
 
 ### 1.1. Tối ưu hóa Thiết kế CSDL Ban đầu
 
@@ -26,7 +26,7 @@ Bao gồm 17 bảng chính, được phân loại theo chức năng:
 
 -----
 
-## 2\. 🏗️ Kiến trúc & Cấu trúc Thư mục (Spring Boot)
+## 2. Kiến trúc & Cấu trúc Thư mục (Spring Boot)
 
 ### 2.1. Cấu trúc Thư mục Đề xuất (Modular Monolith)
 
@@ -54,7 +54,7 @@ src/main/java/com/laptech/
 
 -----
 
-## 3\. 🎯 Thiết kế Entity & Best Practice JPA
+## 3. Thiết kế Entity & Best Practice JPA
 
 ### 3.1. Base Entity và Audit Trail
 
@@ -82,7 +82,7 @@ src/main/java/com/laptech/
 
 -----
 
-## 4\. ⚙️ Logic Nghiệp vụ & Best Practice Lập trình
+## 4. Logic Nghiệp vụ & Best Practice Lập trình
 
 ### 4.1. Quản lý Tồn kho và Giao dịch
 
@@ -105,7 +105,7 @@ src/main/java/com/laptech/
 
 -----
 
-## 5\. 🧪 Kiểm thử (Testing)
+## 5. Kiểm thử (Testing)
 
 ### 5.1. Công cụ và Chiến lược
 
@@ -125,7 +125,7 @@ src/main/java/com/laptech/
 
 -----
 
-## 6\. 🔗 Tích hợp & Môi trường
+## 6. Tích hợp & Môi trường
 
 * **Cấu hình CSDL**: Sử dụng HikariCP cho Connection Pooling.
   * **Cấu hình ví dụ**: `maximum-pool-size: 10`, `minimum-idle: 5`.
@@ -135,7 +135,7 @@ src/main/java/com/laptech/
 
 -----
 
-## 7\. 🚀 Kế hoạch Chuyển đổi sang Microservices (Tương lai)
+## 7. Kế hoạch Chuyển đổi sang Microservices (Tương lai)
 
 ### 7.1. Phân tích Miền Nghiệp vụ
 

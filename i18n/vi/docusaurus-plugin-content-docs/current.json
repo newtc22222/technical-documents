@@ -1,38 +1,38 @@
 {
   "version.label": {
-    "message": "Next",
-    "description": "The label for version current"
+    "message": "Tiếp theo",
+    "description": "Nhãn hiển thị cho phiên bản hiện tại"
   },
   "sidebar.tutorialSidebar.category.Building App": {
-    "message": "Building App",
-    "description": "The label for category 'Building App' in sidebar 'tutorialSidebar'"
+    "message": "Xây dựng Ứng dụng",
+    "description": "Nhãn cho danh mục 'Building App' trong sidebar 'tutorialSidebar'"
   },
   "sidebar.tutorialSidebar.category.Building App.link.generated-index.description": {
-    "message": "System Design knowledge",
-    "description": "The generated-index page description for category 'Building App' in sidebar 'tutorialSidebar'"
+    "message": "Kiến thức về thiết kế hệ thống",
+    "description": "Mô tả cho trang generated-index của danh mục 'Building App' trong sidebar 'tutorialSidebar'"
   },
   "sidebar.tutorialSidebar.category.Libraries and Features": {
-    "message": "Libraries and Features",
-    "description": "The label for category 'Libraries and Features' in sidebar 'tutorialSidebar'"
+    "message": "Thư viện và Tính năng",
+    "description": "Nhãn cho danh mục 'Libraries and Features' trong sidebar 'tutorialSidebar'"
   },
   "sidebar.tutorialSidebar.category.Libraries and Features.link.generated-index.description": {
-    "message": "How to use ... in application?",
-    "description": "The generated-index page description for category 'Libraries and Features' in sidebar 'tutorialSidebar'"
+    "message": "Hướng dẫn sử dụng các thành phần trong ứng dụng",
+    "description": "Mô tả cho trang generated-index của danh mục 'Libraries and Features' trong sidebar 'tutorialSidebar'"
   },
   "sidebar.tutorialSidebar.category.LLM Prompting": {
-    "message": "LLM Prompting",
-    "description": "The label for category 'LLM Prompting' in sidebar 'tutorialSidebar'"
+    "message": "Tương tác với LLM",
+    "description": "Nhãn cho danh mục 'LLM Prompting' trong sidebar 'tutorialSidebar'"
   },
   "sidebar.tutorialSidebar.category.LLM Prompting.link.generated-index.description": {
-    "message": "Expand what you should show for the THING not be human",
-    "description": "The generated-index page description for category 'LLM Prompting' in sidebar 'tutorialSidebar'"
+    "message": "Hướng dẫn mở rộng nội dung hiển thị cho các tác vụ không hướng đến con người",
+    "description": "Mô tả cho trang generated-index của danh mục 'LLM Prompting' trong sidebar 'tutorialSidebar'"
   },
   "sidebar.tutorialSidebar.category.Version Control": {
-    "message": "Version Control",
-    "description": "The label for category 'Version Control' in sidebar 'tutorialSidebar'"
+    "message": "Quản lý Phiên bản",
+    "description": "Nhãn cho danh mục 'Version Control' trong sidebar 'tutorialSidebar'"
   },
   "sidebar.tutorialSidebar.category.Version Control.link.generated-index.description": {
-    "message": "How to manage your project the right way?",
-    "description": "The generated-index page description for category 'Version Control' in sidebar 'tutorialSidebar'"
+    "message": "Hướng dẫn quản lý dự án một cách chuẩn hóa",
+    "description": "Mô tả cho trang generated-index của danh mục 'Version Control' trong sidebar 'tutorialSidebar'"
   }
 }

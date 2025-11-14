@@ -1,7 +1,7 @@
 {
-  "label": "LLM Prompting",
+  "label": "Tương tác với LLM",
   "link": {
     "type": "generated-index",
-    "description": "Expand what you should show for the THING not be human"
+    "description": "Hướng dẫn mở rộng nội dung hiển thị cho các tác vụ không hướng đến con người"
   }
 }
