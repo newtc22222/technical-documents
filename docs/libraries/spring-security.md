@@ -1,20 +1,36 @@
-# Hướng dẫn tích hợp Spring Security vào ứng dụng Spring Boot
+# Guide to Integrating Spring Security into a Spring Boot Application
 
-Tài liệu này cung cấp hướng dẫn chi tiết, từng bước để tích hợp **Spring Security** vào ứng dụng Spring Boot, dựa trên tài liệu chính thức của Spring (phiên bản mới nhất tính đến năm 2025). Hướng dẫn phù hợp cho người mới bắt đầu đến nâng cao, tập trung vào ứng dụng e-commerce như Laptech (với các entity như User, Invoice, Product). Chúng ta sẽ sử dụng các tính năng cơ bản như xác thực (authentication), phân quyền (authorization), và mở rộng đến JWT hoặc OAuth.
+This document provides a detailed, step-by-step guide for integrating **Spring Security** into a Spring Boot application, based on the official Spring documentation (up to date as of 2025).
+It’s designed for beginners to advanced users and tailored for an e-commerce app like Laptech (entities such as User, Invoice, Product).
+We’ll cover basic authentication & authorization, and expand into JWT and OAuth.
 
-Giả sử bạn đang sử dụng Spring Boot 3.x với Java 17+, và đã có kiến thức cơ bản về Spring Boot và JPA.
+Assumptions:
 
-## 1. Thêm Dependencies
+* Spring Boot 3.x
+* Java 17+
+* You already understand Spring Boot + JPA basics
 
-Bắt đầu bằng việc thêm dependency cho Spring Security vào project. Spring Boot cung cấp starter để đơn giản hóa việc này.
+---
 
-### Bước 1.1: Sử dụng Spring Initializr
+## 1. Add Dependencies
 
-- Truy cập [start.spring.io](https://start.spring.io) hoặc sử dụng IDE (IntelliJ, Eclipse) để tạo project.
-- Chọn dependencies: **Spring Web**, **Spring Data JPA**, **Spring Security**.
-- Tải về và import vào IDE.
+Start by adding the Spring Security dependency. Spring Boot provides a convenient starter for this.
 
-### Bước 1.2: Thêm thủ công vào pom.xml (Maven)
+### Step 1.1: Using Spring Initializr
+
+Go to **start.spring.io** or start a project via your IDE (IntelliJ, Eclipse).
+
+Select:
+
+* Spring Web
+* Spring Data JPA
+* Spring Security
+
+Then download the project.
+
+---
+
+### Step 1.2: Add manually to `pom.xml` (Maven)
 
 ```xml
 <dependencies>
@@ -22,22 +38,24 @@ Bắt đầu bằng việc thêm dependency cho Spring Security vào project. Sp
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-security</artifactId>
     </dependency>
-    <!-- Các dependency khác như JPA, Web -->
+    <!-- Other dependencies like JPA, Web -->
 </dependencies>
 ```
 
-### Bước 1.3: Thêm thủ công vào build.gradle (Gradle)
+### Step 1.3: Add manually to `build.gradle` (Gradle)
 
 ```groovy
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-security'
-    // Các dependency khác
+    // Other dependencies
 }
 ```
 
-### Bước 1.4: Override phiên bản (nếu cần, ví dụ Spring Security 6.3.x)
+---
 
-- Maven:
+### Step 1.4: Override version (if needed, e.g., Spring Security 6.3.x)
+
+**Maven:**
 
 ```xml
 <properties>
@@ -45,23 +63,30 @@ dependencies {
 </properties>
 ```
 
-- Gradle:
+**Gradle:**
 
 ```groovy
 ext['spring-security.version'] = '6.3.0'
 ```
 
-**Best practice**: Sử dụng BOM của Spring Boot để quản lý phiên bản tự động, tránh xung đột.
+**Best practice:**
+Use Spring Boot's dependency management (BOM) to avoid version conflicts.
 
-Sau khi thêm, chạy ứng dụng: Spring Security sẽ tự động bảo vệ tất cả endpoint với form login mặc định và tài khoản "user" (password in ra console).
+---
 
-## 2. Cấu hình cơ bản Security
+After adding the dependency and running the app:
 
-Tạo class cấu hình để tùy chỉnh security.
+Spring Security automatically protects all endpoints using a default login page and a generated password printed in console.
 
-### Bước 2.1: Tạo SecurityConfig
+---
 
-Tạo package `config` và class `SecurityConfig`:
+## 2. Basic Security Configuration
+
+Create a configuration class to customize security rules.
+
+### Step 2.1: Create `SecurityConfig`
+
+Create a `config` package and add:
 
 ```java
 import org.springframework.context.annotation.Bean;
@@ -79,46 +104,48 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
             .authorizeHttpRequests(authorize -> authorize
-                .requestMatchers("/api/public/**").permitAll()  // Cho phép truy cập public
-                .requestMatchers("/api/admin/**").hasRole("ADMIN")  // Chỉ admin
-                .anyRequest().authenticated()  // Các request khác cần xác thực
+                .requestMatchers("/api/public/**").permitAll()
+                .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                .anyRequest().authenticated()
             )
-            // Trang login tùy chỉnh
             .formLogin(form -> form
-                .loginPage("/login")  
+                .loginPage("/login")
                 .permitAll()
             )
-            // .logout(logout -> logout.permitAll())
             .sessionManagement(session -> session
-                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)  // Nếu dùng JWT
+                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)  // for JWT use cases
             )
-            .csrf(csrf -> csrf.disable());  // Disable CSRF cho API, enable cho web
+            .csrf(csrf -> csrf.disable()); // disabled for APIs
 
         return http.build();
     }
 }
 ```
 
-**Giải thích**:
+**Explanation:**
 
-- `@EnableWebSecurity`: Kích hoạt tùy chỉnh security.
-- `SecurityFilterChain`: Bean chính để cấu hình quy tắc bảo mật.
-- `authorizeHttpRequests`: Định nghĩa quyền truy cập dựa trên URL.
-- `formLogin`: Cấu hình login form (mặc định hoặc tùy chỉnh).
-- `csrf.disable()`: Disable cho API stateless (JWT), nhưng enable cho ứng dụng web để tránh tấn công CSRF.
+* `@EnableWebSecurity` → enables custom configuration
+* `SecurityFilterChain` → main bean to define security rules
+* `authorizeHttpRequests` → route-based authorization
+* `formLogin` → custom or default login form
+* `csrf.disable()` → required for stateless API designs (JWT)
 
-### Bước 2.2: Cấu hình application.properties
+---
+
+### Step 2.2: App-level user config
 
 ```properties
 spring.security.user.name=admin
-spring.security.user.password=adminpass  # Password mặc định (thay bằng custom)
+spring.security.user.password=adminpass
 ```
 
-## 3. Xác thực cơ bản (Basic Authentication)
+---
 
-Sử dụng `UserDetailsService` để load user từ database.
+## 3. Basic Authentication (with database)
 
-### Bước 3.1: Entity User implement UserDetails
+Use `UserDetailsService` to load users from DB.
+
+### Step 3.1: User Entity implements `UserDetails`
 
 ```java
 import lombok.*;
@@ -138,6 +165,7 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 @Builder
 public class User implements UserDetails {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -145,7 +173,7 @@ public class User implements UserDetails {
     @Column(unique = true)
     private String email;
 
-    private String password;  // Hashed
+    private String password; // hashed password
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
@@ -169,35 +197,19 @@ public class User implements UserDetails {
         return email;
     }
 
-    @Override
-    public boolean isAccountNonExpired() {
-        return true;
-    }
-
-    @Override
-    public boolean isAccountNonLocked() {
-        return true;
-    }
-
-    @Override
-    public boolean isCredentialsNonExpired() {
-        return true;
-    }
-
-    @Override
-    public boolean isEnabled() {
-        return enabled;
-    }
+    // JPA/Security required fields
+    @Override public boolean isAccountNonExpired() { return true; }
+    @Override public boolean isAccountNonLocked() { return true; }
+    @Override public boolean isCredentialsNonExpired() { return true; }
+    @Override public boolean isEnabled() { return enabled; }
 }
 ```
 
-### Bước 3.2: Entity Role
+---
+
+### Step 3.2: Role Entity
 
 ```java
-import lombok.*;
-
-import javax.persistence.*;
-
 @Entity
 @Table(name = "role")
 @Data
@@ -209,35 +221,34 @@ public class Role {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String name;  // e.g., "ADMIN", "USER"
+    private String name; // e.g. ADMIN, USER
 }
 ```
 
-### Bước 3.3: UserDetailsService
+---
+
+### Step 3.3: CustomUserDetailsService
 
 ```java
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.stereotype.Service;
-
 @Service
 public class CustomUserDetailsService implements UserDetailsService {
+
     @Autowired
     private UserRepository userRepository;
 
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+    public UserDetails loadUserByUsername(String username)
+            throws UsernameNotFoundException {
         return userRepository.findByEmail(username)
-            .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + username));
+            .orElseThrow(() ->
+                new UsernameNotFoundException("User not found with email: " + username));
     }
 }
 ```
 
-### Bước 3.4: PasswordEncoder
+---
 
-Thêm vào `SecurityConfig`:
+### Step 3.4: PasswordEncoder
 
 ```java
 @Bean
@@ -246,42 +257,45 @@ public PasswordEncoder passwordEncoder() {
 }
 ```
 
-### Bước 3.5: Cập nhật SecurityConfig để sử dụng UserDetailsService
+---
 
-Cập nhật `securityFilterChain`:
+### Step 3.5: Register authentication provider
 
 ```java
-http
-    .authenticationProvider(authenticationProvider());  // Thêm provider
+http.authenticationProvider(authenticationProvider());
 
 @Bean
 public DaoAuthenticationProvider authenticationProvider() {
-    DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
-    authProvider.setUserDetailsService(customUserDetailsService);
-    authProvider.setPasswordEncoder(passwordEncoder());
-    return authProvider;
+    DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+    provider.setUserDetailsService(customUserDetailsService);
+    provider.setPasswordEncoder(passwordEncoder());
+    return provider;
 }
 ```
 
-## 4. Phân quyền (Authorization)
+---
 
-- Sử dụng `@PreAuthorize` hoặc cấu hình trong `SecurityConfig`.
-- Ví dụ trong Controller:
+## 4. Authorization
+
+Use annotations or HTTP rules.
+
+Example:
 
 ```java
 @RestController
 @RequestMapping("/api/admin")
 @PreAuthorize("hasRole('ADMIN')")
 public class AdminController {
-    // Các endpoint admin
 }
 ```
 
-## 5. Tích hợp nâng cao: JWT Authentication
+---
 
-Nếu cần stateless API (phù hợp Laptech với VNPay/GHN).
+## 5. Advanced Integration: JWT Authentication
 
-### Bước 5.1: Thêm dependency JWT
+Ideal for stateless APIs (like Laptech with VNPay/GHN integrations).
+
+### Step 5.1: Add JWT dependencies
 
 ```xml
 <dependency>
@@ -303,30 +317,29 @@ Nếu cần stateless API (phù hợp Laptech với VNPay/GHN).
 </dependency>
 ```
 
-### Bước 5.2: Tạo JwtUtils
+---
+
+### Step 5.2: JwtUtils
 
 ```java
-import io.jsonwebtoken.*;
-import org.springframework.stereotype.Component;
-
-import java.util.Date;
-
 @Component
 public class JwtUtils {
+
     private String jwtSecret = "yourSecretKey";
-    private int jwtExpirationMs = 86400000;  // 24 giờ
+    private int jwtExpirationMs = 86400000; // 24h
 
     public String generateJwtToken(UserDetails userDetails) {
         return Jwts.builder()
             .setSubject(userDetails.getUsername())
             .setIssuedAt(new Date())
-            .setExpiration(new Date((new Date()).getTime() + jwtExpirationMs))
+            .setExpiration(new Date(System.currentTimeMillis() + jwtExpirationMs))
             .signWith(SignatureAlgorithm.HS512, jwtSecret)
             .compact();
     }
 
     public String getUserNameFromJwtToken(String token) {
-        return Jwts.parser().setSigningKey(jwtSecret).parseClaimsJws(token).getBody().getSubject();
+        return Jwts.parser().setSigningKey(jwtSecret)
+                .parseClaimsJws(token).getBody().getSubject();
     }
 
     public boolean validateJwtToken(String authToken) {
@@ -340,97 +353,108 @@ public class JwtUtils {
 }
 ```
 
-### Bước 5.3: Tạo JwtAuthFilter
+---
+
+### Step 5.3: JwtAuthFilter
 
 ```java
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
-import org.springframework.web.filter.OncePerRequestFilter;
-
-import javax.servlet.FilterChain;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-
 public class JwtAuthFilter extends OncePerRequestFilter {
+
     @Autowired
     private JwtUtils jwtUtils;
+
     @Autowired
     private CustomUserDetailsService userDetailsService;
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+    protected void doFilterInternal(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            FilterChain filterChain)
             throws ServletException, IOException {
+
         try {
             String jwt = parseJwt(request);
+
             if (jwt != null && jwtUtils.validateJwtToken(jwt)) {
                 String username = jwtUtils.getUserNameFromJwtToken(jwt);
-                UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-                UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+
+                UserDetails userDetails =
+                    userDetailsService.loadUserByUsername(username);
+
+                UsernamePasswordAuthenticationToken auth =
+                    new UsernamePasswordAuthenticationToken(
                         userDetails, null, userDetails.getAuthorities());
-                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authentication);
+
+                auth.setDetails(
+                    new WebAuthenticationDetailsSource().buildDetails(request));
+
+                SecurityContextHolder.getContext().setAuthentication(auth);
             }
         } catch (Exception e) {
-            logger.error("Cannot set user authentication: {}", e);
+            logger.error("Cannot set user authentication", e);
         }
+
         filterChain.doFilter(request, response);
     }
 
     private String parseJwt(HttpServletRequest request) {
-        String headerAuth = request.getHeader("Authorization");
-        if (headerAuth != null && headerAuth.startsWith("Bearer ")) {
-            return headerAuth.substring(7);
+        String header = request.getHeader("Authorization");
+        if (header != null && header.startsWith("Bearer ")) {
+            return header.substring(7);
         }
         return null;
     }
 }
 ```
 
-### Bước 5.4: Đăng ký Filter trong SecurityConfig
+---
+
+### Step 5.4: Register filter
 
 ```java
+http.addFilterBefore(jwtAuthFilter(), UsernamePasswordAuthenticationFilter.class);
+
 @Bean
 public JwtAuthFilter jwtAuthFilter() {
     return new JwtAuthFilter();
 }
-
-http
-    .addFilterBefore(jwtAuthFilter(), UsernamePasswordAuthenticationFilter.class);
 ```
 
-### Bước 5.5: AuthController cho Login
+---
+
+### Step 5.5: AuthController
 
 ```java
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
+
     @Autowired
     private AuthenticationManager authenticationManager;
+
     @Autowired
     private JwtUtils jwtUtils;
 
     @PostMapping("/login")
-    public ResponseEntity<String> login(@RequestBody LoginDTO loginDTO) {
-        Authentication authentication = authenticationManager.authenticate(
-            new UsernamePasswordAuthenticationToken(loginDTO.getEmail(), loginDTO.getPassword())
-        );
+    public ResponseEntity<String> login(@RequestBody LoginDTO dto) {
+        Authentication authentication =
+            authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(dto.getEmail(), dto.getPassword()));
+
         SecurityContextHolder.getContext().setAuthentication(authentication);
+
         String jwt = jwtUtils.generateJwtToken(authentication.getPrincipal());
         return ResponseEntity.ok(jwt);
     }
 }
 ```
 
-## 6. Tích hợp nâng cao: OAuth2
+---
 
-Nếu cần đăng nhập qua Google/Facebook.
+## 6. Advanced: OAuth2 Login
 
-### Bước 6.1: Thêm dependency OAuth2
+### Step 6.1: Add dependencies
 
 ```xml
 <dependency>
@@ -439,31 +463,38 @@ Nếu cần đăng nhập qua Google/Facebook.
 </dependency>
 ```
 
-### Bước 6.2: Cấu hình application.properties
+### Step 6.2: Add OAuth Config
 
 ```properties
 spring.security.oauth2.client.registration.google.client-id=your-client-id
 spring.security.oauth2.client.registration.google.client-secret=your-client-secret
 ```
 
-### Bước 6.3: Cập nhật SecurityConfig
+### Step 6.3: Enable OAuth2 login
 
 ```java
-http
-    .oauth2Login(oauth2 -> oauth2
-        .loginPage("/login")
-    );
+http.oauth2Login(oauth2 -> oauth2
+    .loginPage("/login")
+);
 ```
+
+---
 
 ## 7. Best Practices
 
-- **Sử dụng HTTPS**: Luôn enable HTTPS trong production.
-- **Hash Password**: Sử dụng BCrypt hoặc Argon2.
-- **Xử lý Exception**: Tạo custom AccessDeniedHandler và AuthenticationEntryPoint.
-- **Testing**: Sử dụng `@WithMockUser` trong test.
-- **Tích hợp với Laptech**: Kết hợp với JPA (User entity), bảo vệ endpoint như /api/order, /api/payment.
-- **Debug**: Enable `spring.security.debug=true` trong properties để log security.
+* **Always use HTTPS** in production
+* **Hash passwords** with BCrypt or Argon2
+* Create custom `AccessDeniedHandler` and `AuthenticationEntryPoint`
+* Use `@WithMockUser` for testing security
+* Protect critical endpoints like `/api/order`, `/api/payment`
+* Enable debug logs:
+  `spring.security.debug=true`
 
-## 8. Kết luận
+---
 
-Tích hợp Spring Security giúp bảo vệ ứng dụng hiệu quả. Bắt đầu từ cơ bản và mở rộng theo nhu cầu. Tham khảo thêm tại [Spring Security Docs](https://docs.spring.io/spring-security/reference/index.html).
+## 8. Conclusion
+
+Integrating Spring Security properly makes your application significantly safer.
+Start simple, then expand to JWT/OAuth as needed.
+
+You can find more details in the official Spring Security docs.

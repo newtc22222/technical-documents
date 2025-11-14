@@ -1,46 +1,50 @@
 # Database Design
 
-## 1) Những gì mình cần (ưu tiên theo mức độ ảnh hưởng)
-
-### **A. Kiến trúc & lược đồ**
-
-* Ảnh ERD (hoặc file từ dbdiagram, draw\.io, Lucidchart).
-* DDL schema hiện tại (CREATE TABLE/INDEX/VIEW/FK…).
-* Phiên bản DBMS (ví dụ: PostgreSQL 14.10, MySQL 8.0.36), extension đang dùng.
-* Kích thước mỗi bảng/index, growth trong 3–6 tháng.
-
-### **B. Workload thực tế**
-
-* Top 50–100 query theo tần suất/thời gian (có tham số hóa).
-* Kế hoạch thực thi (EXPLAIN/EXPLAIN ANALYZE) cho các query chậm.
-* Mẫu dữ liệu ẩn danh (10–1000 dòng/bảng, tùy kích cỡ).
-* Mẫu giao dịch: tần suất, độ dài, isolation level, pattern khóa/lock.
-
-### **C. Hiệu năng & vận hành**
-
-* Slow query logs, wait events/locking (deadlock reports).
-* Thống kê index (hit ratio, bloat nếu có), autovacuum/VACUUM history (Postgres).
-* Cấu hình DB (max\_connections, shared\_buffers, work\_mem, innodb\_buffer\_pool\_size…).
-* Monitoring snapshot (CPU, RAM, I/O, cache hit, QPS, p95/p99 latency).
-* Chi phí hạ tầng (instance type, storage class, provisioned IOPS).
-
-### **D. Tính sẵn sàng & quy trình**
-
-* Sơ đồ HA/replication, backup/restore (RPO/RTO), DR runbook.
-* Migration toolchain (Flyway/Liquibase/Prisma/ActiveRecord), lịch sử thay đổi nổi bật.
-* Chính sách bảo mật: PII fields, masking, quyền truy cập, audit.
-
-### **E. Ngữ cảnh sản phẩm**
-
-* SLA, mục tiêu hiệu năng (VD: p95 < 100ms cho API X).
-* Nút thắt đã thấy (timeout, queue backlog, deadlock, chi phí tăng, shard lệch…).
-* Roadmap 6–12 tháng (tăng traffic, new features, analytics, multi-region…).
+Below is the English translation of your document — clear, practical, and ready to copy/paste into files or a repo. No questions.
 
 ---
 
-## 2) Cách đóng gói & định dạng (để copy–paste là chạy)
+## 1. What I need (priority by impact)
 
-### **Thư mục mẫu**
+### **A. Architecture & schema**
+
+* ERD image (or file from dbdiagram, draw.io, Lucidchart).
+* Current DDL schema (CREATE TABLE / INDEX / VIEW / FK …).
+* DBMS version (e.g. PostgreSQL 14.10, MySQL 8.0.36), extensions in use.
+* Size per table/index and growth over the last 3–6 months.
+
+### **B. Actual workload**
+
+* Top 50–100 queries by frequency / total time (parameterized).
+* Execution plans (EXPLAIN / EXPLAIN ANALYZE) for slow queries.
+* Anonymized sample data (10–1000 rows per table depending on size).
+* Sample transactions: frequency, duration, isolation level, locking patterns.
+
+### **C. Performance & ops**
+
+* Slow query logs, wait events / locking (deadlock reports).
+* Index statistics (hit ratio, bloat if any), autovacuum / VACUUM history (Postgres).
+* DB configuration (max_connections, shared_buffers, work_mem, innodb_buffer_pool_size, …).
+* Monitoring snapshot (CPU, RAM, I/O, cache hit, QPS, p95/p99 latency).
+* Infrastructure cost (instance type, storage class, provisioned IOPS).
+
+### **D. Availability & processes**
+
+* HA / replication topology, backup/restore (RPO / RTO), DR runbook.
+* Migration toolchain (Flyway / Liquibase / Prisma / ActiveRecord), change history highlights.
+* Security policy: PII columns, masking strategy, access rights, audit.
+
+### **E. Product context**
+
+* SLA and performance targets (e.g. p95 < 100ms for API X).
+* Known bottlenecks (timeouts, queue backlogs, deadlocks, cost spikes, shard imbalances…).
+* 6–12 month roadmap (expected traffic growth, new features, analytics, multi-region).
+
+---
+
+## 2. How to package & format (copy–paste runnable)
+
+### **Suggested folder layout**
 
 ```txt
 db-assessment/
@@ -53,8 +57,8 @@ db-assessment/
 │  └─ sizes.csv
 ├─ 20_workload/
 │  ├─ top_queries.sql
-│  ├─ explain_plans/   (mỗi query 1 file .txt)
-│  └─ sample_data/     (CSV đã ẩn danh)
+│  ├─ explain_plans/   (one .txt per query)
+│  └─ sample_data/     (anonymized CSVs)
 ├─ 30_ops_perf/
 │  ├─ db_config.txt
 │  ├─ slowlog.txt
@@ -69,79 +73,95 @@ db-assessment/
    └─ known_issues.md
 ```
 
-### **DDL & số liệu kích thước**
+### **DDL & size commands**
 
-* PostgreSQL:
+#### *PostgreSQL*
 
-  * `pg_dump -s -f schema_ddl.sql <db>`
-  * Kích thước bảng:
+* Export schema:
 
-      ```sql
-      SELECT relname AS table, pg_total_relation_size(relid) AS bytes
-      FROM pg_catalog.pg_statio_user_tables
-      ORDER BY 2 DESC;
-      ```
+```bash
+pg_dump -s -f schema_ddl.sql <db>
+```
 
-* MySQL:
+* Table sizes:
 
-  * `mysqldump --no-data --routines --events db > schema_ddl.sql`
-  * Kích thước bảng: `INFORMATION_SCHEMA.TABLES` (DATA\_LENGTH + INDEX\_LENGTH).
+```sql
+SELECT relname AS table,
+       pg_total_relation_size(relid) AS bytes
+FROM pg_catalog.pg_statio_user_tables
+ORDER BY 2 DESC;
+```
 
-### **Top query & plan**
+#### *MySQL*
 
-* PostgreSQL: bật `pg_stat_statements`, xuất top N theo `total_exec_time` và `calls`; lấy plan: `EXPLAIN (ANALYZE, BUFFERS, VERBOSE)`.
-* MySQL: `performance_schema.events_statements_summary_by_digest`; slow log + `EXPLAIN ANALYZE`.
+* Export schema (no data):
 
-### **Ẩn danh dữ liệu**
+```bash
+mysqldump --no-data --routines --events db > schema_ddl.sql
+```
 
-* Hash/Tokenize định danh (SHA256 + salt), generalize ngày (đến tuần/tháng), binning cho số, drop cột nhạy cảm không cần thiết.
-* Kèm file `pii_fields.md` mô tả cột nào đã được mask và cách mask.
+* Table sizes: use `INFORMATION_SCHEMA.TABLES` (DATA_LENGTH + INDEX_LENGTH).
+
+### **Top queries & plans**
+
+*Postgres*: enable `pg_stat_statements`, export top N by `total_exec_time` and `calls`; get plans with:
+
+```sql
+EXPLAIN (ANALYZE, BUFFERS, VERBOSE) <your_query>;
+```
+
+*MySQL*: use `performance_schema.events_statements_summary_by_digest`, slow query log; use `EXPLAIN ANALYZE` for detailed plans.
+
+### **Data anonymization**
+
+* Hash / tokenize identifiers (SHA256 + salt), generalize dates (to week/month), bin numeric values, drop sensitive columns not needed.
+* Provide a `pii_fields.md` describing which columns were masked and how.
 
 ---
 
-## 3) Template điền nhanh (copy mẫu này vào `context.md`)
+## 3. Quick-fill template (copy into `context.md`)
 
 ```md
-## Context nhanh
-- Sản phẩm: …
-- DBMS & phiên bản: …
-- Quy mô dữ liệu: … (tổng, top bảng)
-- Traffic: … QPS trung bình / p95…
+## Quick context
+- Product: …
+- DBMS & version: …
+- Data size: … (total, top tables)
+- Traffic: … avg QPS / p95 …
 - SLA: …
-- Đau đầu hiện tại: …
-- Mục tiêu nâng cấp: … (hiệu năng, chi phí, bảo trì, khả dụng, phân tích)
+- Current pain points: …
+- Upgrade goals: … (performance, cost, maintainability, availability, analytics)
 
-## Workload chính
-- Bảng nóng: …
-- Query quan trọng: …
-- Mô hình truy cập: … (đọc/ghi %, batch/stream, giờ cao điểm)
+## Primary workload
+- Hot tables: …
+- Important queries: …
+- Access patterns: … (read/write %, batch/stream, peak hours)
 
-## Vận hành
-- Cấu hình nổi bật: …
+## Operations
+- Notable config: …
 - HA/DR: …
 - Backup: … (RPO/RTO)
-- Bảo mật & compliance: …
+- Security & compliance: …
 
 ## Roadmap
-- Dự kiến 6–12 tháng: …
+- Next 6–12 months: …
 ```
 
 ---
 
-## 4) Bạn bận? Đây là “gói tối thiểu” vẫn đủ để mình tư vấn
+## 4. Short on time? Minimum package that’s still useful
 
 1. `schema_ddl.sql`
-2. Top 50 query (đã tham số hóa) + `EXPLAIN ANALYZE` cho 10 query chậm nhất
-3. Bảng kích thước + tăng trưởng 3 tháng
-4. `db_config.txt` (toàn bộ tham số server)
-5. Known issues + mục tiêu (p95, chi phí, RPO/RTO)
+2. Top 50 parameterized queries + `EXPLAIN ANALYZE` for the 10 slowest
+3. Table sizes + 3-month growth data
+4. `db_config.txt` (all server params)
+5. Known issues + goals (p95 target, cost/RPO/RTO)
 
 ---
 
-## 5) Sau khi nhận được, mình sẽ làm gì?
+## 5. What I’ll do after I receive the package
 
-* Đọc schema → phát hiện anti-pattern (N+1, khóa tổng hợp, FK thiếu index, bloat…).
-* Phân tích plan & stats → đề xuất index/partial index/covering, partitioning, rewrite query.
-* Kiến trúc → connection pooling, read replicas, caching, CQRS, sharding (nếu cần).
-* Vận hành → tuning tham số, autovacuum/maintenance window, backup/restore drill, cost-cutting.
-* Lộ trình nâng cấp → các bước tuần tự, rollback plan, ước tính tác động & rủi ro.
+* Read schema → detect anti-patterns (N+1, composite key issues, missing FK indexes, bloat, etc.).
+* Analyze plans & stats → propose indexes (incl. partial/covering), partitioning, query rewrites.
+* Architecture suggestions → connection pooling, read replicas, caching layers, CQRS, sharding if needed.
+* Ops tuning → parameter tuning, autovacuum/maintenance windows, backup/restore drills, cost optimization.
+* Roadmap → step-by-step upgrade plan, rollback strategy, impact & risk estimates.

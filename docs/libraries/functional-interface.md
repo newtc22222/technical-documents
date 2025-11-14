@@ -1,109 +1,145 @@
-# Tổng quan về Functional Interface trong Java
+# Overview of Functional Interfaces in Java
 
-Functional Interface là một interface trong Java chỉ chứa **duy nhất một phương thức trừu tượng** (abstract method). Chúng là nền tảng cho việc sử dụng **Lambda Expressions** và **Method References**, giúp viết mã ngắn gọn và biểu cảm hơn.
+A **Functional Interface** in Java is an interface that contains **exactly one abstract method**. It’s the core foundation for **Lambda Expressions** and **Method References**, enabling more concise and expressive code.
 
-Annotation `@FunctionalInterface` có thể được sử dụng để đánh dấu một interface là functional. Nó không bắt buộc, nhưng là một thói quen tốt vì trình biên dịch sẽ báo lỗi nếu bạn cố gắng thêm nhiều hơn một phương thức trừu tượng.
+You can use the `@FunctionalInterface` annotation to explicitly mark an interface as functional. It’s optional, but a good habit — the compiler will warn you if you accidentally add more than one abstract method.
 
-## Tại sao Functional Interface quan trọng?
+---
 
-- **Nền tảng cho Lambda Expressions**: Cho phép truyền các hành vi (behavior) như là các tham số cho phương thức.
-- **Tích hợp với Stream API**: Hầu hết các phương thức trong Stream API (như `filter`, `map`, `forEach`) đều nhận các functional interface làm tham số.
-- **Thúc đẩy lập trình hàm**: Giúp viết mã theo phong cách khai báo (declarative) thay vì mệnh lệnh (imperative), tập trung vào "cái gì" cần làm thay vì "làm như thế nào".
+## Why Are Functional Interfaces Important?
 
-## Các Functional Interface phổ biến nhất
+* **Foundation for Lambda Expressions**
+  They allow you to pass behavior as a method argument.
 
-Java cung cấp sẵn một bộ các functional interface thông dụng trong gói `java.util.function`, giúp bạn không cần phải tự định nghĩa cho các trường hợp phổ biến.
+* **Integral to the Stream API**
+  Most Stream API methods (`filter`, `map`, `forEach`, etc.) accept functional interfaces.
+
+* **Promotes Functional Programming**
+  Helps you write declarative code — focusing on *what* should be done instead of *how*.
+
+---
+
+## The Most Common Functional Interfaces
+
+Java provides many built-in functional interfaces in the `java.util.function` package, covering most common use cases.
+
+---
 
 ### 1. `Predicate<T>`
 
-- **Mục đích**: Kiểm tra một giá trị đầu vào có thỏa mãn một điều kiện nào đó hay không.
-- **Phương thức trừu tượng**: `boolean test(T t)`
-- **Mô tả**: Nhận vào một đối tượng kiểu `T` và trả về `true` hoặc `false`.
-- **Ví dụ**:
+* **Purpose**: Check whether a given input satisfies some condition.
+* **Abstract method**: `boolean test(T t)`
+* **Description**: Takes a `T`, returns `true` or `false`.
 
-  ```java
-  Predicate<Integer> isGreaterThan10 = (number) -> number > 10;
-  System.out.println(isGreaterThan10.test(5));   // false
-  System.out.println(isGreaterThan10.test(20));  // true
-  ```
+**Example:**
+
+```java
+Predicate<Integer> isGreaterThan10 = (number) -> number > 10;
+System.out.println(isGreaterThan10.test(5));   // false
+System.out.println(isGreaterThan10.test(20));  // true
+```
+
+---
 
 ### 2. `Consumer<T>`
 
-- **Mục đích**: Thực hiện một hành động nào đó trên một giá trị đầu vào mà không trả về kết quả.
-- **Phương thức trừu tượng**: `void accept(T t)`
-- **Mô tả**: "Tiêu thụ" một đối tượng kiểu `T`. Thường được dùng để thực hiện các side effect như in ra màn hình, ghi vào file...
-- **Ví dụ**:
+* **Purpose**: Perform an action on the given input, returning nothing.
+* **Abstract method**: `void accept(T t)`
+* **Description**: “Consumes” a `T`. Often used for side effects like logging or writing to files.
 
-  ```java
-  Consumer<String> printMessage = (message) -> System.out.println(message);
-  printMessage.accept("Hello, Functional Interface!"); // In ra chuỗi
-  ```
+**Example:**
+
+```java
+Consumer<String> printMessage = (message) -> System.out.println(message);
+printMessage.accept("Hello, Functional Interface!");
+```
+
+---
 
 ### 3. `Function<T, R>`
 
-- **Mục đích**: Chuyển đổi (transform) một giá trị đầu vào từ kiểu `T` sang một giá trị kết quả kiểu `R`.
-- **Phương thức trừu tượng**: `R apply(T t)`
-- **Mô tả**: Nhận vào một đối tượng kiểu `T` và trả về một đối tượng kiểu `R`.
-- **Ví dụ**:
+* **Purpose**: Transform an input of type `T` into a result of type `R`.
+* **Abstract method**: `R apply(T t)`
+* **Description**: Accepts `T`, returns `R`.
 
-  ```java
-  Function<String, Integer> getStringLength = (str) -> str.length();
-  System.out.println(getStringLength.apply("Java")); // 4
-  ```
+**Example:**
+
+```java
+Function<String, Integer> getStringLength = (str) -> str.length();
+System.out.println(getStringLength.apply("Java")); // 4
+```
+
+---
 
 ### 4. `Supplier<T>`
 
-- **Mục đích**: Cung cấp (supply) một giá trị mà không cần bất kỳ đầu vào nào.
-- **Phương thức trừu tượng**: `T get()`
-- **Mô tả**: Không nhận tham số nào và trả về một đối tượng kiểu `T`. Thường được dùng để tạo đối tượng mới hoặc cung cấp giá trị mặc định.
-- **Ví dụ**:
+* **Purpose**: Supply a value with no input.
+* **Abstract method**: `T get()`
+* **Description**: Produces a `T`. Often used for generating defaults or creating new objects.
 
-  ```java
-  Supplier<LocalDateTime> getCurrentDateTime = () -> LocalDateTime.now();
-  System.out.println(getCurrentDateTime.get()); // In ra ngày giờ hiện tại
-  ```
+**Example:**
 
-## Các biến thể hữu ích khác
+```java
+Supplier<LocalDateTime> getCurrentDateTime = () -> LocalDateTime.now();
+System.out.println(getCurrentDateTime.get());
+```
 
-Ngoài 4 interface chính ở trên, Java còn cung cấp nhiều biến thể để xử lý các trường hợp cụ thể hơn.
+---
+
+## Other Useful Variants
 
 ### `UnaryOperator<T>`
 
-- **Mô tả**: Một trường hợp đặc biệt của `Function<T, T>`, nơi kiểu đầu vào và kiểu trả về giống nhau.
-- **Phương thức**: `T apply(T t)`
-- **Ví dụ**:
+* Special case of `Function<T, T>`
+* **Method**: `T apply(T t)`
+* **Example:**
 
-  ```java
-  UnaryOperator<Integer> square = (number) -> number * number;
-  System.out.println(square.apply(5)); // 25
-  ```
+```java
+UnaryOperator<Integer> square = (number) -> number * number;
+System.out.println(square.apply(5)); // 25
+```
+
+---
 
 ### `BinaryOperator<T>`
 
-- **Mô tả**: Nhận vào hai tham số cùng kiểu `T` và trả về một kết quả cũng có kiểu `T`. Hữu ích cho các phép toán gộp (reduction).
-- **Phương thức**: `T apply(T t1, T t2)`
-- **Ví dụ**:
+* Accepts two inputs of type `T`, returns a `T`
+* Great for reduction operations
+* **Method**: `T apply(T t1, T t2)`
 
-  ```java
-  BinaryOperator<Integer> sum = (a, b) -> a + b;
-  System.out.println(sum.apply(10, 20)); // 30
-  ```
+**Example:**
 
-### Các interface cho kiểu nguyên thủy
+```java
+BinaryOperator<Integer> sum = (a, b) -> a + b;
+System.out.println(sum.apply(10, 20)); // 30
+```
 
-- Để tránh boxing/unboxing và tăng hiệu năng, Java cung cấp các phiên bản chuyên biệt cho các kiểu nguyên thủy như `IntPredicate`, `LongConsumer`, `DoubleFunction`, v.v.
+---
 
-## Bảng tổng kết thông tin
+### Primitive-specialized interfaces
 
-| Interface           | Phương thức trừu tượng | Mục đích                                  | Ví dụ ứng dụng                            |
-| ------------------- | ---------------------- | ----------------------------------------- | ----------------------------------------- |
-| `Predicate<T>`      | `boolean test(T t)`    | Kiểm tra điều kiện                        | Kiểm tra số > 10, lọc danh sách           |
-| `Consumer<T>`       | `void accept(T t)`     | Thực hiện hành động, không trả về kết quả | In ra console, ghi vào file               |
-| `Function<T, R>`    | `R apply(T t)`         | Chuyển đổi giá trị từ `T` sang `R`        | Tính độ dài chuỗi, ánh xạ dữ liệu         |
-| `Supplier<T>`       | `T get()`              | Cung cấp giá trị mà không cần đầu vào     | Tạo đối tượng mới, lấy thời gian hiện tại |
-| `UnaryOperator<T>`  | `T apply(T t)`         | Chuyển đổi giá trị cùng kiểu `T`          | Bình phương số, thay đổi giá trị          |
-| `BinaryOperator<T>` | `T apply(T t1, T t2)`  | Thực hiện phép toán trên hai giá trị `T`  | Cộng, nhân, hoặc gộp dữ liệu              |
+To avoid boxing/unboxing overhead, Java includes equivalents like:
 
-## Kết luận
+* `IntPredicate`
+* `LongConsumer`
+* `DoubleFunction`
+* …and more.
 
-Hiểu rõ và sử dụng thành thạo các functional interface này là một bước quan trọng để viết mã Java hiện đại, ngắn gọn và hiệu quả hơn.
+---
+
+## Summary Table
+
+| Interface           | Abstract Method       | Purpose                            | Example Use Case                      |
+| ------------------- | --------------------- | ---------------------------------- | ------------------------------------- |
+| `Predicate<T>`      | `boolean test(T t)`   | Check conditions                   | Filter list, validate values          |
+| `Consumer<T>`       | `void accept(T t)`    | Perform an action, no return value | Print, log, write to file             |
+| `Function<T, R>`    | `R apply(T t)`        | Transform `T` → `R`                | String length, data mapping           |
+| `Supplier<T>`       | `T get()`             | Provide a value without input      | Create objects, get current timestamp |
+| `UnaryOperator<T>`  | `T apply(T t)`        | Transform value of same type       | Square number, mutate values          |
+| `BinaryOperator<T>` | `T apply(T t1, T t2)` | Combine two values of same type    | Sum, multiply, reduce operations      |
+
+---
+
+## Conclusion
+
+Mastering these functional interfaces is a key step toward writing modern, concise, and efficient Java code. They unlock the power of lambdas, streams, and functional programming patterns across the entire Java ecosystem.

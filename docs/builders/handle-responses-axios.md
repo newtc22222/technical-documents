@@ -1,23 +1,23 @@
-# Handle Response with Axios on FE Side (React examples)
+# Handle Response with Axios on the FE Side (React examples)
 
-## 1. Thiết lập `axios` (Best Practice)
+## 1. Setting up `axios` (Best Practice)
 
-Đầu tiên, bạn nên tạo một instance `axios` tùy chỉnh để không phải lặp lại base URL và có thể dễ dàng thêm các header (như token xác thực) sau này.
+First, you should create a custom `axios` instance so you don’t repeat the base URL everywhere and can easily add headers (like auth tokens) later.
 
-**Tạo file `api/axiosConfig.js`:**
+**Create file `api/axiosConfig.js`:**
 
 ```javascript
 import axios from 'axios';
 
 const apiClient = axios.create({
-  baseURL: 'http://localhost:8080/api', // Base URL của API
+  baseURL: 'http://localhost:8080/api', // API base URL
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// Bạn có thể thêm interceptor để xử lý token hoặc lỗi ở đây
-// Ví dụ: Thêm token vào mỗi request
+// You can add interceptors here for handling tokens or errors.
+// Example: add token to every request
 // apiClient.interceptors.request.use(config => {
 //   const token = localStorage.getItem('authToken');
 //   if (token) {
@@ -31,16 +31,14 @@ export default apiClient;
 
 ---
 
-## 2. Xử lý các trường hợp CRUD
+## 2. Handling CRUD Scenarios
 
-Bây giờ, trong các component React của bạn, bạn sẽ import và sử dụng `apiClient` này.
+Now in your React components, you import and use this `apiClient`.
 
-### **a. Lấy danh sách thương hiệu (GET `/api/brands`)**
+### **a. Fetch brand list (GET `/api/brands`)**
 
-* **Backend trả về:** `200 OK` với một mảng các `BrandDTO`.
-* **UI xử lý:** Lấy dữ liệu từ `response.data` và cập nhật state.
-
-<!-- end list -->
+* **Backend returns:** `200 OK` with an array of `BrandDTO`.
+* **UI handling:** Use `response.data` and update state.
 
 ```javascript
 import React, { useState, useEffect } from 'react';
@@ -56,10 +54,10 @@ function BrandList() {
       try {
         setLoading(true);
         const response = await apiClient.get('/brands');
-        setBrands(response.data); // Dữ liệu nằm trong response.data
+        setBrands(response.data); // Data is inside response.data
         setError(null);
       } catch (err) {
-        setError('Không thể tải danh sách thương hiệu.');
+        setError('Unable to load brand list.');
         console.error(err);
       } finally {
         setLoading(false);
@@ -82,88 +80,84 @@ function BrandList() {
 }
 ```
 
-### **b. Tạo mới thương hiệu (POST `/api/brands`)**
+---
 
-* **Backend trả về:** `201 Created` với `BrandDTO` vừa được tạo.
-* **UI xử lý:** Gửi dữ liệu request, sau đó cập nhật state với dữ liệu trả về.
+### **b. Create a new brand (POST `/api/brands`)**
 
-<!-- end list -->
+* **Backend returns:** `201 Created` with the created `BrandDTO`.
+* **UI handling:** Send request data, then update state with the returned brand.
 
 ```javascript
 const createNewBrand = async (brandData) => {
   try {
-    // brandData là một object, ví dụ: { name: 'Asus', description: '...' }
+    // brandData example: { name: 'Asus', description: '...' }
     const response = await apiClient.post('/brands', brandData);
 
-    // Thêm thương hiệu mới vào danh sách hiện tại
+    // Add the new brand into the current list
     setBrands(prevBrands => [...prevBrands, response.data]);
-    
-    // Xử lý thành công (ví dụ: hiển thị thông báo)
-    alert('Tạo thương hiệu thành công!');
+
+    alert('Brand created successfully!');
   } catch (err) {
-    // Xử lý lỗi validation từ server
+    // Handle validation errors from backend
     if (err.response && err.response.status === 400) {
-      alert('Lỗi: ' + err.response.data.message); // Giả sử server trả về lỗi trong message
+      alert('Error: ' + err.response.data.message); // Assuming backend puts error inside "message"
     } else {
-      alert('Đã có lỗi xảy ra.');
+      alert('Something went wrong.');
     }
     console.error(err);
   }
 };
 ```
 
-### **c. Cập nhật thương hiệu (PUT `/api/brands/{id}`)**
+---
 
-* **Backend trả về:** `200 OK` với `BrandDTO` đã được cập nhật.
-* **UI xử lý:** Tìm và thay thế thương hiệu trong state với dữ liệu mới.
+### **c. Update brand (PUT `/api/brands/{id}`)**
 
-<!-- end list -->
+* **Backend returns:** `200 OK` with updated `BrandDTO`.
+* **UI handling:** Replace the old brand in state.
 
 ```javascript
 const updateBrand = async (brandId, updatedData) => {
   try {
     const response = await apiClient.put(`/brands/${brandId}`, updatedData);
-    
-    // Cập nhật lại danh sách thương hiệu trong state
-    setBrands(prevBrands => 
-      prevBrands.map(brand => 
+
+    setBrands(prevBrands =>
+      prevBrands.map(brand =>
         brand.id === brandId ? response.data : brand
       )
     );
-    
-    alert('Cập nhật thành công!');
+
+    alert('Updated successfully!');
   } catch (err) {
-    alert('Cập nhật thất bại.');
+    alert('Update failed.');
     console.error(err);
   }
 };
 ```
 
-### **d. Xóa thương hiệu (DELETE `/api/brands/{id}`)**
+---
 
-* **Backend trả về:** `204 No Content`. Đây là điểm quan trọng, **response sẽ không có body (`response.data` sẽ là `undefined`)**.
-* **UI xử lý:** Kiểm tra `status code` là 204 và loại bỏ thương hiệu khỏi state.
+### **d. Delete brand (DELETE `/api/brands/{id}`)**
 
-<!-- end list -->
+* **Backend returns:** `204 No Content`.
+  Important: **`response.data` will be `undefined`**.
+* **UI handling:** Check status code `204` and remove the brand from state.
 
 ```javascript
 const deleteBrand = async (brandId) => {
-  // Hỏi người dùng để xác nhận
-  if (!window.confirm('Bạn có chắc chắn muốn xóa thương hiệu này?')) {
+  if (!window.confirm('Are you sure you want to delete this brand?')) {
     return;
   }
 
   try {
     const response = await apiClient.delete(`/brands/${brandId}`);
 
-    // Kiểm tra status code là 204
     if (response.status === 204) {
-      // Lọc bỏ thương hiệu đã xóa khỏi danh sách
       setBrands(prevBrands => prevBrands.filter(brand => brand.id !== brandId));
-      alert('Xóa thành công!');
+      alert('Deleted successfully!');
     }
   } catch (err) {
-    alert('Xóa thất bại.');
+    alert('Delete failed.');
     console.error(err);
   }
 };

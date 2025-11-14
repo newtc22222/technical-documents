@@ -2,7 +2,7 @@
 
 ## Traefik
 
-### 1) Cập nhật `docker-compose.yml`
+### 1. Update `docker-compose.yml`
 
 ```yaml
 version: '3.8'
@@ -23,7 +23,7 @@ services:
       - --certificatesresolvers.le.acme.httpchallenge.entrypoint=web
       - --certificatesresolvers.le.acme.email=${LETSENCRYPT_EMAIL}
       - --certificatesresolvers.le.acme.storage=/letsencrypt/acme.json
-      # (tuỳ chọn) bật dashboard nội bộ
+      # (optional) enable internal dashboard
       - --api.dashboard=true
     ports:
       - "80:80"
@@ -40,7 +40,7 @@ services:
       - "traefik.http.routers.http-catchall.entrypoints=web"
       - "traefik.http.routers.http-catchall.middlewares=redirect-to-https"
       - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
-      # (tuỳ chọn) expose dashboard qua domain phụ, nhớ đổi ADMIN_DOMAIN
+      # (optional) expose dashboard via a subdomain, remember to set ADMIN_DOMAIN
       # - "traefik.http.routers.traefik.rule=Host(`${ADMIN_DOMAIN}`)"
       # - "traefik.http.routers.traefik.service=api@internal"
       # - "traefik.http.routers.traefik.entrypoints=websecure"
@@ -82,8 +82,8 @@ services:
       SPRING_DATASOURCE_USERNAME: ${MYSQL_USER:-laptech_user}
       SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD:-password123}
       APP_JWT_SECRET: ${APP_JWT_SECRET}
-    # không cần publish port 8080 ra ngoài nữa (Traefik sẽ route),
-    # nhưng nếu muốn debug local có thể để lại "8080:8080".
+    # you don't need to publish port 8080 externally (Traefik will route),
+    # but if you want to debug locally you can leave "8080:8080".
     # ports:
     #   - "8080:8080"
     restart: unless-stopped
@@ -92,11 +92,11 @@ services:
       - backend
     labels:
       - "traefik.enable=true"
-      # route theo domain app
+      # route by app domain
       - "traefik.http.routers.app.rule=Host(`${APP_DOMAIN}`)"
       - "traefik.http.routers.app.entrypoints=websecure"
       - "traefik.http.routers.app.tls.certresolver=le"
-      # service port bên trong container
+      # internal container service port
       - "traefik.http.services.app.loadbalancer.server.port=8080"
 
 volumes:
@@ -112,12 +112,12 @@ networks:
 
 ---
 
-### 2) `.env` mẫu (bổ sung domain & email)
+### 2. Sample `.env` (add domain & email)
 
-```env
-# App domain (trỏ DNS về server này)
+```ini
+# App domain (point DNS to this server)
 APP_DOMAIN=app.example.com
-# Email để đăng ký Let's Encrypt
+# Email for Let's Encrypt registration
 LETSENCRYPT_EMAIL=you@example.com
 
 # MySQL
@@ -132,45 +132,44 @@ SPRING_PROFILES_ACTIVE=staging
 SERVER_PORT=8080
 APP_JWT_SECRET=your_jwt_secret_here
 
-# (optional) Dashboard domain nếu muốn bật ở phần label traefik
+# (optional) Dashboard domain if you want to enable the traefik router labels above
 # ADMIN_DOMAIN=traefik.example.com
 ```
 
 ---
 
-### 3) Chuẩn bị trước khi chạy
+### 3. Prep before running
 
-1. Tạo file lưu chứng chỉ:
+Create volume for storing certificates:
 
 ```bash
 docker volume create traefik_letsencrypt
-# Nếu muốn xem trực tiếp trên host:
+# If you prefer to access certs directly on the host:
 # mkdir -p /opt/traefik && touch /opt/traefik/acme.json && chmod 600 /opt/traefik/acme.json
-# rồi bind mount vào /letsencrypt thay vì volume (tuỳ bạn).
+# then bind-mount that path to /letsencrypt instead of using a named volume (your choice).
 ```
 
-2. DNS: trỏ bản ghi `A` của `APP_DOMAIN` về IP máy chủ (public).
-
-3. Mở port 80 & 443 trên firewall/security group.
+1. DNS: point the `A` record of `APP_DOMAIN` to the server public IP.
+2. Open ports 80 & 443 on firewall / security group.
 
 ---
 
-### 4) Chạy
+### 4. Run
 
 ```bash
 docker compose up -d --build
 ```
 
-* Truy cập: `https://app.example.com` (đổi theo `APP_DOMAIN`).
-* Traefik tự xin và gia hạn chứng chỉ.
+* Access: `https://app.example.com` (replace with your `APP_DOMAIN`).
+* Traefik will request and auto-renew certificates.
 
 ---
 
-### Optional: expose Traefik dashboard an toàn
+### Optional: expose Traefik dashboard securely
 
-* Bật các label ở service `traefik` cho router `traefik` (đã comment sẵn).
-* Đặt `ADMIN_DOMAIN` trong `.env`.
-* Có thể thêm Basic Auth middleware nếu cần; mình có thể gen sẵn user\:pass hash cho bạn nếu muốn.
+* Uncomment the dashboard labels in the `traefik` service for the `traefik` router (they are commented in the file).
+* Set `ADMIN_DOMAIN` in `.env`.
+* You can add a Basic Auth middleware if needed; I can generate a user:pass hash for you if you want.
 
 ---
 
@@ -180,7 +179,7 @@ docker compose up -d --build
 version: '3.8'
 
 services:
-  # --- Nginx reverse proxy (tự cấu hình từ labels của các service khác) ---
+  # --- Nginx reverse proxy (auto-config from other services' labels) ---
   nginx-proxy:
     image: nginxproxy/nginx-proxy:alpine
     container_name: nginx-proxy
@@ -189,7 +188,7 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      # để nginx-proxy đọc cấu hình động và certs
+      # let nginx-proxy read dynamic config and certs
       - /var/run/docker.sock:/tmp/docker.sock:ro
       - nginx_certs:/etc/nginx/certs:ro
       - nginx_vhost:/etc/nginx/vhost.d
@@ -236,7 +235,7 @@ services:
     networks:
       - backend
 
-  # --- Ứng dụng của bạn (được proxy qua domain) ---
+  # --- Your application (proxied via domain) ---
   app:
     build:
       context: .
@@ -259,15 +258,15 @@ services:
       VIRTUAL_HOST: ${APP_DOMAIN}
       LETSENCRYPT_HOST: ${APP_DOMAIN}
       LETSENCRYPT_EMAIL: ${LETSENCRYPT_EMAIL}
-    # KHÔNG cần map port 8080 ra ngoài; nginx-proxy sẽ route vào container này
+    # NO need to map port 8080 externally; nginx-proxy will route into this container
     # ports:
     #   - "8080:8080"
     restart: unless-stopped
     networks:
       - frontend
       - backend
-    # nginx-proxy mặc định trỏ vào cổng 80 của container. App Spring chạy 8080,
-    # nên chỉ định rõ service port:
+    # nginx-proxy defaults to routing to container port 80. Spring app runs on 8080,
+    # so specify service port explicitly:
     labels:
       - "VIRTUAL_PORT=8080"
 
@@ -284,12 +283,12 @@ networks:
     driver: bridge
 ```
 
-### `.env` mẫu
+### Sample `.env`
 
-```env
-# Domain app (trỏ DNS A/AAAA về IP server)
+```ini
+# App domain (point A/AAAA record to server IP)
 APP_DOMAIN=app.example.com
-# Email nhận thông báo từ Let's Encrypt
+# Email for Let's Encrypt notifications
 LETSENCRYPT_EMAIL=you@example.com
 
 # MySQL
@@ -305,19 +304,21 @@ SERVER_PORT=8080
 APP_JWT_SECRET=your_jwt_secret_here
 ```
 
-### Cách chạy
+### How to run
 
-1. Trỏ DNS: `APP_DOMAIN` → IP server (mở port 80/443).
-2. Khởi chạy:
+1. DNS: point `APP_DOMAIN` to the server IP (open ports 80/443).
+
+2. Start:
 
    ```bash
    docker compose up -d --build
    ```
-3. Truy cập: `https://app.example.com` (đổi theo domain của bạn).
 
-    * **acme-companion** sẽ tự xin/gia hạn cert + tự reload Nginx mỗi khi cert đổi.
+3. Access: `https://app.example.com` (replace with your domain).
 
-### Notes nhanh
+* The `acme-companion` will automatically request/renew certs and reload Nginx when certs change.
 
-* Nếu bạn muốn chạy nhiều app sau này, chỉ cần thêm service mới và set `VIRTUAL_HOST`, `LETSENCRYPT_HOST`, `VIRTUAL_PORT` tương ứng — nginx-proxy sẽ tự map.
-* Không cần viết file Nginx thủ công, stack này auto config từ labels/env.
+### Quick notes
+
+* If you want to run multiple apps later, just add a new service and set `VIRTUAL_HOST`, `LETSENCRYPT_HOST`, `VIRTUAL_PORT` accordingly — nginx-proxy will map them automatically.
+* No need to write Nginx configs manually; this stack auto-generates config from labels/env.

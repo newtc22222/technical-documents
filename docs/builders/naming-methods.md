@@ -1,88 +1,103 @@
-# Quy tắc đặt tên phương thức cho Controller, Service, và Repository
+# Method Naming Conventions for Controller, Service, and Repository
 
-Việc áp dụng một quy tắc đặt tên nhất quán trên toàn bộ dự án giúp giảm thiểu sự nhầm lẫn, tăng tốc độ phát triển và làm cho mã nguồn trở nên chuyên nghiệp hơn. Dưới đây là các quy tắc được khuyến nghị cho từng lớp trong kiến trúc Spring Boot.
+Applying consistent naming rules across your project reduces confusion, speeds up development, and makes your codebase more professional. Below are the recommended naming conventions for each layer in a Spring Boot architecture.
 
-## 1. Lớp Repository (Lớp truy cập dữ liệu)
+---
 
-Lớp này chỉ có một nhiệm vụ: tương tác với cơ sở dữ liệu. Tên phương thức phải phản ánh rõ ràng hành động truy vấn dữ liệu.
+## 1. Repository Layer (Data Access Layer)
 
-### 1.1. Quy tắc
+This layer has a single responsibility: interact with the database.
+Method names must clearly reflect the data query action.
 
-- **Tuân thủ quy ước của Spring Data JPA**: Tận dụng tối đa khả năng tự tạo truy vấn từ tên phương thức.
-- Bắt đầu bằng các tiền tố:
-  - `find...`, `read...`, `query...`, `get...` để truy vấn dữ liệu.
-  - `count...` để đếm số lượng bản ghi.
-  - `exists...` để kiểm tra sự tồn tại.
-  - `delete...` hoặc `remove...` để xóa dữ liệu.
-- Sử dụng `By` để ngăn cách các điều kiện truy vấn.
+### 1.1. Rules
 
-### 1.2. Ví dụ
+* **Follow Spring Data JPA naming conventions** to fully leverage auto-generated queries.
+* Start method names with:
 
-| Mục đích                          | Tên phương thức                                       |
-| --------------------------------- | ----------------------------------------------------- |
-| Tìm một sản phẩm bằng ID          | `Optional<Product> findById(Long id);`                |
-| Tìm một sản phẩm bằng tên         | `Optional<Product> findByName(String name);`          |
-| Lấy tất cả sản phẩm theo danh mục | `List<Product> findAllByCategory(Category category);` |
-| Đếm số sản phẩm trong kho         | `long countByStockGreaterThan(int quantity);`         |
-| Kiểm tra email đã tồn tại chưa    | `boolean existsByEmail(String email);`                |
-| Xóa tất cả sản phẩm hết hàng      | `void deleteByIsAvailableFalse();`                    |
+  * `find...`, `read...`, `query...`, `get...` → for retrieving data
+  * `count...` → for counting records
+  * `exists...` → for existence checks
+  * `delete...` or `remove...` → for deletion operations
+* Use `By` to separate query conditions.
 
-## 2. Lớp Service (Lớp nghiệp vụ)
+### 1.2. Examples
 
-Đây là nơi chứa logic nghiệp vụ. Tên phương thức phải mô tả hành động hoặc quy trình nghiệp vụ mà nó thực hiện, không phải là một hành động CRUD đơn thuần.
+| Purpose                              | Method Name                                           |
+| ------------------------------------ | ----------------------------------------------------- |
+| Find a product by ID                 | `Optional<Product> findById(Long id);`                |
+| Find a product by name               | `Optional<Product> findByName(String name);`          |
+| Get all products by category         | `List<Product> findAllByCategory(Category category);` |
+| Count products with stock > quantity | `long countByStockGreaterThan(int quantity);`         |
+| Check if an email already exists     | `boolean existsByEmail(String email);`                |
+| Delete all unavailable products      | `void deleteByIsAvailableFalse();`                    |
 
-### 2.1. Quy tắc
+---
 
-- Sử dụng **động từ mạnh mẽ**, mang tính nghiệp vụ: Tên phương thức nên trả lời câu hỏi "Phương thức này làm gì cho doanh nghiệp?".
-- **Tránh các tên CRUD chung chung**: Thay vì `saveUser`, hãy dùng `registerNewUser` hoặc `updateUserProfile`. Thay vì `getOrder`, hãy dùng `getOrderDetail` hoặc `getPurchaseHistory`.
-- Bao gồm cả **đối tượng và hành động**: (Động từ) + (Đối tượng/Ngữ cảnh).
-- Tên phương thức nên rõ ràng đến mức người không phải lập trình viên cũng có thể hiểu được mục đích của nó.
+## 2. Service Layer (Business Logic Layer)
 
-### 2.2. Ví dụ
+This is where business rules live.
+Method names should describe **what business action or workflow** they perform, not just basic CRUD behavior.
 
-| Mục đích                            | Tên phương thức                                                   |
-| ----------------------------------- | ----------------------------------------------------------------- |
-| Đăng ký một người dùng mới          | `UserDTO registerNewUser(SignUpRequest request);`                 |
-| Xử lý một đơn hàng mới              | `OrderDTO processNewOrder(CreateOrderRequest request);`           |
-| Áp dụng mã giảm giá vào giỏ hàng    | `CartDTO applyVoucherToCart(String voucherCode, Long cartId);`    |
-| Hủy một đơn hàng                    | `void cancelOrder(Long orderId);`                                 |
-| Lấy lịch sử mua hàng của người dùng | `List<OrderSummaryDTO> getPurchaseHistory(Long userId);`          |
-| Tạo báo cáo doanh thu hàng tháng    | `MonthlySalesReport generateMonthlySalesReport(YearMonth month);` |
+### 2.1. Rules
 
-## 3. Lớp Controller (Lớp giao tiếp)
+* Use **strong, business-oriented verbs**.
+  The method should answer: *“What does this do for the business?”*
+* **Avoid generic CRUD names**:
 
-Lớp này xử lý các yêu cầu HTTP. Tên phương thức nên phản ánh hành động của API và tài nguyên mà nó tác động, tuân thủ các nguyên tắc RESTful.
+  * Instead of `saveUser` → use `registerNewUser` or `updateUserProfile`.
+  * Instead of `getOrder` → use `getOrderDetail` or `getPurchaseHistory`.
+* Combine **action + context/object**.
+* Names should be clear enough that even a non-developer can roughly understand the intent.
 
-### 3.1. Quy tắc
+### 2.2. Examples
 
-- Gắn liền với các **động từ HTTP**:
-  - **GET**: `get...`, `find...`, `list...`, `search...`
-  - **POST**: `create...`, `add...`, `register...`
-  - **PUT / PATCH**: `update...`, `modify...`, `change...`
-  - **DELETE**: `delete...`, `remove...`
-- Bao gồm **tên của tài nguyên**: (Hành động) + (Tên tài nguyên).
-- Tên phương thức nên **đơn giản và trực tiếp**, vì ngữ cảnh đã được cung cấp bởi annotation (`@GetMapping`, `@PostMapping`...) và URL.
+| Purpose                           | Method Name                                                       |
+| --------------------------------- | ----------------------------------------------------------------- |
+| Register a new user               | `UserDTO registerNewUser(SignUpRequest request);`                 |
+| Process a new order               | `OrderDTO processNewOrder(CreateOrderRequest request);`           |
+| Apply voucher to cart             | `CartDTO applyVoucherToCart(String voucherCode, Long cartId);`    |
+| Cancel an order                   | `void cancelOrder(Long orderId);`                                 |
+| Get a user’s purchase history     | `List<OrderSummaryDTO> getPurchaseHistory(Long userId);`          |
+| Generate a monthly revenue report | `MonthlySalesReport generateMonthlySalesReport(YearMonth month);` |
 
-### 3.2. Ví dụ
+---
 
-| HTTP Method & URL            | Tên phương thức                                                                                                     |
-| ---------------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| GET     `/api/products/{id}` | `public ResponseEntity<ProductDTO> getProductById(@PathVariable Long id)`                                           |
-| GET     `/api/products`      | `public ResponseEntity<List<ProductDTO>> getAllProducts()`                                                          |
-| POST    `/api/products`      | `public ResponseEntity<ProductDTO> createProduct(@RequestBody CreateProductRequest request)`                        |
-| PUT     `/api/products/{id}` | `public ResponseEntity<ProductDTO> updateProduct(@PathVariable Long id, @RequestBody UpdateProductRequest request)` |
-| DELETE  `/api/products/{id}` | `public ResponseEntity<Void> deleteProduct(@PathVariable Long id)`                                                  |
-| POST    `/api/auth/register` | `public ResponseEntity<?> registerUser(@RequestBody SignUpRequest request)`                                         |
+## 3. Controller Layer (API Layer)
 
-## Bảng tổng hợp: Luồng hoạt động CRUD cho "Product"
+This layer handles HTTP requests.
+Method names should reflect the API action and the resource it affects, following RESTful conventions.
 
-| Lớp            | Tên phương thức (Ví dụ)  | Trách nhiệm                                                              |
-| -------------- | ------------------------ | ------------------------------------------------------------------------ |
-| **Controller** | `createProduct(...)`     | Nhận HTTP Request, xác thực DTO, gọi Service.                            |
-| **Service**    | `addNewProduct(...)`     | Xử lý logic nghiệp vụ (kiểm tra tên trùng, tạo slug...), gọi Repository. |
-| **Repository** | `save(Product product)`  | Lưu đối tượng Product vào cơ sở dữ liệu.                                 |
-| **Controller** | `getProductById(...)`    | Nhận HTTP Request, gọi Service.                                          |
-| **Service**    | `getProductDetails(...)` | Lấy dữ liệu từ Repository, xử lý (nếu cần), map sang DTO.                |
-| **Repository** | `findById(Long id)`      | Tìm Product trong cơ sở dữ liệu bằng ID.                                 |
+### 3.1. Rules
 
-Việc tuân thủ các quy tắc này sẽ giúp kiến trúc ứng dụng của bạn trở nên **rõ ràng**, **dễ bảo trì** và **phát triển** sau này.
+* Stick closely to **HTTP verbs**:
+
+  * **GET**: `get...`, `find...`, `list...`, `search...`
+  * **POST**: `create...`, `add...`, `register...`
+  * **PUT / PATCH**: `update...`, `modify...`, `change...`
+  * **DELETE**: `delete...`, `remove...`
+* Include the **resource name**: (Action) + (Resource).
+* Keep names **simple and direct**, because annotation + URL already provide context.
+
+### 3.2. Examples
+
+| HTTP Method & URL           | Method Name                                                                                                         |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| GET `/api/products/{id}`    | `public ResponseEntity<ProductDTO> getProductById(@PathVariable Long id)`                                           |
+| GET `/api/products`         | `public ResponseEntity<List<ProductDTO>> getAllProducts()`                                                          |
+| POST `/api/products`        | `public ResponseEntity<ProductDTO> createProduct(@RequestBody CreateProductRequest request)`                        |
+| PUT `/api/products/{id}`    | `public ResponseEntity<ProductDTO> updateProduct(@PathVariable Long id, @RequestBody UpdateProductRequest request)` |
+| DELETE `/api/products/{id}` | `public ResponseEntity<Void> deleteProduct(@PathVariable Long id)`                                                  |
+| POST `/api/auth/register`   | `public ResponseEntity<?> registerUser(@RequestBody SignUpRequest request)`                                         |
+
+---
+
+## Summary Table: CRUD Workflow for “Product”
+
+| Layer          | Method Example           | Responsibility                                                             |
+| -------------- | ------------------------ | -------------------------------------------------------------------------- |
+| **Controller** | `createProduct(...)`     | Receive HTTP request, validate DTO, call Service.                          |
+| **Service**    | `addNewProduct(...)`     | Business logic (duplicate name checks, slug creation...), call Repository. |
+| **Repository** | `save(Product product)`  | Persist the Product entity into the database.                              |
+| **Controller** | `getProductById(...)`    | Receive HTTP Request, call Service.                                        |
+| **Service**    | `getProductDetails(...)` | Fetch data, apply logic if needed, map to DTO.                             |
+| **Repository** | `findById(Long id)`      | Query Product by ID.                                                       |

@@ -1,79 +1,95 @@
-# Chiến lược Kiểm thử cho ứng dụng
+# Testing Strategy for the Application
 
-Tài liệu này tổng hợp các câu hỏi và câu trả lời liên quan đến việc xây dựng một chiến lược kiểm thử (testing) hiệu quả và bền vững cho dự án Spring Boot.
+This document summarizes key questions and answers regarding how to design an effective and sustainable testing strategy for a Spring Boot project.
 
 ---
 
-## 1. Tổng quan về Chiến lược: Kim tự tháp Kiểm thử
+## 1. Overview of the Strategy: The Testing Pyramid
 
-Chiến lược hiệu quả nhất cho một ứng dụng hiện đại là tuân theo mô hình "Kim tự tháp Kiểm thử" (Testing Pyramid). Mô hình này giúp chúng ta phân bổ nỗ lực một cách hợp lý, đảm bảo độ bao phủ cao mà không làm chậm quá trình phát triển.
+The most effective strategy for a modern application is following the **Testing Pyramid**. This model helps distribute testing effort wisely, ensuring high coverage without slowing down development.
 
 ![testing-case](../_assets/testing-case_licensed-image.jpg)
 
-Kim tự tháp gồm 3 tầng chính:
+The pyramid has 3 main layers:
 
-### Tầng 1: Unit Tests (Nền tảng - Viết nhiều nhất) 🧪
+### Layer 1: Unit Tests (Foundation — write the most) 🧪
 
-- Mục tiêu: Kiểm tra một đơn vị code nhỏ nhất (một class, một phương thức) một cách cô lập, không phụ thuộc vào CSDL hay các thành phần khác.
-- Trọng tâm: Các lớp Service (...ServiceImpl), nơi chứa logic nghiệp vụ.
+* **Goal**: Test the smallest unit of code (a class or method) in isolation, without DB or other components.
+* **Focus**: Service classes (`...ServiceImpl`), where business logic lives.
 
-### Tầng 2: Integration Tests (Tầng giữa - Viết vừa phải) 🧩
+### Layer 2: Integration Tests (Middle — write moderately) 🧩
 
-- Mục tiêu: Kiểm tra sự phối hợp và tương tác giữa nhiều thành phần với nhau (ví dụ: Controller → Service → Repository → Database).
-- Trọng tâm: Các lớp Controller và các luồng nghiệp vụ quan trọng.
+* **Goal**: Test interactions between multiple components (Controller → Service → Repository → Database).
+* **Focus**: Controllers and major business workflows.
 
-### Tầng 3: End-to-End (E2E) Tests (Tầng đỉnh - Viết ít nhất) 🌐
+### Layer 3: End-to-End (E2E) Tests (Top — write the least) 🌐
 
-- Mục tiêu: Kiểm tra toàn bộ luồng ứng dụng từ giao diện người dùng (UI) đến backend, mô phỏng chính xác hành vi của người dùng thật.
-- Trọng tâm: Các kịch bản sử dụng chính của người dùng.
-
----
-
-## 2. Phạm vi Kiểm thử cho Từng Loại Package
-
-### a. Có cần test Repository và kết nối CSDL không?
-
-**Không**, bạn không cần viết Unit Test riêng cho các interface Repository hay việc kết nối CSDL.
-
-- **Repository**: Các phương thức cơ bản của JpaRepository đã được Spring kiểm thử kỹ lưỡng. Việc test lại chúng là không cần thiết.
-- **Kết nối CSDL**: Đây là vấn đề về cấu hình. Nó sẽ được kiểm tra một cách tự nhiên trong quá trình Integration Test. Nếu cấu hình sai, các Integration Test sẽ thất bại ngay lập tức, đó chính là cách kiểm tra hiệu quả nhất.
-- **Khi nào cần test Repository?** Chỉ khi bạn tự viết một câu lệnh truy vấn phức tạp bằng `@Query`. Khi đó, bạn sẽ viết một Integration Test (không phải Unit Test) để đảm bảo câu lệnh SQL của bạn hoạt động đúng.
-
-### b. Test các package utils, config, và common như thế nào?
-
-`utils` (Tiện ích) - ⭐ Phải có Unit Test
-
-- Lý do: Các lớp tiện ích (ví dụ: SlugGenerator) chứa logic thuần túy và độc lập. Một lỗi nhỏ ở đây có thể ảnh hưởng đến toàn bộ hệ thống.
-- Chiến lược: Viết Unit Test để kiểm tra tất cả các trường hợp đầu vào (chuỗi bình thường, chuỗi có dấu, ký tự đặc biệt, chuỗi rỗng, null).
-
-`config` (Cấu hình) - 🧩 Được kiểm thử qua Integration Test
-
-- Lý do: Các lớp cấu hình chủ yếu là code khai báo (@Bean, @Configuration). Chúng không có logic để unit test.
-- Chiến lược: Chúng được kiểm thử một cách ngầm định khi bạn chạy các Integration Test. Nếu cấu hình sai, Application Context sẽ không thể khởi tạo và test sẽ thất bại.
-
-`common` (Dùng chung) - 🧩 Được kiểm thử qua Integration Test
-
-- Lý do: Các lớp như BaseEntity chỉ chứa các trường và annotation, không có logic nghiệp vụ.
-- Chiến lược: Chức năng của BaseEntity (ví dụ: tự động điền createdAt, createdBy) sẽ được kiểm tra khi bạn viết Integration Test cho các entity kế thừa nó (ví dụ: kiểm tra xem một Brand mới tạo có được điền đúng ngày giờ không).
+* **Goal**: Test the entire user flow from UI to backend, simulating real user behavior.
+* **Focus**: Primary user scenarios.
 
 ---
 
-## 3. Tóm tắt Chiến lược
+## 2. Testing Scope for Each Package
 
-- Tập trung Unit Test vào lớp Service: Đây là nơi chứa logic nghiệp vụ, hãy đảm bảo độ bao phủ cao nhất ở đây.
-- Dùng Integration Test để xác thực các luồng chính: Viết Integration Test cho mỗi API endpoint quan trọng để đảm bảo chúng hoạt động từ đầu đến cuối.
-- Phân loại rõ ràng: Áp dụng đúng loại test cho đúng loại package (utils dùng Unit Test, config và common được kiểm tra qua Integration Test).
-- Không test framework: Tin tưởng vào Spring Data JPA và không viết test cho các chức năng mà nó đã cung cấp sẵn.
+### a. Should we test Repository and database connection?
+
+**No**, you don’t need to write separate unit tests for Repository interfaces or database connectivity.
+
+* **Repository**: Methods from `JpaRepository` are already heavily tested by Spring — retesting them is unnecessary.
+
+* **Database connectivity**: This is a configuration concern. Integration tests will naturally validate it. If your DB config is wrong, your tests will fail instantly — which is exactly what you want.
+
+* **When should you test Repository?**
+  Only when you write custom queries using `@Query`.
+  In that case, you write an **Integration Test**, not a unit test.
+
+### b. How to test packages like utils, config, and common?
+
+#### `utils` — ⭐ Must have Unit Tests
+
+* **Why**: Utility classes (e.g., SlugGenerator) contain pure logic. A tiny bug here affects the entire app.
+* **Strategy**: Write unit tests covering all input cases (normal text, diacritics, special chars, empty, null).
+
+#### `config` — 🧩 Covered via Integration Tests
+
+* **Why**: Config classes are mostly declarations (`@Bean`, `@Configuration`) and contain no business logic.
+* **Strategy**: They are implicitly tested during integration tests.
+  If configuration is wrong, the Application Context fails to initialize.
+
+#### `common` — 🧩 Covered via Integration Tests
+
+* **Why**: Classes like `BaseEntity` contain shared fields and annotations, not complex logic.
+* **Strategy**: Their behavior (e.g., auto-filling `createdAt`) gets validated through entity-related integration tests.
 
 ---
 
-## 4. Luồng Cấu hình Bảo mật Mới
+## 3. Strategy Summary
 
-Kiến trúc bảo mật mới của ứng dụng được xây dựng dựa trên hai nguyên tắc cốt lõi: **Xác thực phi trạng thái (Stateless Authentication)** sử dụng JWT và **Phân quyền dựa trên Quyền hạn (Permission-Based Authorization)**. Luồng hoạt động được chia thành hai giai đoạn chính: **Xác thực** (khi người dùng đăng nhập) và **Phân quyền** (khi người dùng truy cập tài nguyên được bảo vệ).
+* **Prioritize Unit Tests for Service classes**: They contain business logic — aim for high coverage here.
+* **Use Integration Tests to validate core flows**: One integration test per important API ensures end-to-end reliability.
+* **Clear separation**:
 
-### 4.1. Luồng Xác thực (Authentication Flow)
+  * utils → Unit Test
+  * config & common → covered by Integration Test
+* **Don’t test the framework**: Trust Spring Data JPA. No need to test features it already guarantees.
 
-Đây là quá trình xảy ra khi người dùng gửi email và mật khẩu để đăng nhập.
+---
+
+## 4. New Security Configuration Flow
+
+The updated security architecture follows two core principles:
+**Stateless Authentication (JWT)** and **Permission-Based Authorization**.
+
+The process is split into two main phases:
+
+1. **Authentication** (when the user logs in)
+2. **Authorization** (when the user accesses a protected resource)
+
+---
+
+## 4.1. Authentication Flow
+
+This flow happens when the user submits an email and password to log in.
 
 ```mermaid
 sequenceDiagram
@@ -87,29 +103,35 @@ sequenceDiagram
     Client->>AuthController: POST /api/auth/login (email, password)
     AuthController->>AuthService: login(loginRequest)
     AuthService->>AuthenticationManager: authenticate(username, password)
-    Note right of AuthenticationManager: (Sử dụng CustomUserDetailsService để<br/>kiểm tra thông tin trong CSDL)
-    AuthenticationManager-->>AuthService: return Authentication object
+    Note right of AuthenticationManager: Uses CustomUserDetailsService<br/>to check DB credentials
+    AuthenticationManager-->>AuthService: Authentication object
     AuthService->>JwtTokenProvider: generateAccessToken(authentication)
-    JwtTokenProvider-->>AuthService: return accessToken
+    JwtTokenProvider-->>AuthService: accessToken
     AuthService->>RefreshTokenService: createRefreshToken(userId)
-    RefreshTokenService-->>AuthService: return refreshToken
-    AuthService-->>AuthController: Patent: return AuthResponse(accessToken, refreshToken)
+    RefreshTokenService-->>AuthService: refreshToken
+    AuthService-->>AuthController: AuthResponse(accessToken, refreshToken)
     AuthController-->>Client: 200 OK with tokens
 ```
 
-#### Diễn giải các bước
+### Explanation
 
-1. **Client → AuthController**: Người dùng gửi yêu cầu đăng nhập chứa email và mật khẩu.
-2. **AuthController → AuthService**: Controller nhận yêu cầu và gọi đến AuthService để xử lý logic nghiệp vụ.
-3. **AuthService → AuthenticationManager**: AuthService sử dụng AuthenticationManager của Spring Security để xác thực thông tin đăng nhập. AuthenticationManager sẽ ngầm gọi CustomUserDetailsService để tải thông tin người dùng từ CSDL và so sánh mật khẩu.
-4. **AuthenticationManager → AuthService**: Nếu thành công, AuthenticationManager trả về một đối tượng Authentication chứa đầy đủ thông tin người dùng và các quyền hạn của họ.
-5. **Tạo Tokens**: AuthService sử dụng đối tượng Authentication để gọi JwtTokenProvider tạo ra accessToken và gọi RefreshTokenService để tạo và lưu refreshToken vào CSDL.
-6. **Trả về Response**: AuthService trả về một AuthResponse chứa cả hai token cho AuthController.
-7. **AuthController → Client**: Controller gửi response 200 OK kèm theo hai token về cho client để lưu trữ.
+1. **Client → AuthController**: User submits login credentials.
+2. **AuthController → AuthService**: Delegates business logic.
+3. **AuthService → AuthenticationManager**: Uses Spring Security to authenticate.
+   Internally calls `CustomUserDetailsService` to load user & verify password.
+4. **Returns Authentication**: If successful, roles & permissions are included.
+5. **Token generation**:
 
-### 4.2. Luồng Phân quyền (Authorization Flow)
+   * `JwtTokenProvider` creates **accessToken**
+   * `RefreshTokenService` creates & stores **refreshToken**
+6. **AuthService → AuthController**: Returns both tokens.
+7. **Controller → Client**: Sends 200 OK with tokens.
 
-Đây là quá trình xảy ra mỗi khi người dùng truy cập một endpoint được bảo vệ.
+---
+
+## 4.2. Authorization Flow
+
+This happens when the user tries to access a protected endpoint.
 
 ```mermaid
 sequenceDiagram
@@ -119,37 +141,39 @@ sequenceDiagram
     participant SpringSecurity as Security Engine
     participant GlobalExceptionHandler
 
-    Client->>JwtAuthFilter: DELETE /api/products/1 (Header: Authorization: Bearer ...)
+    Client->>JwtAuthFilter: DELETE /api/products/1 (Authorization: Bearer ...)
     JwtAuthFilter->>JwtTokenProvider: validateToken(jwt)
-    JwtTokenProvider-->>JwtAuthFilter: true
+    JwtTokenProvider-->>JwtAuthFilter: valid
     JwtAuthFilter->>CustomUserDetailsService: loadUserByUsername(email)
-    CustomUserDetailsService-->>JwtAuthFilter: return UserDetails (with authorities)
-    JwtAuthFilter->>SpringSecurity: Set Authentication in SecurityContextHolder
-    
-    Note over JwtAuthFilter, SpringSecurity: Request proceeds
+    CustomUserDetailsService-->>JwtAuthFilter: UserDetails (with authorities)
+    JwtAuthFilter->>SpringSecurity: set Authentication context
 
-    SpringSecurity->>ControllerMethod: Intercept call due to @PreAuthorize
-    Note over ControllerMethod: Check @PreAuthorize("hasAuthority('product:delete')")
-    
-    alt User has 'product:delete' permission
-        SpringSecurity->>ControllerMethod: Execute method
+    SpringSecurity->>ControllerMethod: Check @PreAuthorize
+    Note over ControllerMethod: @PreAuthorize("hasAuthority('product:delete')")
+
+    alt Has permission
+        SpringSecurity->>ControllerMethod: Execute
         ControllerMethod-->>Client: 204 No Content
-    else User does NOT have permission
-        SpringSecurity->>GlobalExceptionHandler: throw AccessDeniedException
+    else No permission
+        SpringSecurity->>GlobalExceptionHandler: AccessDeniedException
         GlobalExceptionHandler-->>Client: 403 Forbidden
     end
 ```
 
-#### 4.2.1 Diễn giải các bước
+:::note EEplain
 
-1. **Client → JwtAuthFilter**: Client gửi một request đến một endpoint được bảo vệ, đính kèm accessToken trong header Authorization.
-2. **JwtAuthFilter**: Bộ lọc chặn mọi request và thực hiện các bước sau:
-    - Trích xuất token từ header.
-    - Gọi JwtTokenProvider để xác thực token.
-    - Nếu token hợp lệ, gọi CustomUserDetailsService để tải thông tin UserDetails (bao gồm tất cả các Permission của người dùng).
-    - Tạo một đối tượng Authentication và đặt nó vào SecurityContextHolder.
-3. **Spring Security & @PreAuthorize**: Request tiếp tục đi đến Controller. Trước khi thực thi phương thức deleteProduct(), cơ chế bảo mật của Spring (được kích hoạt bởi @EnableMethodSecurity) sẽ chặn lại.
-4. **Kiểm tra Quyền hạn**: Đọc annotation @PreAuthorize("hasAuthority('product:delete')") và so sánh quyền hạn yêu cầu (product:delete) với danh sách các quyền hạn có trong đối tượng Authentication đã được JwtAuthFilter thiết lập.
-5. **Kết quả**:
-    - Nếu khớp: Phương thức Controller được phép thực thi.
-    - Nếu không khớp: Spring Security ném ra một AccessDeniedException. Lỗi này được GlobalExceptionHandler bắt lại và trả về response 403 Forbidden.
+1. Client sends request with JWT.
+2. `JwtAuthFilter`:
+
+   * Extracts token
+   * Validates it
+   * Loads user details with permissions
+   * Sets Authentication in `SecurityContextHolder`
+3. Spring Security intercepts controller call due to `@PreAuthorize`.
+4. Compares required permission (`product:delete`) with user’s authorities.
+5. Outcomes:
+
+   * **Match** → Method runs
+   * **No match** → `403 Forbidden`
+
+:::

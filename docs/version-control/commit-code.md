@@ -1,81 +1,90 @@
-# Hướng dẫn Tạo Commit Chuyên nghiệp
+# Professional Commit Guide
 
-## 1. Nguyên tắc Vàng: "Atomic Commits" (Commit Nguyên tử) ⚛️
+---
 
-Mỗi commit nên đại diện cho một thay đổi logic duy nhất, hoàn chỉnh và có thể hoạt động được. Tránh gộp nhiều thay đổi không liên quan vào một commit.
+## 1. Golden Rule: Atomic Commits ⚛️
 
-**Ví dụ:**
-Thay vì commit lớn:  
+Each commit should represent a single, logical, complete change that works on its own. Avoid bundling unrelated changes into one commit.
+
+**Example:**
+Instead of a big commit:
 `feat: Add Brand, Category and Product features`
 
-Hãy chia nhỏ thành các commit "nguyên tử":
+Split into atomic commits:
 
-- `feat(brand): Add Brand entity and repository`
-- `feat(category): Add Category entity with self-referencing relationship`
-- `feat(product): Add Product entity with relations to Brand and Category`
-- `feat(product): Implement ProductService logic`
-- `test(product): Add unit tests for ProductService`
+* `feat(brand): Add Brand entity and repository`
+* `feat(category): Add Category entity with self-referencing relationship`
+* `feat(product): Add Product entity with relations to Brand and Category`
+* `feat(product): Implement ProductService logic`
+* `test(product): Add unit tests for ProductService`
 
-**Lợi ích:**
+**Benefits:**
 
-- **Dễ dàng xem lại (Review):** Dễ kiểm tra thay đổi nhỏ và cụ thể.
-- **Dễ dàng hoàn tác (Revert):** Chỉ cần hoàn tác commit gây lỗi mà không ảnh hưởng chức năng khác.
-- **Lịch sử rõ ràng:** Giúp hiểu rõ quá trình phát triển.
+* **Easier reviews:** Small focused changes are quicker to review.
+* **Safer reverts:** Revert only the commit that caused the problem.
+* **Clear history:** Makes the project timeline understandable.
 
-## 2. Cấu trúc một Commit Message Tốt: "Conventional Commits" 📝
+---
 
-Quy chuẩn này giúp tự động tạo changelog và giữ lịch sử Git nhất quán.
+## 2. Good Commit Message Structure: Conventional Commits 📝
 
-**Cấu trúc:**  
+This convention helps generate changelogs automatically and keeps git history consistent.
+
+**Format:**
 `<type>(<scope>): <subject>`
 
-### a. **type (Loại thay đổi):**
+### a. **type (Change kind):**
 
-- `feat`: Tính năng mới (feature).
-- `fix`: Sửa lỗi (bug fix).
-- `docs`: Thay đổi tài liệu (documentation).
-- `style`: Định dạng code (formatting, white-space...), không ảnh hưởng logic.
-- `refactor`: Tái cấu trúc code, không thêm tính năng hay sửa lỗi.
-- `test`: Thêm/sửa bài kiểm thử (test case).
-- `chore`: Công việc vặt (ví dụ: cập nhật .gitignore, cấu hình build).
-- `build`: Thay đổi hệ thống build (ví dụ: pom.xml).
+* `feat` — new feature
+* `fix` — bug fix
+* `docs` — documentation
+* `style` — formatting (whitespace, lint, no logic changes)
+* `refactor` — code restructure, no new feature or bug fix
+* `test` — tests added/changed
+* `chore` — maintenance tasks (e.g. update .gitignore, build config)
+* `build` — build system changes (e.g. pom.xml)
 
-### b. **scope (Phạm vi - Tùy chọn):**
+### b. **scope (Optional):**
 
-Chỉ định module/feature bị ảnh hưởng, ví dụ: `(product)`, `(user)`, `(order)`, `(security)`, `(config)`.
+Indicates affected module/area, e.g. `(product)`, `(user)`, `(order)`, `(security)`, `(config)`.
 
-### c. **subject (Tiêu đề):**
+### c. **subject:**
 
-- Viết ở thì hiện tại, dạng mệnh lệnh (ví dụ: "Add" thay vì "Added" hay "Adding").
-- Viết hoa chữ cái đầu.
-- Ngắn gọn (dưới 50 ký tự).
-- Không có dấu chấm cuối.
+* Use imperative present tense (“Add” not “Added” or “Adding”).
+* Capitalize first letter.
+* Keep it short (under ~50 characters).
+* Don’t end with a period.
 
-## 3. Luồng làm việc Đề xuất (Suggested Workflow) 🚀
+---
 
-1. **Tạo Branch mới:** Luôn bắt đầu tính năng/sửa lỗi trên branch riêng. Đặt tên rõ ràng:
-    - `feature/add-brand-crud`
-    - `fix/login-authentication-bug`
+## 3. Suggested Workflow 🚀
 
-2. **Làm việc và Commit thường xuyên:** Sau mỗi thay đổi "nguyên tử", thực hiện `git add` và `git commit` ngay. Không đợi đến cuối ngày.
+1. **Create a branch:** Always start features/bugfixes on a separate branch. Name it clearly:
 
-3. **Viết Commit Message theo Chuẩn:** Tuân thủ cấu trúc Conventional Commits.
+   * `feature/add-brand-crud`
+   * `fix/login-authentication-bug`
 
-4. **Tạo Pull Request (hoặc Merge Request):** Đẩy branch lên và tạo Pull Request để review code.
+2. **Work & commit often:** After each atomic change, `git add` and `git commit`. Don’t wait until the end.
 
-5. **Merge vào Branch chính:** Sau khi được duyệt, merge vào branch chính (`develop` hoặc `main`).
+3. **Write standardized commit messages:** Follow Conventional Commits.
 
-## 4. Ví dụ Thực tế cho Dự án Laptech
+4. **Open a Pull Request (PR):** Push branch and create PR for code review.
 
-Nhiệm vụ: "Xây dựng các chức năng CRUD cho Brand". Chuỗi commit có thể như sau:
+5. **Merge to main:** After approval, merge into `develop` or `main`.
 
-- `feat(brand): Add Brand entity with JPA and Lombok setup`
-- `feat(brand): Create BrandRepository interface`
-- `feat(brand): Add DTO records and MapStruct mapper for Brand`
-- `feat(brand): Implement BrandService with CRUD business logic`
-- `feat(brand): Create BrandController with REST endpoints`
-- `docs(brand): Add Swagger documentation for Brand APIs`
-- `test(brand): Add unit tests for BrandServiceImpl`
-- `test(brand): Add integration tests for BrandController`
-- `refactor(common): Move SlugGenerator to common util package`
-- `fix(brand): Correctly handle unique slug generation in BrandService`
+---
+
+## 4. Real-world Example (Laptech project)
+
+Task: “Build CRUD for Brand”. A possible commit sequence:
+
+* `feat(brand): Add Brand entity with JPA and Lombok setup`
+* `feat(brand): Create BrandRepository interface`
+* `feat(brand): Add DTO records and MapStruct mapper for Brand`
+* `feat(brand): Implement BrandService with CRUD business logic`
+* `feat(brand): Create BrandController with REST endpoints`
+* `docs(brand): Add Swagger documentation for Brand APIs`
+* `test(brand): Add unit tests for BrandServiceImpl`
+* `test(brand): Add integration tests for BrandController`
+* `refactor(common): Move SlugGenerator to common util package`
+* `fix(brand): Correctly handle unique slug generation in BrandService`

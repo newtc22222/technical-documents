@@ -1,21 +1,22 @@
-# Tích hợp Spring Data JPA và Lombok
+# Integrating Spring Data JPA and Lombok
 
-Tài liệu này cung cấp một hướng dẫn toàn diện về cách kết hợp sức mạnh của Spring Data JPA và thư viện Lombok để xây dựng các lớp Entity một cách hiệu quả, sạch sẽ và an toàn.
-
----
-
-## 1. Tại sao nên kết hợp JPA và Lombok?
-
-- **Spring Data JPA** giúp đơn giản hóa tầng truy cập dữ liệu bằng cách cung cấp các Repository mạnh mẽ, giảm thiểu việc phải viết các câu lệnh SQL thủ công.
-- **Lombok** là một thư viện giúp giảm thiểu code lặp lại (boilerplate code) bằng cách tự động tạo ra các phương thức như getters, setters, constructors, `toString()`... thông qua các annotation.
-
-Khi kết hợp, chúng ta có được các lớp Entity vừa mạnh mẽ về mặt chức năng, vừa cực kỳ gọn gàng và dễ đọc. Tuy nhiên, việc kết hợp này đòi hỏi sự cẩn thận để tránh các cạm bẫy phổ biến liên quan đến vòng đời của Entity.
+This document provides a comprehensive guide on how to combine the power of **Spring Data JPA** and **Lombok** to build clean, efficient, and safe Entity classes.
 
 ---
 
-## 2. Thiết lập Dự án
+## 1. Why Combine JPA and Lombok?
 
-Để bắt đầu, hãy đảm bảo file `pom.xml` của bạn có đầy đủ các dependency và cấu hình plugin cần thiết.
+* **Spring Data JPA** simplifies the data access layer by providing powerful repositories and removing most manual SQL.
+* **Lombok** reduces boilerplate code by generating getters, setters, constructors, and `toString()` via annotations.
+
+When combined, your entities become both functional and clean.
+However — this combo requires careful handling to avoid common pitfalls in the entity lifecycle.
+
+---
+
+## 2. Project Setup
+
+Make sure your `pom.xml` includes the necessary dependencies and compiler plugin configuration.
 
 ### Dependencies
 
@@ -34,9 +35,9 @@ Khi kết hợp, chúng ta có được các lớp Entity vừa mạnh mẽ về
 </dependency>
 ```
 
-#### Cấu hình Maven Compiler Plugin
+### Maven Compiler Plugin Configuration
 
-Đây là bước **quan trọng nhất** để đảm bảo Lombok có thể tạo code trong quá trình biên dịch.
+This is **critical** — Lombok generates code at compile time, and the annotation processor must be enabled.
 
 ```xml
 <build>
@@ -46,16 +47,16 @@ Khi kết hợp, chúng ta có được các lớp Entity vừa mạnh mẽ về
             <artifactId>maven-compiler-plugin</artifactId>
             <version>3.11.0</version>
             <configuration>
-                <source>17</source> <!-- Hoặc phiên bản Java của bạn -->
+                <source>17</source> <!-- Or your Java version -->
                 <target>17</target>
                 <annotationProcessorPaths>
-                    <!-- Processor của Lombok -->
+                    <!-- Lombok annotation processor -->
                     <path>
                         <groupId>org.projectlombok</groupId>
                         <artifactId>lombok</artifactId>
                         <version>${lombok.version}</version>
                     </path>
-                    <!-- Các processor khác nếu có, ví dụ MapStruct -->
+                    <!-- Other processors (e.g., MapStruct) go here -->
                 </annotationProcessorPaths>
             </configuration>
         </plugin>
@@ -63,39 +64,65 @@ Khi kết hợp, chúng ta có được các lớp Entity vừa mạnh mẽ về
 </build>
 ```
 
-**Lưu ý:** Trong IntelliJ IDEA, bạn cần phải kích hoạt "Annotation Processing" trong phần `Settings > Build, Execution, Deployment > Compiler > Annotation Processors`.
+> **Note:** In IntelliJ, enable annotation processing:
+> `Settings → Build, Execution, Deployment → Compiler → Annotation Processors`.
 
 ---
 
-## 3. Best Practice khi xây dựng Entity
+## 3. Best Practices for Entity Design
 
-Dưới đây là các nguyên tắc và thực hành tốt nhất khi định nghĩa một lớp Entity. Chúng ta sẽ sử dụng `Product` entity làm ví dụ.
-
-### a. Các Annotation Lombok cơ bản
-
-- `@Getter`, `@Setter`: An toàn để sử dụng, giúp tạo getter và setter cho các trường.
-- `@NoArgsConstructor`: **Bắt buộc**. JPA yêu cầu một constructor không tham số để có thể khởi tạo các đối tượng entity.
-- `@AllArgsConstructor`, `@Builder`: Rất hữu ích cho việc tạo dữ liệu mẫu (seeding) và viết test case.
-
-### b. Xử lý các Mối quan hệ (`@ToString`)
-
-- **Vấn đề:** Sử dụng `@ToString` mặc định của Lombok trên một entity có các mối quan hệ được tải lười (`fetch = FetchType.LAZY`) có thể gây ra lỗi `LazyInitializationException`. Lỗi này xảy ra khi phương thức `toString()` cố gắng truy cập vào một collection chưa được tải từ CSDL trong khi transaction đã bị đóng.
-- **Giải pháp (Best Practice):** Luôn ghi đè phương thức `toString()` thủ công hoặc sử dụng `@ToString.Exclude` của Lombok để loại bỏ các trường quan hệ khỏi phương thức này.
-
-### c. Xử lý `equals()` và `hashCode()` (Quan trọng nhất)
-
-- **Vấn đề:** Sử dụng `@EqualsAndHashCode` mặc định của Lombok là **rất nguy hiểm** cho JPA entity.
-    1. **Vấn đề với `hashCode()`:** Hash code của một entity sẽ thay đổi khi nó được lưu vào CSDL (vì trường `id` thay đổi từ `null` thành một giá trị). Điều này phá vỡ "hợp đồng" của `hashCode` và gây ra hành vi không mong muốn khi sử dụng entity trong các `HashSet` hoặc `HashMap`.
-    2. **Vấn đề với `equals()`:** Nếu `equals()` so sánh các trường quan hệ, nó có thể gây ra các vòng lặp vô hạn hoặc `LazyInitializationException`.
-- **Giải pháp (Best Practice):** Luôn ghi đè hai phương thức này thủ công.
-  - **`equals()`:** Chỉ nên so sánh dựa trên trường `@Id`. Phải xử lý đúng trường hợp `id` là `null`.
-  - **`hashCode()`:** Nên trả về một giá trị hằng số (ví dụ: `getClass().hashCode()`) để đảm bảo hash code của một đối tượng **không bao giờ thay đổi** trong suốt vòng đời của nó.
+Here are the best practices for creating a proper Entity class.
+We’ll use a `Product` entity as the example.
 
 ---
 
-## 4. Ví dụ: Entity `Product` hoàn chỉnh
+### a. Essential Lombok Annotations
 
-Dưới đây là một ví dụ về `Product` entity áp dụng tất cả các best practice đã thảo luận.
+* `@Getter`, `@Setter` — safe and recommended
+* `@NoArgsConstructor` — **mandatory** for JPA (required for proxying and reflection)
+* `@AllArgsConstructor`, `@Builder` — great for seeding and testing
+
+---
+
+### b. Handling Relationships (`@ToString`)
+
+**The Problem:**
+Using Lombok’s default `@ToString` in an entity with lazy-loaded relationships can trigger `LazyInitializationException`.
+Why? Because `toString()` accesses fields that JPA hasn't loaded yet after the entity manager is closed.
+
+**Best Practice:**
+
+* Override `toString()` manually **or**
+* Use `@ToString.Exclude` on relationship fields
+
+---
+
+### c. Handling `equals()` and `hashCode()` — the MOST important part
+
+**Why default Lombok is dangerous:**
+
+1. **`hashCode()` issue:**
+   The hash changes when an entity is persisted (because `id` changes from `null` to a value).
+   This can break collections like `HashSet` and `HashMap`.
+
+2. **`equals()` issue:**
+   Comparing relationship fields in `equals()` can:
+
+   * cause infinite loops
+   * trigger `LazyInitializationException`
+   * break JPA persistence identity rules
+
+**Best Practice:**
+Write both methods manually:
+
+* `equals()` compares only the ID — and only when it isn’t null
+* `hashCode()` returns a **constant per-class hash** to ensure consistency
+
+This is the same strategy used by Hibernate and recommended by Vlad Mihalcea.
+
+---
+
+## 4. Full Example: `Product` Entity (Best Practice)
 
 ```java
 package com.laptech.product.entity;
@@ -131,13 +158,13 @@ public class Product extends BaseEntity {
     @Column(unique = true, nullable = false)
     private String sku;
 
-    // ... các trường khác như description, price, stockQuantity ...
+    // ... other fields: description, price, stockQuantity ...
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(columnDefinition = "json")
     private Map<String, Object> specifications;
 
-    // --- Các mối quan hệ ---
+    // --- Relationships ---
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id", nullable = false)
     private Category category;
@@ -145,26 +172,26 @@ public class Product extends BaseEntity {
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<ProductImage> images;
 
-    // --- Best Practice cho equals(), hashCode() và toString() ---
+    // --- Best practices for equals(), hashCode(), toString() ---
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Product product = (Product) o;
-        // Chỉ so sánh nếu id không null.
+        // Compare only when id is not null
         return id != null && id.equals(product.id);
     }
 
     @Override
     public int hashCode() {
-        // Trả về một giá trị hằng số để đảm bảo tính nhất quán.
+        // Return a constant hash per class to avoid changes after persistence
         return getClass().hashCode();
     }
 
     @Override
     public String toString() {
-        // Chỉ bao gồm các trường an toàn, không gây ra Lazy Loading.
+        // Include only safe fields (avoid lazy-loaded relationships)
         return "Product{" +
                 "id=" + id +
                 ", name='" + name + '\'' +
@@ -172,3 +199,4 @@ public class Product extends BaseEntity {
                 '}';
     }
 }
+```
