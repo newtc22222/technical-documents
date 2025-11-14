@@ -1,0 +1,47 @@
+:root {
+  --ifm-color-primary: #034694; /* Chelsea blue */
+  --ifm-color-primary-dark: #023474;
+  --ifm-color-primary-darker: #022e65;
+  --ifm-color-primary-darkest: #021f44;
+  --ifm-color-primary-light: #1569c7;
+  --ifm-color-primary-lighter: #338fff;
+  --ifm-color-primary-lightest: #cce1ff;
+  --ifm-background-color: #ffffff; /* White background */
+  --ifm-navbar-background-color: #034694;
+  --ifm-navbar-link-color: #ffffff;
+  --ifm-footer-background: #034694;
+  --ifm-footer-color: #ffd700; /* Optional: gold accent */
+  --ifm-code-font-size: 95%;
+  --docusaurus-highlighted-code-line-bg: rgba(
+    3,
+    70,
+    148,
+    0.08
+  ); /* light blue tint for code lines */
+  --navbar-link-hover: #ffd700; /* Chelsea gold/yellow */
+}
+
+.navbar__link:hover,
+.navbar__link--active {
+  color: var(--navbar-link-hover) !important;
+  text-decoration: underline; /* optional: make it stand out */
+  background: none !important; /* remove background highlight if any */
+}
+
+/* For dark mode: black, teal, and white */
+[data-theme="dark"] {
+  --ifm-color-primary: #14bdbd; /* Vibrant teal */
+  --ifm-color-primary-dark: #119e9e;
+  --ifm-color-primary-darker: #137c7c;
+  --ifm-color-primary-darkest: #054545;
+  --ifm-color-primary-light: #3fd6d6;
+  --ifm-color-primary-lighter: #70e5e5;
+  --ifm-color-primary-lightest: #b2ffff;
+  --ifm-background-color: #090d14; /* Nearly black */
+  --ifm-navbar-background-color: #090d14;
+  --ifm-navbar-link-color: #ffffff;
+  --ifm-footer-background: #090d14;
+  --ifm-footer-color: #14bdbd;
+  --ifm-code-font-size: 95%;
+  --docusaurus-highlighted-code-line-bg: rgba(20, 189, 189, 0.12);
+}
