@@ -1,0 +1,9 @@
+{
+  "label": "API Reference",
+  "position": 5,
+  "collapsed": true,
+  "link": {
+    "type": "generated-index",
+    "description": "Comprehensive details of Laptech's API endpoints and usage."
+  }
+}
