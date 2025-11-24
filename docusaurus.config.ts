@@ -86,11 +86,22 @@ const config: Config = {
       items: [
         {
           type: "docSidebar",
-          sidebarId: "tutorialSidebar",
+          sidebarId: "laptech",
           position: "left",
-          label: "Topics",
+          label: "Laptech",
         },
-        // { to: "blog", label: "Blogs", position: "left" },
+        {
+          type: "docSidebar",
+          sidebarId: "flashcardLearning",
+          position: "left",
+          label: "Flashcard Learning",
+        },
+        {
+          type: "docSidebar",
+          sidebarId: "knowledge",
+          position: "left",
+          label: "Guides",
+        },
         {
           href: "https://github.com/newtc22222",
           label: "GitHub",
