@@ -8,7 +8,7 @@ Tài liệu này tổng hợp các câu hỏi và câu trả lời liên quan đ
 
 Chiến lược hiệu quả nhất cho một ứng dụng hiện đại là tuân theo mô hình "Kim tự tháp Kiểm thử" (Testing Pyramid). Mô hình này giúp chúng ta phân bổ nỗ lực một cách hợp lý, đảm bảo độ bao phủ cao mà không làm chậm quá trình phát triển.
 
-![testing-case](../_assets/testing-case_licensed-image.jpg)
+![testing-case](../../_assets/testing-case_licensed-image.jpg)
 
 Kim tự tháp gồm 3 tầng chính:
 

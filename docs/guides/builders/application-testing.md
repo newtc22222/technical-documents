@@ -8,7 +8,7 @@ This document summarizes key questions and answers regarding how to design an ef
 
 The most effective strategy for a modern application is following the **Testing Pyramid**. This model helps distribute testing effort wisely, ensuring high coverage without slowing down development.
 
-![testing-case](../_assets/testing-case_licensed-image.jpg)
+![testing-case](../../_assets/testing-case_licensed-image.jpg)
 
 The pyramid has 3 main layers:
 
