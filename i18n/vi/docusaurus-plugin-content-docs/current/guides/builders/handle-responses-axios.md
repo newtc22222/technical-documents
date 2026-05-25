@@ -40,8 +40,6 @@ Bây giờ, trong các component React của bạn, bạn sẽ import và sử d
 * **Backend trả về:** `200 OK` với một mảng các `BrandDTO`.
 * **UI xử lý:** Lấy dữ liệu từ `response.data` và cập nhật state.
 
-<!-- end list -->
-
 ```javascript
 import React, { useState, useEffect } from 'react';
 import apiClient from './api/axiosConfig';
@@ -87,8 +85,6 @@ function BrandList() {
 * **Backend trả về:** `201 Created` với `BrandDTO` vừa được tạo.
 * **UI xử lý:** Gửi dữ liệu request, sau đó cập nhật state với dữ liệu trả về.
 
-<!-- end list -->
-
 ```javascript
 const createNewBrand = async (brandData) => {
   try {
@@ -117,8 +113,6 @@ const createNewBrand = async (brandData) => {
 * **Backend trả về:** `200 OK` với `BrandDTO` đã được cập nhật.
 * **UI xử lý:** Tìm và thay thế thương hiệu trong state với dữ liệu mới.
 
-<!-- end list -->
-
 ```javascript
 const updateBrand = async (brandId, updatedData) => {
   try {
@@ -143,8 +137,6 @@ const updateBrand = async (brandId, updatedData) => {
 
 * **Backend trả về:** `204 No Content`. Đây là điểm quan trọng, **response sẽ không có body (`response.data` sẽ là `undefined`)**.
 * **UI xử lý:** Kiểm tra `status code` là 204 và loại bỏ thương hiệu khỏi state.
-
-<!-- end list -->
 
 ```javascript
 const deleteBrand = async (brandId) => {
