@@ -1,8 +1,8 @@
-# Thiết lập i18n (quốc tế hóa) trong Docusaurus
+# Setting up i18n (internationalization) in Docusaurus
 
-## Bước 0: Chuẩn bị dự án Docusaurus mới (nếu chưa có)
+## Step 0: Prepare a new Docusaurus project (if you don’t have one)
 
-Nếu bạn chưa có dự án, tạo nhanh một cái đơn giản.
+If you don’t have a project yet, quickly create a simple one.
 
 ```bash
 npx create-docusaurus@latest my-site classic
@@ -10,24 +10,24 @@ cd my-site
 npm install
 ```
 
-Cấu trúc ban đầu:
+Initial structure:
 
 ```txt
 my-site/
 ├── docusaurus.config.js
 ├── docs/
-│   └── intro.md  # Nội dung mẫu: "Hello from Docusaurus"
+│   └── intro.md  # Sample content: "Hello from Docusaurus"
 ├── src/
 │   └── pages/
 │       └── index.js
 └── package.json
 ```
 
-Chạy thử: `npm run start` → Truy cập <http://localhost:3000> để xem site mặc định.
+Run it: `npm run start` → Open <http://localhost:3000> to see the default site.
 
-## Bước 1: Bật i18n trong config (Demo cấu hình cơ bản)
+## Step 1: Enable i18n in config (Basic configuration demo)
 
-Mở `docusaurus.config.js` và thêm phần i18n. Đây là demo đầy đủ với 2 ngôn ngữ.
+Open `docusaurus.config.js` and add the i18n section. This is a full demo with 2 languages.
 
 ```js
 // @ts-check
@@ -44,9 +44,9 @@ const config = {
 
   onBrokenLinks: 'throw',
 
-  i18n: {  // <--- Demo i18n ở đây
-    defaultLocale: 'vi',  // Tiếng Việt là mặc định
-    locales: ['vi', 'en'],  // Hỗ trợ vi và en
+  i18n: {  // <--- i18n demo here
+    defaultLocale: 'vi',  // Vietnamese as default
+    locales: ['vi', 'en'],  // Support vi and en
     localeConfigs: {
       vi: {
         label: 'Tiếng Việt',
@@ -109,7 +109,7 @@ const config = {
             position: 'right',
           },
           {
-            type: 'localeDropdown',  // <--- Thêm dropdown ngôn ngữ
+            type: 'localeDropdown',  // <--- Add language dropdown
             position: 'right',
           },
         ],
@@ -117,7 +117,7 @@ const config = {
       footer: {
         style: 'dark',
         links: [
-          // ... (giữ nguyên)
+          // ... (keep unchanged)
         ],
         copyright: `Copyright © ${new Date().getFullYear()} My Project, Inc. Built with Docusaurus.`,
       },
@@ -131,14 +131,14 @@ const config = {
 export default config;
 ```
 
-**Demo chạy:** `npm run start` → Bây giờ site có dropdown ngôn ngữ, nhưng chưa có bản dịch nên en sẽ fallback về vi.
+**Demo run:** `npm run start` → Now the site has a language dropdown, but there are no translations yet so en will fallback to vi.
 
-## Bước 2: Tạo cấu trúc thư mục cho bản dịch (Demo tách docs)
+## Step 2: Create the translation folder structure (Docs split demo)
 
-Giả sử docs gốc (`docs/intro.md`) đang bằng tiếng Việt. Chúng ta sẽ copy sang en để dịch.
+Assuming the original docs (`docs/intro.md`) are in Vietnamese. We will copy them to en for translation.
 
-**Nội dung demo cho docs gốc (tiếng Việt):**
-Mở `docs/intro.md` và viết:
+**Sample original docs content (Vietnamese):**
+Open `docs/intro.md` and write:
 
 ```md
 ---
@@ -150,19 +150,19 @@ sidebar_position: 1
 Xin chào! Đây là tài liệu mẫu bằng tiếng Việt.
 ```
 
-**Lệnh demo để tách sang en:**
+**Demo commands to split into en:**
 
 ```bash
-# Tạo file JSON bản dịch cơ bản cho en
+# Create the base translation JSON for en
 npm run write-translations -- --locale en
 
-# Copy docs tiếng Việt sang thư mục en để dịch
+# Copy Vietnamese docs into the en folder for translation
 mkdir -p i18n/en/docusaurus-plugin-content-docs/current
 cp -r docs/* i18n/en/docusaurus-plugin-content-docs/current/
 ```
 
-**Dịch demo cho en:**
-Mở `i18n/en/docusaurus-plugin-content-docs/current/intro.md` và sửa thành:
+**Demo translation for en:**
+Open `i18n/en/docusaurus-plugin-content-docs/current/intro.md` and change it to:
 
 ```md
 ---
@@ -174,42 +174,42 @@ sidebar_position: 1
 Hello! This is a sample document in English.
 ```
 
-**Cấu trúc thư mục sau demo:**
+**Folder structure after the demo:**
 
 ```txt
 my-site/
-├── docs/  # Tiếng Việt (default)
+├── docs/  # Vietnamese (default)
 │   └── intro.md
 ├── i18n/
 │   └── en/
-│       ├── code.json  # Bản dịch code blocks (tạo tự động)
+│       ├── code.json  # Auto-generated code block translations
 │       └── docusaurus-plugin-content-docs/
 │           └── current/
-│               └── intro.md  # Tiếng Anh
+│               └── intro.md  # English
 └── ...
 ```
 
-**Demo chạy:**
+**Demo run:**
 
-- `npm start -- --locale en` → <http://localhost:3000/en/docs/intro> (xem tiếng Anh)
-- `npm start` → <http://localhost:3000/docs/intro> (tiếng Việt)
+- `npm start -- --locale en` → <http://localhost:3000/en/docs/intro> (English)
+- `npm start` → <http://localhost:3000/docs/intro> (Vietnamese)
 
-## Bước 3: Dịch giao diện (navbar, footer, etc.) (Demo với JSON)
+## Step 3: Translate UI text (navbar, footer, etc.) (JSON demo)
 
-Chạy lệnh để tạo file JSON bản dịch.
+Run the command to generate translation JSON files.
 
-**Lệnh demo:**
+**Demo command:**
 
 ```bash
-npm run write-translations  # Tạo cho tất cả locales
+npm run write-translations  # Generate for all locales
 ```
 
-Nó sẽ tạo các file như:
+It will create files like:
 
-- `i18n/vi/docusaurus-theme-classic/navbar.json` (tiếng Việt - nhưng vì default, có thể skip)
-- `i18n/en/docusaurus-theme-classic/navbar.json` (tiếng Anh)
+- `i18n/vi/docusaurus-theme-classic/navbar.json` (Vietnamese - can skip because default)
+- `i18n/en/docusaurus-theme-classic/navbar.json` (English)
 
-**Demo nội dung cho `i18n/en/docusaurus-theme-classic/navbar.json`:**
+**Sample content for `i18n/en/docusaurus-theme-classic/navbar.json`:**
 
 ```json
 {
@@ -232,17 +232,17 @@ Nó sẽ tạo các file như:
 }
 ```
 
-Dịch sang tiếng Anh (thực ra đã là en rồi, nhưng nếu cần tùy chỉnh, bạn sửa "message").
+Translate to English (it is already en, but if customization is needed, edit the `message` values).
 
-Tương tự cho `footer.json`, `current.json` (cho docs labels).
+Similarly for `footer.json` and `current.json` (for docs labels).
 
-**Demo chạy:** Khởi động lại site, dropdown sẽ hiển thị label đúng (English vs Tiếng Việt).
+**Demo run:** Restart the site, and the dropdown will show the correct labels (English vs Tiếng Việt).
 
-## Bước 4: Thêm trang tĩnh đa ngôn ngữ (Demo cho src/pages)
+## Step 4: Add multilingual static pages (src/pages demo)
 
-Giả sử bạn có trang chủ `src/pages/index.js` bằng tiếng Việt.
+Assume you have a homepage `src/pages/index.js` in Vietnamese.
 
-**Demo code cho `src/pages/index.js` (tiếng Việt):**
+**Sample code for `src/pages/index.js` (Vietnamese):**
 
 ```js
 import React from 'react';
@@ -257,14 +257,14 @@ export default function Home() {
 }
 ```
 
-**Tạo phiên bản en:**
-Tạo thư mục `i18n/en/docusaurus-plugin-content-pages/` và file `index.md` (hoặc .js nếu dùng React).
+**Create the en version:**
+Create the `i18n/en/docusaurus-plugin-content-pages/` folder and an `index.md` file (or `.js` if using React).
 
 ```bash
 mkdir -p i18n/en/docusaurus-plugin-content-pages
 ```
 
-Nội dung `i18n/en/docusaurus-plugin-content-pages/index.md`:
+Content for `i18n/en/docusaurus-plugin-content-pages/index.md`:
 
 ```md
 ---
@@ -274,31 +274,31 @@ title: Home
 Hello from the English home page!
 ```
 
-**Demo chạy:**
+**Demo run:**
 
-- <http://localhost:3000/> (tiếng Việt)
-- <http://localhost:3000/en/> (tiếng Anh)
+- <http://localhost:3000/> (Vietnamese)
+- <http://localhost:3000/en/> (English)
 
-## Bước 5: Build và deploy (Demo production)
+## Step 5: Build and deploy (Production demo)
 
 ```bash
 npm run build
 ```
 
-Kết quả trong `build/`:
+Result in `build/`:
 
-- `build/index.html` → Tiếng Việt
-- `build/en/index.html` → Tiếng Anh
+- `build/index.html` → Vietnamese
+- `build/en/index.html` → English
 
-Deploy lên Netlify/Github Pages: Thêm baseUrl đúng, và site sẽ tự redirect dựa trên browser locale nếu cấu hình.
+Deploy to Netlify/GitHub Pages: set the correct baseUrl, and the site will redirect based on browser locale if configured.
 
-## Bước 6: Tích hợp Crowdin (Demo tự động hóa - optional)
+## Step 6: Integrate Crowdin (Automation demo - optional)
 
-Cài plugin: `npm install @docusaurus/plugin-client-redirects`
+Install the plugin: `npm install @docusaurus/plugin-client-redirects`
 
-Config Crowdin: Tạo project trên crowdin.com, liên kết với GitHub.
+Configure Crowdin: create a project on crowdin.com and connect it to GitHub.
 
-**Demo script trong package.json:**
+**Demo script in package.json:**
 
 ```json
 "scripts": {
@@ -307,7 +307,7 @@ Config Crowdin: Tạo project trên crowdin.com, liên kết với GitHub.
 }
 ```
 
-Chạy: `npm run crowdin:upload` để push nguồn lên Crowdin, sau khi dịch xong pull về.
+Run: `npm run crowdin:upload` to push source files to Crowdin, then pull translations back when complete.
 
 ---
 
