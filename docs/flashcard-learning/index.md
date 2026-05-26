@@ -8,7 +8,7 @@ description: Overview of the authentication module in the Flashcard Learning.
 
 The Authentication Module is part of the Laptech API, a Spring Boot-based backend service. It handles user registration, login, JWT-based authentication, refresh tokens, and session management. This module ensures secure access to the API using access tokens and HttpOnly cookies for refresh tokens.
 
-### Key Features hehe
+## Key Features
 
 - User registration with validation.
 - Login with JWT access tokens.
