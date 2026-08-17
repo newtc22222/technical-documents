@@ -30,10 +30,6 @@ Read **in order** if you are new to the review; jump by file if you are executin
 | 07 | [07-frontend-quality.md](./07-frontend-quality.md) | F-12 data-access, F-13 streaks, UX consistency, FE tests |
 | 08 | [08-product-roadmap.md](./08-product-roadmap.md) | Phase 2–5 features gated by foundation work |
 | 09 | [09-implementation-backlog.md](./09-implementation-backlog.md) | Ordered backlog with effort, owners, acceptance criteria |
-| — | [kickoff-prompt-security-stack.md](./kickoff-prompt-security-stack.md) | Paste-ready agent prompt for security stack (#44–#46) — implemented on `fix/horizon-a-security-stack` |
-| — | [kickoff-prompt-a5-transactions.md](./kickoff-prompt-a5-transactions.md) | A5 single transaction owner (#48) — paste-ready prompt |
-| — | [kickoff-prompt-a6-seed-ownership.md](./kickoff-prompt-a6-seed-ownership.md) | A6 seed ownership / entrypoint (#49) — paste-ready prompt |
-| — | [kickoff-prompt-a7-docs-skills.md](./kickoff-prompt-a7-docs-skills.md) | A7 docs/skills (#50) — paste-ready prompt; implement on `docs/horizon-a-agent-skills-a7` |
 
 ---
 
