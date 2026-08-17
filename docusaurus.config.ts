@@ -86,6 +86,12 @@ const config: Config = {
       items: [
         {
           type: "docSidebar",
+          sidebarId: "ffRestaurent",
+          position: "left",
+          label: "FF RESTaurent",
+        },
+        {
+          type: "docSidebar",
           sidebarId: "laptech",
           position: "left",
           label: "Laptech",
@@ -119,10 +125,12 @@ const config: Config = {
       darkTheme: prismThemes.vsDark,
       additionalLanguages: [
         "bash",
+        "diff",
         "docker",
         "java",
         "markdown",
         "mermaid",
+        "powershell",
         "sql",
         "yaml",
       ],
