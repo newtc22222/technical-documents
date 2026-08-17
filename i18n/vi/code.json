@@ -325,5 +325,40 @@
   "theme.tags.tagsPageTitle": {
     "message": "Thẻ",
     "description": "The title of the tag list page"
+  },
+  "theme.SearchBar.noResultsText": {
+    "message": "Không tìm thấy kết quả nào"
+  },
+  "theme.SearchBar.seeAllOutsideContext": {
+    "message": "Xem tất cả kết quả bên ngoài \"{context}\""
+  },
+  "theme.SearchBar.searchInContext": {
+    "message": "Xem tất cả kết quả bên trong \"{context}\""
+  },
+  "theme.SearchBar.seeAll": {
+    "message": "Xem tất cả kết quả được tìm thấy"
+  },
+  "theme.SearchBar.label": {
+    "message": "Tìm kiếm...",
+    "description": "The ARIA label and placeholder for search button"
+  },
+  "theme.SearchPage.existingResultsTitle": {
+    "message": "Tìm kiếm theo tiêu đề: \"{query}\"",
+    "description": "The search page title for non-empty query"
+  },
+  "theme.SearchPage.emptyResultsTitle": {
+    "message": "Tìm kiếm theo tiêu đề",
+    "description": "The search page title for empty query"
+  },
+  "theme.SearchPage.searchContext.everywhere": {
+    "message": "Mọi nơi"
+  },
+  "theme.SearchPage.documentsFound.plurals": {
+    "message": "Có {count} kết quả được tìm thấy",
+    "description": "Pluralized label for \"{count} documents found\". Use as much plural forms (separated by \"|\") as your language support (see https://www.unicode.org/cldr/cldr-aux/charts/34/supplemental/language_plural_rules.html)"
+  },
+  "theme.SearchPage.noResultsText": {
+    "message": "Không tìm thấy kết quả nào",
+    "description": "The paragraph for empty search result"
   }
 }

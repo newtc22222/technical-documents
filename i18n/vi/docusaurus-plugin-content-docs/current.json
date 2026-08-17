@@ -1,7 +1,7 @@
 {
   "version.label": {
     "message": "Tiếp theo",
-    "description": "Nhãn hiển thị cho phiên bản hiện tại"
+    "description": "The label for version current"
   },
   "sidebar.tutorialSidebar.category.Building App": {
     "message": "Xây dựng Ứng dụng",
@@ -34,5 +34,81 @@
   "sidebar.tutorialSidebar.category.Version Control.link.generated-index.description": {
     "message": "Hướng dẫn quản lý dự án một cách chuẩn hóa",
     "description": "Mô tả cho trang generated-index của danh mục 'Version Control' trong sidebar 'tutorialSidebar'"
+  },
+  "sidebar.ffRestaurent.category.Development": {
+    "message": "Phát triển",
+    "description": "The label for category 'Development' in sidebar 'ffRestaurent'"
+  },
+  "sidebar.ffRestaurent.category.Domain Contracts": {
+    "message": "Quy chuẩn Nghiệp vụ",
+    "description": "The label for category 'Domain Contracts' in sidebar 'ffRestaurent'"
+  },
+  "sidebar.ffRestaurent.category.Deployment & Infrastructure": {
+    "message": "Triển khai & Hạ tầng",
+    "description": "The label for category 'Deployment & Infrastructure' in sidebar 'ffRestaurent'"
+  },
+  "sidebar.ffRestaurent.category.Runbooks & Operations": {
+    "message": "Quy trình & Vận hành",
+    "description": "The label for category 'Runbooks & Operations' in sidebar 'ffRestaurent'"
+  },
+  "sidebar.ffRestaurent.category.Performance": {
+    "message": "Hiệu năng",
+    "description": "The label for category 'Performance' in sidebar 'ffRestaurent'"
+  },
+  "sidebar.ffRestaurent.category.Releases": {
+    "message": "Bản phát hành",
+    "description": "The label for category 'Releases' in sidebar 'ffRestaurent'"
+  },
+  "sidebar.ffRestaurent.category.Archive": {
+    "message": "Lưu trữ",
+    "description": "The label for category 'Archive' in sidebar 'ffRestaurent'"
+  },
+  "sidebar.laptech.category.Overview": {
+    "message": "Overview",
+    "description": "The label for category 'Overview' in sidebar 'laptech'"
+  },
+  "sidebar.laptech.category.Setup & Installation": {
+    "message": "Setup & Installation",
+    "description": "The label for category 'Setup & Installation' in sidebar 'laptech'"
+  },
+  "sidebar.laptech.category.API Reference": {
+    "message": "API Reference",
+    "description": "The label for category 'API Reference' in sidebar 'laptech'"
+  },
+  "sidebar.laptech.category.API Reference.link.generated-index.description": {
+    "message": "Comprehensive details of Laptech's API endpoints and usage.",
+    "description": "The generated-index page description for category 'API Reference' in sidebar 'laptech'"
+  },
+  "sidebar.knowledge.category.Building App": {
+    "message": "Building App",
+    "description": "The label for category 'Building App' in sidebar 'knowledge'"
+  },
+  "sidebar.knowledge.category.Building App.link.generated-index.description": {
+    "message": "System Design knowledge",
+    "description": "The generated-index page description for category 'Building App' in sidebar 'knowledge'"
+  },
+  "sidebar.knowledge.category.Libraries and Features": {
+    "message": "Libraries and Features",
+    "description": "The label for category 'Libraries and Features' in sidebar 'knowledge'"
+  },
+  "sidebar.knowledge.category.Libraries and Features.link.generated-index.description": {
+    "message": "How to use ... in application?",
+    "description": "The generated-index page description for category 'Libraries and Features' in sidebar 'knowledge'"
+  },
+  "sidebar.knowledge.category.LLM Prompting": {
+    "message": "LLM Prompting",
+    "description": "The label for category 'LLM Prompting' in sidebar 'knowledge'"
+  },
+  "sidebar.knowledge.category.LLM Prompting.link.generated-index.description": {
+    "message": "Expand what you should show for the THING not be human",
+    "description": "The generated-index page description for category 'LLM Prompting' in sidebar 'knowledge'"
+  },
+  "sidebar.knowledge.category.Version Control": {
+    "message": "Version Control",
+    "description": "The label for category 'Version Control' in sidebar 'knowledge'"
+  },
+  "sidebar.knowledge.category.Version Control.link.generated-index.description": {
+    "message": "How to manage your project the right way?",
+    "description": "The generated-index page description for category 'Version Control' in sidebar 'knowledge'"
   }
 }

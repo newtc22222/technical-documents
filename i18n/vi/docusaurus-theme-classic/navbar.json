@@ -1,7 +1,7 @@
 {
   "title": {
     "message": "Tài liệu Kỹ thuật",
-    "description": "Tiêu đề trong thanh điều hướng"
+    "description": "The title in the navbar"
   },
   "item.label.Topics": {
     "message": "Chủ đề",
@@ -13,6 +13,22 @@
   },
   "item.label.GitHub": {
     "message": "GitHub",
-    "description": "Mục trong thanh điều hướng với nhãn 'GitHub'"
+    "description": "Navbar item with label GitHub"
+  },
+  "item.label.FF RESTaurent": {
+    "message": "FF RESTaurent",
+    "description": "Navbar item with label FF RESTaurent"
+  },
+  "item.label.Laptech": {
+    "message": "Laptech",
+    "description": "Navbar item with label Laptech"
+  },
+  "item.label.Flashcard Learning": {
+    "message": "Flashcard Learning",
+    "description": "Navbar item with label Flashcard Learning"
+  },
+  "item.label.Guides": {
+    "message": "Guides",
+    "description": "Navbar item with label Guides"
   }
 }
