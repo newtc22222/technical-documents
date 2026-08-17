@@ -110,5 +110,29 @@
   "sidebar.knowledge.category.Version Control.link.generated-index.description": {
     "message": "How to manage your project the right way?",
     "description": "The generated-index page description for category 'Version Control' in sidebar 'knowledge'"
+  },
+  "sidebar.linguFlow.category.Overview": {
+    "message": "Tổng quan",
+    "description": "The label for category 'Overview' in sidebar 'linguFlow'"
+  },
+  "sidebar.linguFlow.category.Architecture & Schema": {
+    "message": "Kiến trúc & Cơ sở dữ liệu",
+    "description": "The label for category 'Architecture & Schema' in sidebar 'linguFlow'"
+  },
+  "sidebar.linguFlow.category.Features & Guides": {
+    "message": "Tính năng & Hướng dẫn",
+    "description": "The label for category 'Features & Guides' in sidebar 'linguFlow'"
+  },
+  "sidebar.linguFlow.category.Operations & DevOps": {
+    "message": "Vận hành & DevOps",
+    "description": "The label for category 'Operations & DevOps' in sidebar 'linguFlow'"
+  },
+  "sidebar.linguFlow.category.Improvement Plans": {
+    "message": "Kế hoạch Cải tiến",
+    "description": "The label for category 'Improvement Plans' in sidebar 'linguFlow'"
+  },
+  "sidebar.linguFlow.category.Release Notes": {
+    "message": "Bản phát hành",
+    "description": "The label for category 'Release Notes' in sidebar 'linguFlow'"
   }
 }

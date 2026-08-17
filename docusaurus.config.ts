@@ -98,9 +98,9 @@ const config: Config = {
         },
         {
           type: "docSidebar",
-          sidebarId: "flashcardLearning",
+          sidebarId: "linguFlow",
           position: "left",
-          label: "Flashcard Learning",
+          label: "LinguFlow",
         },
         {
           type: "docSidebar",

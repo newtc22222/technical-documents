@@ -23,9 +23,9 @@
     "message": "Laptech",
     "description": "Navbar item with label Laptech"
   },
-  "item.label.Flashcard Learning": {
-    "message": "Flashcard Learning",
-    "description": "Navbar item with label Flashcard Learning"
+  "item.label.LinguFlow": {
+    "message": "LinguFlow",
+    "description": "Navbar item with label LinguFlow"
   },
   "item.label.Guides": {
     "message": "Guides",
