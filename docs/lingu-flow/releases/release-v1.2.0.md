@@ -2,7 +2,7 @@
 id: release-v1.2.0
 title: LinguFlow 1.2.0
 sidebar_label: v1.2.0
-sidebar_position: 2
+sidebar_position: 5
 description: Release notes for LinguFlow v1.2.0, adding five new item types and IELTS exam support.
 ---
 
@@ -26,7 +26,7 @@ location.
 ## Product highlights
 
 | Area | What's in 1.2.0 |
-|------|------------------|
+| ------ | ------------------ |
 | Item types | Five beyond multiple choice: `matching`, `true-false-not-given`, `fill-in-blank`, `short-answer`, `essay` |
 | IELTS | Registered end to end; sections named by skill, each narrowing the item types it accepts |
 | Built-in exams | **Academic Reading** (14 questions, one original 400–600 word passage, 60 min) and **Academic Writing** (2 ungraded essay tasks) |
@@ -63,20 +63,42 @@ location.
 
 - The version is authored once in the root `package.json`. `npm run version:sync`
   writes it into `frontend/package.json` and a generated `backend/app/version.py`.
-- The Postgres integrity CI job now runs with automated verification.
+  It previously lived in seven places and drifted silently
+- The Postgres integrity CI job now genuinely runs. It had been passing without
+  executing a single assertion — Alembic never found `alembic.ini`, and a broad
+  handler reported that as "Postgres not available" and skipped
 
 ---
 
 ## Deploy notes (production)
 
-Railway applies **Alembic `0011_question_answer_key`** — additive and
+Railway must apply **Alembic `0011_question_answer_key`** — additive and
 nullable, no backfill.
 
-The seeder runs from the same entrypoint and updates built-in content:
-- Two new public IELTS templates appear (`ielts-academic-reading-1` and writing).
-- `ielts-academic-reading-1` seeds at `seedVersion` 4; the template row is updated in place.
+The seeder then runs from the same entrypoint and **changes built-in content**:
+
+- Two new public IELTS templates appear. Seeded templates are `is_public=True`
+  and `ielts` is enabled by default in `exam_type_flags`, so they are visible to
+  all users unless IELTS is disabled in this environment
+- `ielts-academic-reading-1` seeds at `seedVersion` 4; the template row is
+  updated **in place**, so its id survives and sessions already sat against it
+  keep resolving. Its questions are archived and recreated via soft delete, so
+  past results still render
+- No TOEIC content changes
 
 Confirm `GET /api/health` reports `"version": "1.2.0"`.
+
+---
+
+## Not in this release
+
+- Grading of written responses — essays are captured and excluded from the score
+  denominator, but there is no reviewer flow (#20)
+- Speaking — no mic capture, no sitter-side upload, no audio playback in results
+  (#79, #89, #90, #91)
+- TOEIC Listening **content** — Parts 1–4 exist in the taxonomy and the player
+  works, but no paper seeds them; TOEIC ships Reading only (Parts 5–7)
+- Scaled and band scoring — scores remain a raw percentage, not 10–990 or 0–9
 
 ---
 
@@ -84,3 +106,12 @@ Confirm `GET /api/health` reports `"version": "1.2.0"`.
 
 - #102 generalize the exam system beyond TOEIC (IELTS build-out)
 - #103 this release (staging → main)
+
+## Issues closed
+
+None. This work came from a reviewed design document rather than tracked issues;
+the exam-type items above stay open.
+
+**Tag:** `v1.2.0` on `main`.
+
+**Next:** [v1.2.1](./release-v1.2.1.md) — three-theme system and the OMR answer sheet.

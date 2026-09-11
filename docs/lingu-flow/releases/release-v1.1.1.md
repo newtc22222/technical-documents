@@ -2,7 +2,7 @@
 id: release-v1.1.1
 title: LinguFlow 1.1.1
 sidebar_label: v1.1.1
-sidebar_position: 3
+sidebar_position: 6
 description: Release notes for LinguFlow v1.1.1, introducing TOEIC Listening media, passage sets, and exam integrity lock.
 ---
 
@@ -20,7 +20,7 @@ Production cut of staging after the TOEIC listening track and exam-integrity sit
 ## Product highlights
 
 | Area | What’s in 1.1.1 |
-|------|------------------|
+| ------ | ------------------ |
 | Listening | Author TOEIC Parts 1–4 with audio (and Part 1 photo) on the shared bank; sit with the tape player |
 | Sets | Parts 3–4 share one clip via `passageGroup`; set create copies `audioUrl` onto every stem |
 | Sitting | Autoplay on the live booth; seekable replay on results and composer preview |
@@ -41,6 +41,8 @@ Production cut of staging after the TOEIC listening track and exam-integrity sit
 - Freeze media after a **submitted** answer (`user_answer != ""`)
 - Leave-session warning while status is `in-progress`
 
+Not in this release: AI generate (#87), TTS (#88), official 200-item listening seed.
+
 ### Exam integrity
 
 - Sitting route is full-bleed (no app header)
@@ -52,9 +54,9 @@ Production cut of staging after the TOEIC listening track and exam-integrity sit
 
 ## Deploy notes (production)
 
-1. Railway entrypoint applies **Alembic `0010_question_listening_media`** (`alembic upgrade head` then seed).
-2. Listening uses the existing R2 pipeline. Production `R2_*` env and **bucket CORS** stay required.
-3. `GET /api/health` reports `"version": "1.1.1"`.
+1. Railway entrypoint must apply **Alembic `0010_question_listening_media`** (`alembic upgrade head` then seed). Confirm the deploy log.
+2. Listening uses the existing R2 pipeline. Production `R2_*` env and **bucket CORS** stay required (same as card images).
+3. `GET /api/health` should report `"version": "1.1.1"`.
 
 ---
 
@@ -63,4 +65,10 @@ Production cut of staging after the TOEIC listening track and exam-integrity sit
 - #97 TOEIC listening bank media, upload, and exam player
 - #101 this release (staging → main)
 
+## Issues closed
+
+# 83, #84, #85, #86. Parent #78 stays open for #87 / #88
+
 See also: [TOEIC Listening Items](../features/toeic-listening.md), [API Documentation](../architecture/api-documentation.md), [Card Image Uploads](../features/card-image-uploads.md).
+
+**Next:** [v1.2.0](./release-v1.2.0.md) — five new item types and IELTS registered against the exam-type abstraction.
