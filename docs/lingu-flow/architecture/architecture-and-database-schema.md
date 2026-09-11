@@ -1,14 +1,17 @@
 ---
 id: architecture-and-database-schema
 title: Architecture & Database Schema
-sidebar_label: Architecture & Schema
-sidebar_position: 1
-description: Database model architecture, ER diagrams, entity relationships, and schema design.
+sidebar_label: Architecture & Database Schema
+sidebar_position: 2
+description: Relational PostgreSQL data model, entity relationships, and Alembic migrations.
 ---
 
 # 🏗️ Architecture & Database Schema
 
 This document details the database model architecture, entity relationships, migration workflows, and schema design for LinguFlow's PostgreSQL database.
+
+**Full column-level reference:** [database-design.md](./database-design.md) (assessment v2, flashcards, sharing).  
+**Authoring / sitting lifecycle:** [Question & Exam Design](./question-and-exam-design.md).
 
 ---
 
@@ -18,15 +21,26 @@ This document details the database model architecture, entity relationships, mig
 erDiagram
     USERS ||--o{ DECKS : owns
     USERS ||--o{ CARDS : owns
-    USERS ||--o{ EXAM_TEMPLATES : creates
-    USERS ||--o{ EXAM_SESSIONS : attempts
+    USERS ||--o{ CARD_PROGRESS : studies
+    USERS ||--o{ EXAMS : creates
+    USERS ||--o{ ATTEMPTS : sits
     DECKS ||--o{ CARDS : contains
+    CARDS ||--o{ CARD_PROGRESS : progress
 
-    EXAM_TEMPLATES ||--o{ EXAM_TEMPLATE_QUESTIONS : lists
-    QUESTIONS ||--o{ EXAM_TEMPLATE_QUESTIONS : placed_in
-    EXAM_TEMPLATES ||--o{ EXAM_SESSIONS : generates
-    EXAM_SESSIONS ||--o{ ANSWER_RECORDS : records
-    QUESTIONS ||--o{ ANSWER_RECORDS : targets
+    STIMULI ||--o{ STIMULUS_VERSIONS : versions
+    QUESTIONS ||--o{ QUESTION_VERSIONS : versions
+    QUESTION_VERSIONS ||--o| QUESTION_KEYS : key
+    QUESTION_VERSIONS }o--o| STIMULUS_VERSIONS : "passage set"
+    EXAMS ||--o{ EXAM_VERSIONS : versions
+    EXAM_VERSIONS ||--o{ EXAM_NODES : tree
+    EXAM_NODES ||--o{ EXAM_SLOTS : places
+    QUESTIONS ||--o{ EXAM_SLOTS : identity
+    EXAM_VERSIONS ||--o{ ATTEMPTS : "exam mode"
+    ATTEMPTS ||--o{ ATTEMPT_ITEMS : freezes
+    QUESTION_VERSIONS ||--o{ ATTEMPT_ITEMS : pinned
+    ATTEMPT_ITEMS ||--o| RESPONSES : answers
+    ATTEMPTS ||--o{ SCORES : scales
+    ATTEMPTS ||--o{ ATTEMPT_SECTIONS : clocks
 
     USERS {
         uuid id PK
@@ -35,6 +49,8 @@ erDiagram
         string password_hash
         string google_id
         boolean is_guest
+        boolean is_active
+        string avatar_url
         datetime created_at
         datetime updated_at
     }
@@ -44,6 +60,7 @@ erDiagram
         uuid user_id FK
         string name
         string description
+        string visibility
         datetime created_at
         datetime updated_at
     }
@@ -54,75 +71,59 @@ erDiagram
         uuid deck_id FK
         text front
         text back
-        int srs_interval
-        float srs_ease_factor
-        int srs_repetitions
-        datetime srs_next_review
+        int position
+        string visibility
         datetime created_at
         datetime updated_at
     }
 
-    EXAM_TEMPLATES {
-        uuid id PK
-        uuid user_id FK
-        string name
-        string exam_type
-        text description
-        int duration_minutes
-        int total_questions
-        int passing_score
-        string level
-        boolean is_public
-        json tags
-        datetime created_at
-        datetime updated_at
+    CARD_PROGRESS {
+        uuid user_id PK
+        uuid card_id PK
+        int srs_interval
+        float srs_ease_factor
+        int srs_repetitions
+        datetime srs_next_review
     }
 
     QUESTIONS {
         uuid id PK
         uuid user_id FK
-        string exam_type
-        string part
-        string passage_group
-        text question_text
-        text passage
-        text audio_url
-        text image_url
-        string type
-        json options
-        string correct_answer
-        text explanation
-        json tags
+        string status
+        string origin
+        string response_kind
+        string locale
         string difficulty
+        string skill
+        json tags
+        string search_text
+        string visibility
+        uuid current_version_id
         datetime archived_at
-        datetime created_at
-        datetime updated_at
     }
 
-    EXAM_SESSIONS {
+    EXAMS {
         uuid id PK
         uuid user_id FK
-        uuid exam_template_id FK
-        datetime started_at
-        datetime finished_at
-        int time_limit_minutes
-        float score
-        int correct_count
-        int total_count
+        string name
+        string exam_type
         string status
-        datetime created_at
-        datetime updated_at
+        string visibility
+        json blueprint
+        json draft_structure
+        uuid current_version_id
+        datetime archived_at
     }
 
-    ANSWER_RECORDS {
+    ATTEMPTS {
         uuid id PK
-        uuid session_id FK
-        uuid question_id FK
-        string user_answer
-        boolean is_correct
-        int time_taken_seconds
-        datetime created_at
-        datetime updated_at
+        uuid user_id FK
+        uuid exam_version_id FK
+        string mode
+        string status
+        int time_limit_seconds
+        string feedback_mode
+        int accumulated_seconds
     }
 
     EXAM_TYPE_FLAGS {
@@ -133,108 +134,103 @@ erDiagram
     }
 ```
 
-> **Note**: `EXAM_TYPE_FLAGS` has no foreign key to `EXAM_TEMPLATES` — it's keyed by
-> the `exam_type` string value itself (`"toeic"`, `"hsk"`, ...), not a relational
-> reference. A missing row means the type is enabled by default; see
-> [Exam-Type Feature Flags](../features/exam-type-feature-flags.md) for the full enforcement model.
+> **Note**: Assessment v2 (`0017` / `0018`) replaced `exam_templates`,
+> `exam_sessions`, and `answer_records`. SM-2 left `cards` for `card_progress`
+> in `0015` (per-learner schedules on shared cards). `EXAM_TYPE_FLAGS` has no FK
+> to `exams` — it is keyed by the `exam_type` string (`"toeic"`, `"hsk"`, …). A
+> missing row means enabled. See [Exam-Type Feature Flags](../features/exam-type-feature-flags.md)
+> and [Question & Exam Design](./question-and-exam-design.md).
 
 ---
 
 ## 🗄️ Database Tables Specifications
 
 ### 1. `users` Table
+
 Stores user accounts (standard email/password, Google OAuth2, and temporary guest accounts).
-- `id`: `UUID` (Primary Key, default `gen_random_uuid()`)
-- `email`: `VARCHAR(255)` (Unique, Indexed)
-- `username`: `VARCHAR(100)` (Unique, Indexed)
-- `password_hash`: `VARCHAR(255)` (Bcrypt hashed password, nullable for Google/Guest accounts)
-- `google_id`: `VARCHAR(255)` (Unique, Nullable)
-- `is_guest`: `BOOLEAN` (Default `False`)
+
+- `id`: `UUID` (Primary Key)
+- `email` / `username`: unique, indexed, nullable
+- `password_hash`: nullable for Google / guest accounts
+- `google_id`: unique, nullable
+- `is_guest`: `BOOLEAN` (default `false`)
+- `is_active`: `BOOLEAN` (default `true`; deactivation checked at login — `0007`)
+- `daily_streak`, `last_active`, `last_ip`: activity / guest cleanup
+- `avatar_url`: R2 object key (`0008`)
 - `created_at` / `updated_at`: `TIMESTAMPTZ`
 
 ### 2. `decks` Table
+
 Groups flashcards into custom study decks.
+
 - `id`: `UUID` (Primary Key)
-- `user_id`: `UUID` (Foreign Key -> `users.id` ON DELETE CASCADE)
-- `name`: `VARCHAR(150)` (Required)
-- `description`: `TEXT` (Optional)
-- **Aggregation**: `card_count` is dynamically calculated via `Outer Join` on `cards.deck_id`.
+- `user_id`: `UUID` → `users.id` ON DELETE CASCADE
+- `name`: required
+- `description`: optional
+- `visibility`: `private` \| `protected` \| `public` (`0015`)
+- **Aggregation**: `card_count` is calculated via join on `cards.deck_id` (not a stored column).
+- Deleting a deck **ORM-cascades** to its cards even though `cards.deck_id` is `ON DELETE SET NULL` at the column level.
 
 ### 3. `cards` Table
-Stores flashcard pairs with SuperMemo-2 (SM-2) spaced repetition parameters.
+
+Flashcard content and presentation order. **SM-2 state is not stored here.**
+
 - `id`: `UUID` (Primary Key)
-- `user_id`: `UUID` (Foreign Key -> `users.id` ON DELETE CASCADE)
-- `deck_id`: `UUID` (Foreign Key -> `decks.id` ON DELETE SET NULL, Nullable)
-- `front`: `TEXT` (Prompt / word / phrase)
-- `back`: `TEXT` (Definition / translation / example)
-- `srs_interval`: `INTEGER` (Days until next review, default `0`)
-- `srs_ease_factor`: `FLOAT` (Difficulty factor, default `2.5`, floor `1.3`)
-- `srs_repetitions`: `INTEGER` (Successful consecutive reviews count, default `0`)
-- `srs_next_review`: `TIMESTAMPTZ` (Scheduled review timestamp, default `now()`)
+- `user_id`: `UUID` → `users.id` ON DELETE CASCADE
+- `deck_id`: `UUID` → `decks.id` ON DELETE SET NULL (nullable = Unfiled)
+- `front` / `back`: prompt and answer text
+- `position`: order within a deck (independent of SRS)
+- `image_url` / `notes`: optional
+- `visibility`: `private` \| `protected` \| `public` (`0015`)
 
-### 4. `exam_templates` Table
-Stores certification practice exam templates (built-in public & custom user-created).
-- `id`: `UUID` (Primary Key)
-- `user_id`: `UUID` (Foreign Key -> `users.id` ON DELETE SET NULL, Nullable for public templates)
-- `name`: `VARCHAR(255)` (Exam title)
-- `exam_type`: `VARCHAR(50)` (`"toeic"`, `"ielts"`, `"hsk"`, `"jlpt"`, `"custom"`)
-- `description`: `TEXT`
-- `duration_minutes`: `INTEGER` (Time limit in minutes)
-- `total_questions`: `INTEGER` (Total question count)
-- `passing_score`: `INTEGER` (Passing threshold percentage, e.g. `60`)
-- `level`: `VARCHAR(50)` (`"Intermediate"`, `"Advanced"`, `"N5"`, etc.)
-- `is_public`: `BOOLEAN` (Default `False`)
-- `tags`: `JSON` (Array of tags)
+### 3b. `card_progress` Table
 
-### 5. `questions` Table
-Shared bank items. Placement on an exam is the `exam_template_questions` join
-table — a question has **no** `exam_template_id`. Soft-delete via `archived_at`.
-- `id`: `UUID` (Primary Key)
-- `user_id`: `UUID` (Foreign Key -> `users.id` ON DELETE SET NULL, Nullable; built-ins are `NULL`)
-- `exam_type`: `VARCHAR` (Required bank taxonomy: `"toeic"`, `"ielts"`, …)
-- `part`: `VARCHAR` (Nullable, normalized e.g. `part1`–`part7`)
-- `passage_group`: `VARCHAR` (Nullable; shared passage **or** listening clip)
-- `question_text`: `TEXT` (Required prompt)
-- `passage`: `TEXT` (Reading text, or optional listening **script**)
-- `audio_url` / `image_url`: `TEXT` (Nullable; https URL or R2 key — see [TOEIC Listening Items](../features/toeic-listening.md); added in `0010_question_listening_media`)
-- `type`: `VARCHAR(50)` (`"multiple-choice"`)
-- `options`: `JSON` (List of choice strings e.g. `["A. ...", "B. ..."]`)
-- `correct_answer`: `VARCHAR(10)` (`"A"`, `"B"`, `"C"`, `"D"`)
-- `explanation`: `TEXT` (Answer explanation)
-- `difficulty`: `VARCHAR(20)` (`"easy"`, `"medium"`, `"hard"`)
-- `listed_in_bank`: `BOOLEAN` (Exam-only items stay off bank listings)
-- `archived_at`: `TIMESTAMPTZ` (Soft delete; sessions still resolve the row)
+Per-learner SuperMemo-2 schedule (`0015_item_sharing`). Enables studying a shared/public card without writing onto the author's row.
 
-Placement is `exam_template_questions` (`exam_template_id`, `question_id`, `order_index`).
-Deleting an exam removes **links only**. Listening media lives on the question
-row — see [TOEIC Listening Items](../features/toeic-listening.md).
+- PK: `(user_id, card_id)` → `users` / `cards` ON DELETE CASCADE
+- `srs_interval`, `srs_ease_factor` (default `2.5`, floor `1.3` in the service), `srs_repetitions`
+- `srs_next_review`: indexed due date
+- `updated_at`
 
-### 6. `exam_sessions` Table
-Tracks student exam attempts, elapsed times, and final scores.
-- `id`: `UUID` (Primary Key)
-- `user_id`: `UUID` (Foreign Key -> `users.id` ON DELETE CASCADE)
-- `exam_template_id`: `UUID` (Foreign Key -> `exam_templates.id` ON DELETE CASCADE)
-- `started_at`: `TIMESTAMPTZ` (Session start time)
-- `finished_at`: `TIMESTAMPTZ` (Session completion time, Nullable)
-- `time_limit_minutes`: `INTEGER` (Time limit)
-- `score`: `FLOAT` (Percentage score `0.0` - `100.0`)
-- `correct_count`: `INTEGER` (Total correct answers)
-- `total_count`: `INTEGER` (Total questions)
-- `status`: `VARCHAR(20)` (`"in-progress"`, `"completed"`, `"abandoned"`)
+### 4. Assessment v2 tables (`exams`, `questions`, `attempts`, …)
 
-### 7. `answer_records` Table
-Records candidate answers for each question during an exam session.
-- `id`: `UUID` (Primary Key)
-- `session_id`: `UUID` (Foreign Key -> `exam_sessions.id` ON DELETE CASCADE)
-- `question_id`: `UUID` (Foreign Key -> `questions.id` ON DELETE CASCADE)
-- `user_answer`: `VARCHAR(10)` (Selected answer choice e.g. `"B"`)
-- `is_correct`: `BOOLEAN` (Result flag)
-- `time_taken_seconds`: `INTEGER` (Time spent on question)
+Introduced in `0017_assessment_v2_schema`; legacy v1 tables (and
+`ai_generation_jobs`) dropped in `0018_drop_legacy_assessment`. Denormalized bank
+search column in `0019_question_search_text`. Runtime columns (`mode`, pause,
+`attempt_sections`, `question_notes`) in `0020_attempt_runtime`. Blueprint columns
+and `exam_type_blueprints` in `0021_exam_blueprints`. Full design:
+[Question & Exam Design](./question-and-exam-design.md) · column lists in
+[database-design.md](./database-design.md). Models: `backend/app/models/assessment.py`.
 
-### 8. `exam_type_flags` Table
+| Table | Role |
+| --- | --- |
+| `stimuli` / `stimulus_versions` | Shared source material; version content in `body` (DSL) |
+| `questions` / `question_versions` / `question_keys` | Bank identity, immutable `body`, answer key (separate table) |
+| `ai_provenance` | Prompt/model metadata for AI-authored question versions |
+| `exams` / `exam_versions` | Exam identity + published immutable composition |
+| `exam_nodes` / `exam_slots` | Recursive section/part tree; slots point at question **identity** |
+| `attempts` / `attempt_items` / `responses` | Sitting; pins question/stimulus **versions** (`exam_version_id` nullable for bank practice) |
+| `scores` | One row per scale (percent, section, TOEIC total, …) |
+| `attempt_sections` | Frozen section locks/clocks per sitting |
+| `question_notes` | One learner note per `(user, question)` |
+| `exam_type_blueprints` | Optional admin override of the per-type structure gate |
+
+**Question bank browse columns** on `questions` (listing never opens version JSON):
+`status` (`draft` \| `in_review` \| `published` \| `retired`), `origin`
+(`human` \| `ai` \| `import`), `response_kind`, `locale`, `difficulty`, `skill`,
+`tags` (JSONB), `search_text` (from `0019`), `visibility`, `archived_at`.
+`GET /api/questions/facets` returns only the vocabularies actually present:
+response kinds, difficulties, locales, skills, tags. Bodies and media are **not**
+flat columns on `questions` — they live in `question_versions.body` /
+`stimulus_versions.body` (DSL; blocks are nested inside that JSON). Soft-delete
+via `archived_at`; attempts still resolve archived items.
+
+### 5. `exam_type_flags` Table
+
 Backend-owned enable/disable switch per exam type — content-readiness gating and an
 ops kill switch, added in migration `0006_exam_type_flags`. See
 [Exam-Type Feature Flags](../features/exam-type-feature-flags.md) for the full design.
+
 - `exam_type`: `VARCHAR` (Primary Key — `"toeic"`, `"ielts"`, `"hsk"`, `"jlpt"`, ...)
 - `enabled`: `BOOLEAN` (Default `true`)
 - `label`: `VARCHAR` (Display name, e.g. `"TOEIC"`)
@@ -242,31 +238,39 @@ ops kill switch, added in migration `0006_exam_type_flags`. See
 - A missing row (e.g. for `"custom"`, which is never represented here) means the
   type is enabled — absence is not the same as an explicit disable.
 
-### 9. `feature_flags` Table
+### 6. `feature_flags` Table
+
 Product-wide kill switches (starting with `ai`), added in `0012_feature_flags`.
 See [AI Service Layer](../features/ai-service-layer.md).
+
 - `key`: `VARCHAR` (Primary Key — e.g. `"ai"`)
 - `enabled`: `BOOLEAN` (Default `true`)
 - `updated_at`: `TIMESTAMPTZ`
 - A missing row means the feature is **enabled**.
 
-### 10. `ai_explanations` Table
+### 7. `ai_explanations` Table
+
 Cache for explain output (`0013_ai_explanations`). Unique `(kind, subject_key, locale)`.
-- `kind`: `card` or `exam_answer`
-- `subject_key`: card UUID, or `{session_id}:{question_id}`
+
+- `kind`: `card` or attempt-item explain subjects (see assessment AI router)
+- `subject_key`: card UUID, or attempt/item-scoped key
 - `content`, `provider`, `created_at`
 
-### 11. `ai_generation_jobs` Table
-Async question-generation jobs (`0014_ai_generation_jobs`).
-- `user_id`: owner (CASCADE on user delete)
-- `status`: `pending` / `running` / `succeeded` / `failed`
-- `payload` / `result` JSON, `error` text (generic, never a vendor dump)
+### 8. Sharing tables (`0015`)
+
+- `item_members`: explicit grantees `(item_type, item_id, user_id)` — used by decks/cards **and** assessment (`question` \| `stimulus` \| `exam`)
+- `item_effective_access` / `item_effective_grantees`: materialized projection for **decks/cards** only (assessment v2 reads visibility off the row; no exam→bank inheritance)
+
+> **`ai_generation_jobs` is gone.** Created in `0014`, dropped in `0018` with the
+> legacy assessment tables. AI draft provenance lives on `ai_provenance` keyed by
+> `question_version_id`.
 
 ---
 
 ## 🛠️ Alembic Database Migration Workflow
 
 Alembic handles version control and schema migrations for PostgreSQL.
+Current head: **`0021_exam_blueprints`**.
 
 ```bash
 # Generate a new migration script automatically from SQLAlchemy models
@@ -278,3 +282,5 @@ alembic upgrade head
 # Downgrade database by 1 migration step
 alembic downgrade -1
 ```
+
+On SQLite local boot, prefer `python run_local.py` (`create_all` + `alembic stamp head`) — do not run `alembic upgrade head` against SQLite.

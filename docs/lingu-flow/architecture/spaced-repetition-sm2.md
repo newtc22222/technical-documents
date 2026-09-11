@@ -2,7 +2,7 @@
 id: spaced-repetition-sm2
 title: SuperMemo-2 (SM-2) Spaced Repetition Engine
 sidebar_label: Spaced Repetition (SM-2)
-sidebar_position: 4
+sidebar_position: 6
 description: Mathematical formulation and Python implementation of the SuperMemo-2 (SM-2) algorithm.
 ---
 
