@@ -1,9 +1,9 @@
 ---
 id: card-image-uploads
 title: Card Image Uploads (R2 + CORS)
-sidebar_label: Card Image Uploads
-sidebar_position: 5
-description: How flashcard images get uploaded to Cloudflare R2 and configuring R2 CORS.
+sidebar_label: Card Image Uploads (R2)
+sidebar_position: 7
+description: Presigned object upload pipeline, direct browser PUT to Cloudflare R2, and bucket CORS policies.
 ---
 
 # 🖼️ Card Image Uploads (R2 + CORS)
@@ -14,7 +14,7 @@ bucket setting that is easy to miss: **R2 CORS**. FastAPI `CORS_ORIGINS` does
 
 Related: [Deployment Guide](../operations/deployment-guide.md) (bucket + tokens),
 [API Documentation](../architecture/api-documentation.md) (`/api/media/*`),
-[Domain Cutover](../operations/domain-cutover.md) (staging vs production hosts),
+[Domain cutover](../operations/domain-cutover.md) (staging vs production hosts),
 [TOEIC Listening Items](./toeic-listening.md) (`purpose: "question"`, audio types).
 
 ---
@@ -50,7 +50,7 @@ Rules that must stay true:
   allow `audio/mpeg`, `audio/wav`, `audio/webm`, `audio/mp4` (`.mp3` / `.wav` /
   `.webm` / `.m4a`), **15 MB** for audio. Caps are enforced in the browser
   before PUT; presigned PUT cannot reliably enforce length server-side.
-- `Card.image_url` and `Question.audio_url` / `image_url` store the **object
+- `Card.image_url` and assessment media keys inside stimulus/question **blocks** store the **object
   key** (or an https URL), not a durable public URL. Study / bank previews call
   `GET /api/media/presign-download/{file_key}` for owner keys. Exam sitters use
   session-signed `audioPlayUrl` instead — see [TOEIC Listening Items](./toeic-listening.md).
@@ -140,7 +140,7 @@ Chrome console:
 > header is present on the requested resource.
 
 A **Python** PUT with the same credentials succeeds. That proves the keys work;
-only the **browser → R2** hop is blocked.
+only the **browser $\rightarrow$ R2** hop is blocked.
 
 Railway / FastAPI CORS (`CORS_ORIGINS`, `CORS_ORIGIN_REGEX`) applies to
 `/api/*` only. The file never goes through FastAPI.
@@ -149,8 +149,8 @@ Railway / FastAPI CORS (`CORS_ORIGINS`, `CORS_ORIGIN_REGEX`) applies to
 
 ## ✅ Fix: bucket CORS policy
 
-Cloudflare Dashboard → **R2** → the bucket the running process actually signs
-for (`R2_BUCKET_NAME`) → **Settings → CORS policy**.
+Cloudflare Dashboard $\rightarrow$ **R2** $\rightarrow$ the bucket the running process actually signs
+for (`R2_BUCKET_NAME`) $\rightarrow$ **Settings $\rightarrow$ CORS policy**.
 
 Apply this on **every** bucket the app uses (`linguflow-media`,
 `linguflow-media-staging` if you split them):
@@ -174,7 +174,7 @@ Apply this on **every** bucket the app uses (`linguflow-media`,
 ```
 
 Add any other SPA origin you care about (PR preview hosts, `lingu-flow.com`
-after [Domain Cutover](../operations/domain-cutover.md)). `AllowedHeaders` must include
+after [domain cutover](../operations/domain-cutover.md)). `AllowedHeaders` must include
 `content-type` because the signed PUT sends it and the browser therefore
 preflights.
 
@@ -182,4 +182,23 @@ After saving CORS:
 
 1. Restart the backend if you just changed `.env`.
 2. Retry the card-editor file picker.
-3. Expect: presign **200** → R2 PUT **200** → confirm **200** → image key on the card.
+3. Expect: presign **200** $\rightarrow$ R2 PUT **200** $\rightarrow$ confirm **200** $\rightarrow$ image key on the card.
+
+---
+
+## 🧪 Local diagnosis (no secrets)
+
+From `backend/` with venv active:
+
+```bash
+# 1) Confirm the live API (not a fresh Python import) is the bucket you think
+#    Decode the path on upload_url — /<bucket>/uploads/...
+# 2) HeadBucket / PutObject against R2_BUCKET_NAME should succeed.
+# 3) OPTIONS the signed URL with:
+#      Origin: http://localhost:5173
+#      Access-Control-Request-Method: PUT
+#      Access-Control-Request-Headers: content-type
+#    403 + "CORS not configured for this bucket" = this page.
+```
+
+Health (`GET /api/health`) staying green does **not** mean R2 or CORS is OK.

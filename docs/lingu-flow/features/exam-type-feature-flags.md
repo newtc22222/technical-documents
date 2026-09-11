@@ -1,9 +1,9 @@
 ---
 id: exam-type-feature-flags
 title: Exam-Type Feature Flags
-sidebar_label: Exam Feature Flags
-sidebar_position: 3
-description: Backend-owned feature flags per exam type for content gating and kill switches.
+sidebar_label: Exam-Type Feature Flags
+sidebar_position: 4
+description: Global backend-owned kill switches and content-readiness gating per certification exam type.
 ---
 
 # 🚩 Exam-Type Feature Flags
@@ -69,27 +69,27 @@ flowchart TD
     Enabled --> Pass["normal public / ownership filtering"]
 
     Disabled --> Which{"which endpoint?"}
-    Which -->|"GET /api/exams/templates"| Hide["omit from the listing<br/>(silent, no error)"]
-    Which -->|"POST /api/exams/sessions"| Deny["403 Forbidden<br/>not 404 — nothing sensitive to hide"]
+    Which -->|"GET /api/exams"| Hide["omit from the listing<br/>(silent, no error)"]
+    Which -->|"POST /api/attempts<br/>POST /api/practice/*"| Deny["403 Forbidden<br/>not 404 — nothing sensitive to hide"]
 
-    Disabled -.->|never affected| Live["a session already in progress<br/>or completed keeps working"]
+    Disabled -.->|never affected| Live["an attempt already in progress<br/>or completed keeps working"]
 ```
 
-Two existing endpoints in `/api/exams` enforce the flag:
+Assessment routers enforce the flag:
 
-- **`GET /api/exams/templates`** excludes any template whose `exam_type` is disabled,
-  in addition to its existing public/ownership filtering.
-- **`POST /api/exams/sessions`** returns **403** (not 404) when starting a session
-  against a disabled exam type. 403 rather than 404 is deliberate: unlike a private
-  template, there's nothing sensitive to hide about a type being temporarily
-  unavailable.
+- **`GET /api/exams`** excludes any exam whose `exam_type` is disabled, in addition
+  to ownership / visibility filtering.
+- **`POST /api/attempts`**, **`POST /api/practice/from-exam`**, and
+  **`POST /api/practice/from-bank`** (when a filter carries `examType`) return
+  **403** (not 404) when the type is disabled. 403 rather than 404 is deliberate:
+  unlike a private exam, there is nothing sensitive to hide about a type being
+  temporarily unavailable.
 
-**A session already in progress or completed is never affected.** Disabling a type
-only blocks *new* sessions and hides it from listings — answering questions, viewing
-results, and finishing an already-started session on a since-disabled type all keep
-working normally. This mirrors the existing invariant that session results resolve
-from the session's own `AnswerRecord`s, not the live state of the template or its
-exam type.
+**An attempt already in progress or completed is never affected.** Disabling a type
+only blocks *new* starts and hides the type from listings — answering, viewing
+results, and finishing an already-started attempt on a since-disabled type all keep
+working. Results resolve from pinned `attempt_items` / `responses` / `scores`, not
+the live exam catalog.
 
 ---
 
@@ -111,7 +111,8 @@ exam type no longer means hunting down multiple hardcoded arrays.
 
 ## 🛠️ Operator Guide
 
-There is no admin UI for toggling flags by design — it's a direct database write:
+There is no admin UI for toggling flags by design (see below) — it's a direct
+database write:
 
 ```sql
 -- Disable an exam type (kill switch)

@@ -3,12 +3,12 @@ id: ai-features
 title: AI Features (User Guide)
 sidebar_label: AI Features (User Guide)
 sidebar_position: 1
-description: How to use AI flashcard explain, exam answer explain, question generate, and live exam hints.
+description: User guide for AI explain, question generation, and assessment assistance.
 ---
 
 # AI Features (User Guide)
 
-LinguFlow can explain flashcards and exam answers, generate new practice questions, and offer a **non-spoiling hint** during a live exam.
+LinguFlow can explain flashcards and attempt answers, and generate new practice questions.
 
 These tools are **optional**. Study, grading, and exams work the same way if AI is off or the provider is down — you only see an error on the AI button you clicked.
 
@@ -20,7 +20,7 @@ Ships in [PR #96](https://github.com/newtc22222/lingu-flow/pull/96) (`feature/ai
 
 | Account | Access |
 |---|---|
-| Registered (email / Google) | Explain, generate, hint |
+| Registered (email / Google) | Explain, generate |
 | Guest | Core app only — AI buttons return “unavailable” / 403 |
 | Signed out | Must log in |
 
@@ -43,13 +43,16 @@ You can only explain **your own** cards.
 
 ---
 
-## 2. Explain an exam answer
+## 2. Explain an attempt answer
 
-On the **results** screen (after you submit), expand a question and click **Explain**.
+On the **results** screen (after you submit), or via the ask panel in **practice**,
+request **Explain** for an item.
 
-- Available only on a **finished** exam — never mid-attempt (that would leak the key).
-- The explanation uses the question as you sat it, including your answer vs the key.
-- Bank-authored explanations (if any) still appear above; AI explain is extra.
+- **Exam mode:** available after the attempt is **completed** — not mid-exam (that
+  would leak the key).
+- **Practice mode:** explain is allowed while the drill is in progress.
+- The explanation uses the **pinned question version** you sat, including your
+  answer vs the key — not today’s live bank row.
 
 ---
 
@@ -73,25 +76,11 @@ If every candidate fails validation, the job is **failed** (not “success with 
 
 ---
 
-## 4. Hint during an exam
-
-In a **live** sitting, a **Hint (H)** control sits under the question.
-
-- Opt-in only — it never fires when the question loads.
-- Keyboard: press **`H`** (ignored while you are typing in a field).
-- Does **not** pause or extend the exam clock.
-- The hint must not name the correct letter or quote the winning option. If the model slips, LinguFlow discards the text and you see “AI is temporarily unavailable” instead of a spoiler.
-
-Hints are only for **your** in-progress session, and only for a question that is actually on that exam.
-
----
-
 ## Keyboard recap
 
 | Context | Key | Action |
 |---|---|---|
-| Live exam | `A` `B` `C` `D` | Select an option |
-| Live exam | `H` | Request a hint (opt-in) |
+| Live exam / practice | `A` `B` `C` `D` | Select an option (where MCQ) |
 | Review | `Space` | Flip, then **Explain** if you want it |
 
 ---
@@ -110,6 +99,6 @@ None of these block finishing an exam or grading a card. Close the panel and con
 
 ## Privacy (short version)
 
-- API keys never live in the browser. The SPA only calls LinguFlow’s `/api/ai/...` routes.
+- API keys never live in the browser. The SPA calls LinguFlow’s `/api/ai/...` and
+  attempt explain routes (`/api/attempts/.../explain`).
 - Explanations may be cached so the same card/answer + language is not regenerated every time.
-- Hints are not cached (they are session-specific).

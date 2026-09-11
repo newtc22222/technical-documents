@@ -1,9 +1,9 @@
 ---
 id: toeic-listening
 title: TOEIC Listening Items
-sidebar_label: TOEIC Listening
-sidebar_position: 4
-description: How LinguFlow stores, authors, and plays TOEIC Listening media (Parts 1–4).
+sidebar_label: TOEIC Listening Items
+sidebar_position: 5
+description: Storage, authoring, and playback architecture for TOEIC Listening audio clips and photos.
 ---
 
 # 🎧 TOEIC Listening Items
@@ -11,9 +11,12 @@ description: How LinguFlow stores, authors, and plays TOEIC Listening media (Par
 How LinguFlow stores, authors, and plays **TOEIC Listening** media (Parts 1–4).
 Reading parts (5–7) leave audio and photo empty.
 
-Shipped in **[v1.1.1](../releases/release-v1.1.1.md)** (PR #97). Migration
-`0010_question_listening_media` revises `0009_exam_draft_snapshot`.
-AI generate (#87) and TTS (#88) are not in this release.
+Shipped in **[v1.1.1](../releases/release-v1.1.1.md)** (PR #97) on the v1 bank columns.
+**Assessment v2** (`0017` / `0018`) moved media into **stimulus / question version
+DSL blocks** (`AudioBlock`, `ImageBlock`, …) — there are no longer
+`questions.audio_url` / `image_url` / `passage_group` columns. The part taxonomy
+and R2 upload pipeline below still apply; storage shape follows
+[Question & Exam Design](../architecture/question-and-exam-design.md).
 
 Related: [Card Image Uploads](./card-image-uploads.md) (same R2 presign pipeline),
 [API Documentation](../architecture/api-documentation.md),
@@ -23,19 +26,13 @@ Related: [Card Image Uploads](./card-image-uploads.md) (same R2 presign pipeline
 
 ## 🎯 What this is
 
-Questions stay in the **shared bank**. Listening does **not** add a separate
-clip table. Each question may hold:
+Questions stay in the **shared bank**. Listening does **not** add a dedicated
+clip table. Shared conversation/talk material is a **Stimulus** with versioned
+`blocks`; stems are **Questions** that reference it. Audio/photo values remain
+dual-mode (**https** URL or R2 object key).
 
-| Column | Stores |
-|---|---|
-| `audio_url` | Absolute **https** URL, or an R2 object key (`questions/{user}/{uuid}.ext`) |
-| `image_url` | Same dual-mode, photos only (Part 1) |
-| `part` | Normalized `part1`–`part7` |
-| `passage_group` | Shared id for a conversation / talk / reading set |
-| `passage` | Optional **script** (listening) or reading text (Parts 6–7) |
-
-Bank listings omit play URLs. A **live or completed session** may include
-short-lived `audioPlayUrl` / `imagePlayUrl` so sitters never need an owner
+Bank listings omit signed play URLs. An **attempt paper** may resolve short-lived
+play URLs for pinned stimulus/question versions so sitters never need an owner
 presign.
 
 ---
@@ -99,7 +96,7 @@ Built-in seeded Part 1 items may have no R2 objects — the player shows
 
 ## 📦 Media contract
 
-Same presign → browser PUT → confirm flow as cards. Pass
+Same presign $\rightarrow$ browser PUT $\rightarrow$ confirm flow as cards. Pass
 `purpose: "question"` so the final key is under `questions/`, not `cards/`.
 
 ```mermaid
@@ -109,7 +106,7 @@ sequenceDiagram
     participant UI as Composer
     participant API as FastAPI
     participant R2 as Cloudflare R2
-    participant DB as Postgres
+    participant DB as PostgreSQL
 
     Author->>UI: pick Part 3/4, attach one clip
     UI->>API: POST /api/media/presign-upload<br/>(purpose "question", audio type)
@@ -154,7 +151,7 @@ Question create / update / set bodies accept camelCase `audioUrl` and
 `imageUrl`. Set create also accepts a shared `audioUrl` (copied to each stem)
 and may omit passage/documents when audio is present.
 
-Session details (`GET /api/exams/sessions/{id}/details`) add:
+Attempt paper payloads (`GET /api/attempts/{id}` / start responses) may add:
 
 ```json
 {

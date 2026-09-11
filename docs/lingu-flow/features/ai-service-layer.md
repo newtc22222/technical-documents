@@ -3,12 +3,12 @@ id: ai-service-layer
 title: AI Service Layer (Developer Guide)
 sidebar_label: AI Service Layer (Dev)
 sidebar_position: 2
-description: Architecture, provider routing, error handling, rate limiting, and HTTP contracts for the AI service layer.
+description: Provider-agnostic LLM client, kill switch, prompt templates, and error-handling architecture.
 ---
 
 # AI Service Layer (Developer Guide)
 
-Implementation of `AI_FEATURE_GUIDE.md` on branch `feature/ai_generation` ([PR #96](https://github.com/newtc22222/lingu-flow/pull/96)).
+Implementation of [AI_FEATURE_GUIDE.md](https://github.com/newtc22222/lingu-flow/blob/feature/ai_generation/AI_FEATURE_GUIDE.md) on branch `feature/ai_generation` ([PR #96](https://github.com/newtc22222/lingu-flow/pull/96)).
 
 Learner-facing copy: [AI Features](./ai-features.md).
 
@@ -42,7 +42,7 @@ flowchart TD
     Factory -->|toeic, ielts, custom, cards| OpenAI["OpenAIAdapter"]
     Factory -->|chosen key empty| Unavailable["UnavailableAIClient<br/>available = False → 503"]
 
-    Gemini --> PG[("Postgres")]
+    Gemini --> PG[("PostgreSQL")]
     OpenAI --> PG
     PG --- Tables["feature_flags · ai_explanations<br/>ai_generation_jobs<br/>questions (INSERT only, never UPDATE)"]
 ```
@@ -62,7 +62,7 @@ flowchart TD
 
 Override with `AI_DEFAULT_PROVIDER=gemini|openai`. Empty override keeps the catalog split.
 
-Factory: `get_ai_client(exam_type=None)` — **never raises at construction**. Empty key → `UnavailableAIClient` (`available is False`). Routes map that to 503 immediately (generate also fails fast on enqueue so the UI does not poll a doomed job).
+Factory: `get_ai_client(exam_type=None)` — **never raises at construction**. Empty key $\rightarrow$ `UnavailableAIClient` (`available is False`). Routes map that to 503 immediately (generate also fails fast on enqueue so the UI does not poll a doomed job).
 
 Adapters talk HTTP via `httpx` (already a backend dep). Timeouts default to `AI_REQUEST_TIMEOUT_SECONDS` (20s). Retries: up to 3 attempts on timeout / 429 / 5xx only.
 
@@ -120,7 +120,7 @@ Same “absence = enabled” semantics as [Exam-Type Feature Flags](./exam-type-
 [{ "key": "ai", "enabled": true }]
 ```
 
-`PATCH /api/feature-flags/ai` body: `{ "enabled": false }`. Unknown key → 404.
+`PATCH /api/feature-flags/ai` body: `{ "enabled": false }`. Unknown key $\rightarrow$ 404.
 
 ### Explain
 
@@ -128,8 +128,8 @@ Same “absence = enabled” semantics as [Exam-Type Feature Flags](./exam-type-
 POST /api/ai/explain-card
 { "cardId": "<uuid>", "locale": "en" }
 
-POST /api/ai/explain
-{ "sessionId": "<uuid>", "questionId": "<uuid>", "locale": "en" }
+POST /api/attempts/{attemptId}/items/{position}/explain
+{ "locale": "en" }
 ```
 
 `200`:
@@ -138,7 +138,14 @@ POST /api/ai/explain
 { "explanation": "...", "cached": false, "provider": "openai" }
 ```
 
-Cache table `ai_explanations`, unique `(kind, subject_key, locale)`. `kind` is `card` or `exam_answer`. `subject_key` is the card id or `{sessionId}:{questionId}`.
+Attempt explain is gated in `services/assessment/explain.py`: completed attempts, or
+`mode=practice` (in-progress exam explain stays blocked). It uses the **pinned**
+question/stimulus versions on the attempt item. Cache table `ai_explanations`,
+unique `(kind, subject_key, locale)`.
+
+### Hint
+
+Removed — there is no `/api/ai/hint` route on the assessment-v2 stack.
 
 ### Generate
 
@@ -152,7 +159,7 @@ GET /api/ai/jobs/{jobId}
 { "jobId": "...", "status": "pending|running|succeeded|failed", "result": { "questionIds": [] }, "error": null }
 ```
 
-`count` 1–10. `examType` in `toeic|ielts|hsk|jlpt|custom`. Worker: `jobs/generate_questions.py` via FastAPI `BackgroundTasks`. Zero valid candidates → `failed`, not `succeeded` + `[]`. A `running` job older than 5 minutes is flipped to `failed` on the next owner `GET`.
+`count` 1–10. `examType` in `toeic|ielts|hsk|jlpt|custom`. Worker: `jobs/generate_questions.py` via FastAPI `BackgroundTasks`. Zero valid candidates $\rightarrow$ `failed`, not `succeeded` + `[]`. A `running` job older than 5 minutes is flipped to `failed` on the next owner `GET`.
 
 Job lifecycle (`AIGenerationJob.status`, `services/ai_generate_service.py`):
 
@@ -173,17 +180,6 @@ stateDiagram-v2
     end note
 ```
 
-### Hint
-
-```http
-POST /api/ai/hint
-{ "sessionId": "<uuid>", "questionId": "<uuid>" }
-
-200 { "hint": "..." }
-```
-
-In-progress + owned + `AnswerRecord` contains the question. Prompt **omits** the key; `hint_leaks_answer()` then rejects letter-as-answer phrasing and the winning option text. One retry, then 503. Does not touch `time_limit_minutes`.
-
 ---
 
 ## Data model (Alembic)
@@ -194,25 +190,18 @@ In-progress + owned + `AnswerRecord` contains the question. Prompt **omits** the
 | `0013_ai_explanations` | `ai_explanations` + unique `(kind, subject_key, locale)` |
 | `0014_ai_generation_jobs` | `ai_generation_jobs` (`user_id` CASCADE, `status`, `payload`, `result`, `error`, timestamps) |
 
-Missing `feature_flags` row ⇒ enabled. Staging/prod: `alembic upgrade head` via existing `entrypoint.sh`.
+Missing `feature_flags` row $\implies$ enabled. Staging/prod: `alembic upgrade head` via existing `entrypoint.sh`.
 
 ---
 
 ## Frontend
 
-```
-frontend/src/features/ai/
-  api.ts            # apiFetch wrappers only
-  types.ts
-  components/
-    ExplainPanel.vue
-    HintControl.vue
-    GenerateQuestionsPanel.vue
-```
+Card explain helper: `frontend/src/shared/ai.ts` (`explainCard` $\rightarrow$
+`/api/ai/explain-card`). Attempt explain and generation live under
+`features/assessment/` (runtime ask panel, authoring generate form) and call
+`assessment_ai` routes. There is no `features/ai/` package and no hint control.
 
-Mounts: `ExamResultsView`, `ReviewSession` (after flip), `LearnView` (after MCQ select), `QuestionBankView`, `QuestionCard` (`H`). Each control owns local `loading` / `error` refs — no Pinia AI store. Copy under `ai.*` in `en.json` / `vi.json` (`font-body` / `font-label` for Vietnamese).
-
-Admin toggle: `AdminFlagsPanel` → `PATCH /api/feature-flags/ai`.
+Admin toggle: `AdminFlagsPanel` $\rightarrow$ `PATCH /api/feature-flags/ai`.
 
 ---
 
@@ -233,7 +222,7 @@ No frontend env vars. Secrets stay on Railway.
 
 **Instant disable (no deploy):**
 
-1. Admin Console → Feature Flags → **AI features** → Deactivate, or
+1. Admin Console $\rightarrow$ Feature Flags $\rightarrow$ **AI features** $\rightarrow$ Deactivate, or
 2. `PATCH /api/feature-flags/ai` `{ "enabled": false }`, or
 3. `UPDATE feature_flags SET enabled = false, updated_at = now() WHERE key = 'ai';`
 
@@ -254,7 +243,7 @@ CI must never call Gemini or OpenAI. Adapters accept a fake `transport`; service
 | `tests/test_ai_client.py` | Routing, empty key, retry vs 4xx, structured parse |
 | `tests/test_feature_flags.py` | Public GET, admin PATCH, missing = enabled |
 | `tests/test_ai_explain.py` | Happy, 401, guest 403, non-owner 404, in-progress 409, 503, flag off |
-| `tests/test_ai_generate.py` | 202, owner poll, unattached insert, other-user 404, zero-valid → failed |
+| `tests/test_ai_generate.py` | 202, owner poll, unattached insert, other-user 404, zero-valid $\rightarrow$ failed |
 | `tests/test_ai_hint.py` | Happy, spoiler regression (must not leak `correct_answer`), completed 404, missing AnswerRecord 404 |
 | `tests/test_exam_visibility.py` | Re-run after wiring — no authz regressions |
 
