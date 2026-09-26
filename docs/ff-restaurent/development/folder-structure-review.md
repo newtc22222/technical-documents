@@ -307,6 +307,21 @@ features/
     └── PaymentChart.tsx
 ```
 
+Pages become thin orchestrators:
+
+```tsx
+// pages/BillsPage.tsx (~100 lines)
+export default function BillsPage() {
+  const data = useLoaderData();
+  return (
+    <>
+      <BillFilters ... />
+      <BillList bills={data.bills} />
+    </>
+  );
+}
+```
+
 ### 3.6 Web: `lib/api.ts` Mixes Types and Client Logic
 
 **Problem**: `api.ts` (376 lines) contains all API response types, the API

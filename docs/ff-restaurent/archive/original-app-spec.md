@@ -16,11 +16,11 @@ Build a web app (mobile to follow later) that helps a single group manage shared
 
 Every user always has the **CUSTOMER** role as a baseline, and may additionally hold **exactly one** of the two "chef" roles:
 
-| Combination | Valid? |
-| --- | --- |
-| CUSTOMER only | ✅ |
-| CUSTOMER + SOUS_CHEF | ✅ |
-| CUSTOMER + HEAD_CHEF | ✅ |
+| Combination                      | Valid?                 |
+| ----------------------------------| ------------------------|
+| CUSTOMER only                    | ✅                      |
+| CUSTOMER + SOUS_CHEF             | ✅                      |
+| CUSTOMER + HEAD_CHEF             | ✅                      |
 | CUSTOMER + SOUS_CHEF + HEAD_CHEF | ❌ (mutually exclusive) |
 
 Permission hierarchy: `HEAD_CHEF ⊃ SOUS_CHEF ⊃ CUSTOMER`
@@ -49,41 +49,41 @@ Permission hierarchy: `HEAD_CHEF ⊃ SOUS_CHEF ⊃ CUSTOMER`
 
 ### Bill
 
-| Field | Description |
-| --- | --- |
-| `id` | Unique identifier |
-| `restaurant_id` / `eatery_id` | Where the order was placed |
-| `base_cost` | Sum of item costs before adjustments |
-| `vat` | VAT amount or percentage (specify which) |
-| `shipping_fee` | Delivery/shipping cost |
-| `discounts[]` | List of discounts, each with a type (percentage/fixed) and value |
-| `vouchers[]` | List of vouchers applied (each with code + value) — a bill can have multiple |
-| `total_cost` | Computed: `base_cost + vat + shipping_fee − sum(discounts) − sum(vouchers)` |
-| `created_by` | SOUS_CHEF or HEAD_CHEF who created it |
-| `status` | active / archived |
-| `participants[]` | List of members with their split (see below) |
+| Field                         | Description                                                                  |
+| -------------------------------| ------------------------------------------------------------------------------|
+| `id`                          | Unique identifier                                                            |
+| `restaurant_id` / `eatery_id` | Where the order was placed                                                   |
+| `base_cost`                   | Sum of item costs before adjustments                                         |
+| `vat`                         | VAT amount or percentage (specify which)                                     |
+| `shipping_fee`                | Delivery/shipping cost                                                       |
+| `discounts[]`                 | List of discounts, each with a type (percentage/fixed) and value             |
+| `vouchers[]`                  | List of vouchers applied (each with code + value) — a bill can have multiple |
+| `total_cost`                  | Computed: `base_cost + vat + shipping_fee − sum(discounts) − sum(vouchers)`  |
+| `created_by`                  | SOUS_CHEF or HEAD_CHEF who created it                                        |
+| `status`                      | active / archived                                                            |
+| `participants[]`              | List of members with their split (see below)                                 |
 
 ### BillParticipant (per member, per bill)
 
-| Field | Description |
-| --- | --- |
-| `member_id` | Reference to user |
-| `origin_cost` | This member's share of `base_cost` (even split across participants) |
-| `allocated_vat` | This member's even share of the bill's total VAT |
-| `allocated_shipping` | This member's even share of the bill's total shipping fee |
-| `discount_applied` | This member's even share of the combined total of all discounts + vouchers |
-| `final_price` | `origin_cost + allocated_vat + allocated_shipping − discount_applied` — the amount this member owes |
-| `payment_status` | paid / waiting |
-| `paid_at` | Timestamp when marked paid |
+| Field                | Description                                                                                         |
+| ----------------------| -----------------------------------------------------------------------------------------------------|
+| `member_id`          | Reference to user                                                                                   |
+| `origin_cost`        | This member's share of `base_cost` (even split across participants)                                 |
+| `allocated_vat`      | This member's even share of the bill's total VAT                                                    |
+| `allocated_shipping` | This member's even share of the bill's total shipping fee                                           |
+| `discount_applied`   | This member's even share of the combined total of all discounts + vouchers                          |
+| `final_price`        | `origin_cost + allocated_vat + allocated_shipping − discount_applied` — the amount this member owes |
+| `payment_status`     | paid / waiting                                                                                      |
+| `paid_at`            | Timestamp when marked paid                                                                          |
 
 ### Restaurant / Eatery
 
-| Field | Description |
-| --- | --- |
-| `id`, `name`, `address`, `cuisine_type` | Basic restaurant profile fields |
-| `type` | e.g. `RESTAURANT` or `EATERY` — **user-defined per entry**, not a fixed system rule. The app treats both as the same underlying entity/table with a `type` label the SOUS_CHEF/HEAD_CHEF assigns when creating it (e.g., "Restaurant" = a physical dine-in venue, "Eatery" = a delivery-only vendor/stall — but this categorization is left to the user creating the entry, not hardcoded logic) |
-| `is_recommended`, `is_favorite` | Flags for favorites and recommendations |
-| `status` | active / archived — **archived entries can be un-archived (restored) by HEAD_CHEF** |
+| Field                                   | Description                                                                                                                                                                                                                                                                                                                                                                                      |
+| --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `id`, `name`, `address`, `cuisine_type` |
+| `type`                                  | e.g. `RESTAURANT` or `EATERY` — **user-defined per entry**, not a fixed system rule. The app treats both as the same underlying entity/table with a `type` label the SOUS_CHEF/HEAD_CHEF assigns when creating it (e.g., "Restaurant" = a physical dine-in venue, "Eatery" = a delivery-only vendor/stall — but this categorization is left to the user creating the entry, not hardcoded logic) |
+| `is_recommended`, `is_favorite`         |
+| `status`                                | active / archived — **archived entries can be un-archived (restored) by HEAD_CHEF**                                                                                                                                                                                                                                                                                                              |
 
 ## 4. Bill-Splitting Logic
 
@@ -112,16 +112,16 @@ Views should support filtering/grouping by:
 
 ## 7. Tech Stack (open source, self-hostable)
 
-| Layer | Choice | Why |
-| --- | --- | --- |
-| Frontend | React + TypeScript + Vite + Tailwind CSS + shadcn/ui | Widely supported, fast dev loop, no vendor lock-in |
-| Backend | Node.js + TypeScript, NestJS (or Fastify if you want something lighter) | Same language as frontend = easier for one dev/small team to maintain |
-| Database | PostgreSQL | Open source, rock-solid for relational/financial data |
-| ORM | Prisma | Type-safe queries, schema-as-code, built-in migrations |
-| Auth | JWT with refresh tokens (roll your own) or Lucia Auth | No paid third-party auth dependency |
-| API contract | OpenAPI/Swagger auto-generated from code | Keeps frontend/backend in sync, self-documenting |
-| Containerization | Docker + docker-compose | `docker compose up` should be enough to run the whole stack locally or on a VPS |
-| CI | GitHub Actions (lint + typecheck + test on every PR) | Free, standard, catches regressions early |
+| Layer            | Choice                                                                  | Why                                                                             |
+| ---------------- | ----------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| Frontend         | React + TypeScript + Vite + Tailwind CSS + shadcn/ui                    | Widely supported, fast dev loop, no vendor lock-in                              |
+| Backend          | Node.js + TypeScript, NestJS (or Fastify if you want something lighter) | Same language as frontend = easier for one dev/small team to maintain           |
+| Database         | PostgreSQL                                                              | Open source, rock-solid for relational/financial data                           |
+| ORM              | Prisma                                                                  | Type-safe queries, schema-as-code, built-in migrations                          |
+| Auth             | JWT with refresh tokens (roll your own) or Lucia Auth                   | No paid third-party auth dependency                                             |
+| API contract     | OpenAPI/Swagger auto-generated from code                                | Keeps frontend/backend in sync, self-documenting                                |
+| Containerization | Docker + docker-compose                                                 | `docker compose up` should be enough to run the whole stack locally or on a VPS |
+| CI               | GitHub Actions (lint + typecheck + test on every PR)                    | Free, standard, catches regressions early                                       |
 
 **Money handling rule (non-negotiable):** store all monetary values as integers in the smallest currency unit (e.g., cents) or as `Decimal`/`numeric` in Postgres — never `float`/`double`. Bill-splitting math is the core feature; float rounding errors will silently corrupt totals.
 
