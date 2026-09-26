@@ -10,9 +10,12 @@ description: Render PostgreSQL to Google Cloud SQL for PostgreSQL migration stra
 
 ## Render PostgreSQL → Google Cloud SQL for PostgreSQL
 
-> [!NOTE]
-> **This database migration was successfully completed on July 25, 2026.** 
-> For the historical record of how the migration was actually executed, please refer to the [GCP Migration Timeline](./gcp-migration-timeline.md) document. This playbook is preserved for historical context and as a reference for future migrations.
+:::note
+
+**This database migration was successfully completed on July 25, 2026.** 
+For the historical record of how the migration was actually executed, please refer to the [GCP Migration Timeline](./gcp-migration-timeline.md) document. This playbook is preserved for historical context and as a reference for future migrations.
+
+:::
 
 ---
 

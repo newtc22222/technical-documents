@@ -11,11 +11,9 @@ description: Detailed timeline, infrastructure provisioning script, and troubles
 This document provides a detailed timeline and explanation of the steps taken to migrate FF RESTaurent from Render to Google Cloud Platform (GCP) during the Phase 2.5 milestone (FF-60). It serves as a learning resource and historical record of the infrastructure provisioning and troubleshooting process.
 
 ## 1. Infrastructure Provisioning Script (`harden-production-gcp.sh`)
-
 To ensure a reproducible and automated deployment, we utilized and expanded upon a bash script (`scripts/harden-production-gcp.sh`) leveraging the `gcloud` CLI. The script provisions all required GCP resources in the correct order.
 
 ### Global Load Balancing & Routing
-
 1. **Global Static IP Allocation:** We reserved a global static IP address (`34.111.254.90`) to provide a stable, single entry point for all incoming traffic.
 2. **Serverless Network Endpoint Groups (NEGs):** NEGs were created to act as a bridge between the Global Load Balancer and the Cloud Run services (API and Web). This allows the Load Balancer to route traffic directly to serverless containers.
 3. **Backend Services:** We created backend services for both the API and Web NEGs, which manage the distribution of traffic.
@@ -26,17 +24,14 @@ To ensure a reproducible and automated deployment, we utilized and expanded upon
 6. **Target HTTPS Proxy & Forwarding Rule:** A target HTTPS proxy was created to bind the SSL certificates to the URL map. Finally, a Global Forwarding Rule was established to listen on Port 443 (HTTPS) at the reserved Static IP and forward traffic to the proxy.
 
 ### Security & Configuration
-
 - **Secret Manager:** To configure Cross-Origin Resource Sharing (CORS), we created and injected a new version of the `ff-cors-origins` secret into Google Cloud Secret Manager. The API Cloud Run service was granted IAM permissions to read this secret on startup.
 
 ## 2. Container Build & Deployment
 
 ### API Deployment
-
 The API container was deployed to Cloud Run using the `render` target from the Dockerfile. The API seamlessly deployed because it relies on standard Node.js execution and Prisma schema migrations which run on container startup.
 
 ### Web Deployment & Troubleshooting
-
 The frontend Web deployment presented several interesting challenges that we had to resolve:
 
 1. **Windows/WSL Interoperability with `gcloud`:**
@@ -54,14 +49,11 @@ The frontend Web deployment presented several interesting challenges that we had
    - *Solution:* We updated the deployment command (`gcloud run deploy`) to explicitly include `--port 80`, informing Cloud Run exactly where to route internal traffic.
 
 ## 3. Monitoring & Observability
-
 After the services were successfully deployed, we provisioned Google Cloud Monitoring resources:
-
 - **Uptime Checks:** Automated checks to ping the Web and API endpoints periodically from multiple global regions to verify availability.
 - **Alert Policies:** Policies configured to alert the system administrator if the uptime checks fail or if the services become unreachable.
 
 ## 4. Post-Cutover
-
 - The user successfully updated the DNS Registrar A Records for `api.ff-restaurent.com` and `app.ff-restaurent.com` to point to the Load Balancer IP (`34.111.254.90`).
 - The system entered a 48-hour monitoring window to observe stability before retiring the legacy Render infrastructure.
 
@@ -85,7 +77,6 @@ Now that the infrastructure is established, you do **NOT** need to run the `hard
 You can deploy updates via the Google Cloud CLI (or set up a GitHub Actions pipeline to run these commands automatically):
 
 ### Deploying the API
-
 1. Ensure your current working directory is the project root.
 2. Run the Cloud Build submit command for the API Dockerfile:
    ```bash
@@ -97,7 +88,6 @@ You can deploy updates via the Google Cloud CLI (or set up a GitHub Actions pipe
    ```
 
 ### Deploying the Web App
-
 1. Ensure your current working directory is the project root.
 2. Run the Cloud Build submit command for the Web Dockerfile:
    ```bash

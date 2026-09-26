@@ -8,10 +8,13 @@ description: Phase 2 contract verification gate — deployment gate, post-deploy
 
 # Phase 2 contract verification runbook
 
-> [!NOTE]
-> **This contract gate completed with the [v1.1.0](../releases/release-v1.1.0.md) release.**
-> The runbook is preserved as the historical record of the Phase 2 verification
-> procedure and as a reference for future contract migrations.
+:::note
+
+**This contract gate completed with the [v1.1.0](../releases/release-v1.1.0.md) release.**
+The runbook is preserved as the historical record of the Phase 2 verification
+procedure and as a reference for future contract migrations.
+
+:::
 
 The expand/backfill operations are retired after accepted production repeat run 29760632288. Do not run the removed backfill command after migration 14.
 

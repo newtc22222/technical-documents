@@ -13,11 +13,14 @@ member is signed in. The browser opens an authenticated Server-Sent Events
 (SSE) connection, receives lightweight invalidation events, and refetches the
 authoritative notification list without reloading the page.
 
-> [!NOTE]
-> FF-88 was merged into `develop` in
-> [PR #90](https://github.com/newtc22222/ff-restaurent/pull/90). The feature
-> becomes available in an environment after the merged API and web revision is
-> deployed.
+:::note
+
+FF-88 was merged into `develop` in
+[PR #90](https://github.com/newtc22222/ff-restaurent/pull/90). The feature
+becomes available in an environment after the merged API and web revision is
+deployed.
+
+:::
 
 This feature is independent of browser push delivery. It does not require
 notification permission or Firebase configuration. See
@@ -57,21 +60,21 @@ API mutations succeed. Later refetches reconcile it with the database.
 
 ## Know the stream contract
 
-| Behavior | Contract |
-| --- | --- |
-| Endpoint | Authenticated `GET /notifications/stream` |
-| Content type | `text/event-stream` |
-| Ownership | Every query includes the authenticated `userId` and `inAppVisible = true` |
-| Cursor | ISO creation time plus notification ID, ordered by `(createdAt, id)` |
-| Poll interval | Two seconds while the stream is idle |
-| Batch size | Up to 100 cursor-ordered rows per query |
-| Heartbeat | A comment frame every 15 seconds while idle |
-| Reconnect | 1, 2, 4, 8, 16, then at most 30 seconds between attempts |
+| Behavior      | Contract                                                                          |
+| ------------- | --------------------------------------------------------------------------------- |
+| Endpoint      | Authenticated `GET /notifications/stream`                                         |
+| Content type  | `text/event-stream`                                                               |
+| Ownership     | Every query includes the authenticated `userId` and `inAppVisible = true`         |
+| Cursor        | ISO creation time plus notification ID, ordered by `(createdAt, id)`              |
+| Poll interval | Two seconds while the stream is idle                                              |
+| Batch size    | Up to 100 cursor-ordered rows per query                                           |
+| Heartbeat     | A comment frame every 15 seconds while idle                                       |
+| Reconnect     | 1, 2, 4, 8, 16, then at most 30 seconds between attempts                          |
 | Healthy reset | A connection lasting at least 30 seconds resets the next retry delay to one second |
-| Re-auth | Each stream ends after at most 60 seconds so reconnect revalidates the session |
-| Recovery | The browser sends the last cursor in `Last-Event-ID` and refetches the full list |
-| Disconnect | The API aborts polling and releases stream state promptly |
-| Failure | Silent fallback to the last authoritative snapshot; no toast or broken navigation |
+| Re-auth       | Each stream ends after at most 60 seconds so reconnect revalidates the session     |
+| Recovery      | The browser sends the last cursor in `Last-Event-ID` and refetches the full list  |
+| Disconnect    | The API aborts polling and releases stream state promptly                         |
+| Failure       | Silent fallback to the last authoritative snapshot; no toast or broken navigation |
 
 Repeated invalidations do not duplicate inbox entries because the refetched
 database list is authoritative and notifications have stable IDs.
@@ -133,16 +136,16 @@ silent failure.
 
 ## Troubleshoot live updates
 
-| Symptom | Check | Resolution |
-| --- | --- | --- |
-| Stream returns `401` or `403` | Session token and account state | Sign in again; the client deliberately stops retrying rejected authentication |
-| Stream returns `404` | Deployed API revision | Deploy the API revision containing FF-88 |
-| Browser blocks the preflight | CORS response headers | Confirm `Authorization` and `Last-Event-ID` are allowed |
-| Stream stays pending with no events | Heartbeat frames and source rows | A pending request is normal; confirm a visible notification was created for that user |
-| Header does not update within five seconds | `/notifications/stream`, `/notifications`, and API logs | Confirm the invalidation arrived and the authoritative refetch succeeded |
-| Stream reconnects periodically | Cloud Run or network request lifetime | This is expected; cursor recovery and connection-time refetch handle missed rows |
-| Push works but the open tab does not update | SSE endpoint and web revision | Push and the real-time inbox are separate channels; verify FF-88 is deployed to both apps |
-| Live inbox works but no system notification appears | Firebase and browser permission | Follow [Push Notifications](./push-notifications.md); SSE does not grant or require push permission |
+| Symptom                                             | Check                                                   | Resolution                                                                                     |
+| --------------------------------------------------- | ------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| Stream returns `401` or `403`                       | Session token and account state                         | Sign in again; the client deliberately stops retrying rejected authentication                  |
+| Stream returns `404`                                | Deployed API revision                                   | Deploy the API revision containing FF-88                                                       |
+| Browser blocks the preflight                        | CORS response headers                                   | Confirm `Authorization` and `Last-Event-ID` are allowed                                        |
+| Stream stays pending with no events                 | Heartbeat frames and source rows                        | A pending request is normal; confirm a visible notification was created for that user          |
+| Header does not update within five seconds          | `/notifications/stream`, `/notifications`, and API logs | Confirm the invalidation arrived and the authoritative refetch succeeded                       |
+| Stream reconnects periodically                      | Cloud Run or network request lifetime                   | This is expected; cursor recovery and connection-time refetch handle missed rows               |
+| Push works but the open tab does not update         | SSE endpoint and web revision                           | Push and the real-time inbox are separate channels; verify FF-88 is deployed to both apps      |
+| Live inbox works but no system notification appears | Firebase and browser permission                         | Follow [Push Notifications](./push-notifications.md); SSE does not grant or require push permission |
 
 Stream failures must remain silent. Do not add a user-facing error that blocks
 navigation, authentication, notification creation, or push delivery solely

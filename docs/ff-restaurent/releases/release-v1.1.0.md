@@ -2,7 +2,7 @@
 id: release-v1.1.0
 title: Release v1.1.0
 sidebar_label: v1.1.0
-sidebar_position: 4
+sidebar_position: 6
 description: FF RESTaurent 1.1.0 release notes — Phase 2 implementation, FF-38 contract migration, Supabase media storage, and production evidence.
 ---
 
