@@ -69,6 +69,23 @@ A missing Vietnamese file silently falls back to English — most of `laptech/` 
 
 Known drift: keys in `current.json` are still `sidebar.tutorialSidebar.category.*` from before the sidebars were renamed to `laptech`/`flashcardLearning`/`knowledge`, so those category translations no longer resolve. Re-run `write-translations -- --locale vi` to emit the current keys (it merges into existing files rather than overwriting translated messages).
 
+## Syncing FF RESTaurent docs from the wiki
+
+`docs/ff-restaurent/` mirrors the private `ff-restaurent` GitHub wiki. The sync is one-way (wiki to docs), and `scripts/sync-ff-wiki.mjs` does it, driven by `scripts/ff-wiki-sync.config.json`.
+
+```bash
+# Clone or pull the wiki first: git clone https://github.com/newtc22222/ff-restaurent.wiki.git
+npm run sync:ff-wiki -- --wiki ../ff-restaurent.wiki --pages Release-v2.4.0   # sync named pages
+npm run sync:ff-wiki -- --wiki ../ff-restaurent.wiki --check                 # list pages that differ, write nothing
+npm run build                                                                # broken links fail the build
+```
+
+- `FF_WIKI_DIR` can replace `--wiki`.
+- Pages matching `exclude` (`_Sidebar`, `_Footer`, `Pre-release-Checklist-*`) are never published, and links to them become plain text. Keep internal checklists out of this public site.
+- `Home` is marked `manual`, so `docs/ff-restaurent/index.md` is edited by hand. Add new releases to its Releases table and update its "Current state" note yourself.
+- A new wiki page needs a `pages` entry with `path` and `frontMatter` (at least `id`, `title`, `sidebar_label`, `sidebar_position`). Existing pages keep their front matter.
+- The script converts GitHub alerts to admonitions, rewrites wiki links to relative `./page.md` links, strips HTML comments, and labels bare code fences `text`. It does not re-apply table alignment or other hand edits, so prefer `--pages` over a full sync and review the diff.
+
 ## Markdown features available
 
 - Mermaid via `@docusaurus/theme-mermaid` + `markdown.mermaid: true` — use ` ```mermaid ` fences.

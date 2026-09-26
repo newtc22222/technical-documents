@@ -1,0 +1,42 @@
+{
+  "docsDir": "docs/ff-restaurent",
+  "exclude": ["^_", "^Pre-release-Checklist-"],
+  "replacements": [
+    {
+      "regex": true,
+      "from": "\\s*[—-]?\\s*see also the \\[RC checklist\\]\\(Pre-release-Checklist-[^)]*\\)",
+      "to": ""
+    },
+    { "regex": true, "from": "^Related: \\[Pre-release-Checklist-[^\\n]*\\n\\n?", "to": "" },
+    { "regex": true, "from": "^\\| \\[RC checklist[^\\n]*\\n", "to": "" }
+  ],
+  "pages": {
+    "Home": { "path": "index.md", "manual": true },
+    "Release-v2.3.0-rc.1": {
+      "path": "releases/release-v2.3.0-rc.1.md",
+      "frontMatter": {
+        "id": "release-v2.3.0-rc.1",
+        "title": "Release v2.3.0-rc.1 (Staging)",
+        "sidebar_label": "v2.3.0-rc.1 (Staging)",
+        "sidebar_position": 1,
+        "description": "FF RESTaurent 2.3.0-rc.1 Staging release candidate, with bill notifications and auto-archive, cuisine images, cookbooks, meal votes, and Honor Badges."
+      }
+    },
+    "Release-v2.2.2": {
+      "path": "releases/release-v2.2.2.md",
+      "frontMatter": {
+        "id": "release-v2.2.2",
+        "title": "Release v2.2.2",
+        "sidebar_label": "v2.2.2",
+        "sidebar_position": 2,
+        "description": "FF RESTaurent 2.2.2 release notes, with member cost formulas, mobile responsiveness, and Docker Compose standardization."
+      }
+    },
+    "Release-v2.2.0": { "frontMatter": { "sidebar_position": 3 } },
+    "Release-v2.1.0": { "frontMatter": { "sidebar_position": 4 } },
+    "Release-v2.0.0": { "frontMatter": { "sidebar_position": 5 } },
+    "Release-v1.1.0": { "frontMatter": { "sidebar_position": 6 } },
+    "Release-v1.1.0-RC": { "frontMatter": { "sidebar_position": 7 } },
+    "Release-v1.0.0": { "frontMatter": { "sidebar_position": 8 } }
+  }
+}
