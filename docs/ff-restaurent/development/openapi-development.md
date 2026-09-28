@@ -10,8 +10,11 @@ description: How to update and validate the OpenAPI contract, generated transpor
 
 FF RESTaurent generates its OpenAPI specification and web transport types from the same Zod schemas that Fastify uses for runtime validation. This guide shows how to inspect the contract, regenerate its artifacts, run its checks, and diagnose drift.
 
-> [!NOTE]
-> The FF-31 setup is currently on pull request [#59](https://github.com/newtc22222/ff-restaurent/pull/59). If the commands below are missing from your branch, check out `codex/ff-31-openapi-generated-client` or wait until the pull request merges into `develop`.
+:::note
+
+The FF-31 setup is currently on pull request [#59](https://github.com/newtc22222/ff-restaurent/pull/59). If the commands below are missing from your branch, check out `codex/ff-31-openapi-generated-client` or wait until the pull request merges into `develop`.
+
+:::
 
 ## Understand the contract flow
 
@@ -121,15 +124,15 @@ The gate lives in `.github/workflows/ci.yml` under **Verify OpenAPI and generate
 
 Use the failure message to identify which contract layer is out of sync:
 
-| Failure | Cause | Resolution |
-| --- | --- | --- |
-| `apps/api/openapi.json is stale` | Runtime schemas changed without regeneration | Run `npm run openapi:generate`, inspect the diff, and commit the artifact |
-| `apps/web/src/lib/generated/api-types.ts is stale` | The generated web contract does not match the runtime document | Regenerate and commit both generated artifacts |
-| `Missing OpenAPI component` | A required named transport schema is absent | Add or restore the component in `apps/api/src/schemas/transport.ts` |
-| A shared enum appears as string literals | The generator mapping does not cover the component | Update `sharedTypes` in `scripts/generate-openapi.ts`; do not patch generated output |
-| A partial update requires every field | The route contract uses a create schema | Export and use a `.partial()` update schema in both locations |
-| Swagger returns `401` before a validation error | Authentication runs before body validation by contract | Supply a valid JWT before testing request validation |
-| Typecheck fails while loading Prisma configuration | `DATABASE_URL` is missing | Set `DATABASE_URL` and rerun `npm run typecheck` |
+| Failure                                            | Cause                                                          | Resolution                                                                           |
+| -------------------------------------------------- | -------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| `apps/api/openapi.json is stale`                   | Runtime schemas changed without regeneration                   | Run `npm run openapi:generate`, inspect the diff, and commit the artifact            |
+| `apps/web/src/lib/generated/api-types.ts is stale` | The generated web contract does not match the runtime document | Regenerate and commit both generated artifacts                                       |
+| `Missing OpenAPI component`                        | A required named transport schema is absent                    | Add or restore the component in `apps/api/src/schemas/transport.ts`                  |
+| A shared enum appears as string literals           | The generator mapping does not cover the component             | Update `sharedTypes` in `scripts/generate-openapi.ts`; do not patch generated output |
+| A partial update requires every field              | The route contract uses a create schema                        | Export and use a `.partial()` update schema in both locations                        |
+| Swagger returns `401` before a validation error    | Authentication runs before body validation by contract         | Supply a valid JWT before testing request validation                                 |
+| Typecheck fails while loading Prisma configuration | `DATABASE_URL` is missing                                      | Set `DATABASE_URL` and rerun `npm run typecheck`                                     |
 
 ## Complete the developer checklist
 

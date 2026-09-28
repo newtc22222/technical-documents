@@ -19,11 +19,10 @@ and how to run it in production.
 [Production Runbook](./runbooks-operations/production-runbook.md) for operating the live service.
 
 > [!NOTE]
-> **Current state.** The latest release is [v2.2.0](./releases/release-v2.2.0.md)
-> (2026-08-02). The platform includes real-time SSE notification streaming,
-> FCM push notifications, managed dining area images, custom accent themes,
-> consolidated Settings, application information dialogs, and automated release
-> verification.
+> **Current state.** Production runs [v2.2.2](./releases/release-v2.2.2.md)
+> (2026-08-20). Staging (`develop`) has
+> [v2.3.0-rc.1](./releases/release-v2.3.0-rc.1.md) in progress; it is not in
+> production yet.
 
 ---
 
@@ -75,6 +74,8 @@ and how to run it in production.
 
 | Release | Date | Summary |
 | --- | --- | --- |
+| [v2.3.0-rc.1 (Staging)](./releases/release-v2.3.0-rc.1.md) | 2026-09-19 | Staging release candidate: bill-created notifications and auto-archive, dining area detail editing, cuisine EN/VI names and images, meal-vote surveys and wheels, and Honor Badges. Not in production yet. |
+| [v2.2.2](./releases/release-v2.2.2.md) | 2026-08-20 | Member cost formulas for bill splitting, mobile responsiveness across the app, and Docker Compose standardization. |
 | [v2.2.0](./releases/release-v2.2.0.md) | 2026-08-02 | Real-time SSE notification stream, FCM push delivery, dining area media, custom accent themes, consolidated Settings, and automated verification. |
 | [v2.1.0](./releases/release-v2.1.0.md) | 2026-07-30 | Phase 2.5/2B hardening: staging CI/CD, OpenAPI transport generation, filter/date improvements, avatars, and agent tooling. |
 | [v2.0.0](./releases/release-v2.0.0.md) | 2026-07-26 | Major infrastructure shift — migration from Render to GCP (Cloud Run, Cloud SQL) and Cloudflare. |

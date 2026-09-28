@@ -2,7 +2,7 @@
 id: release-v1.0.0
 title: Release v1.0.0
 sidebar_label: v1.0.0
-sidebar_position: 6
+sidebar_position: 8
 description: FF RESTaurent 1.0.0 release notes — Phase 1 launch scope, authentication, role boundaries, and settlement integrity.
 ---
 
@@ -141,13 +141,13 @@ VITE_API_URL=https://api.example.com
 
 1. Phase 1 implementation and release gates completed on `develop`.
 2. The release candidate was promoted through the reviewed `develop` → `main`
-    workflow.
+   workflow.
 3. Production migrations, health/readiness checks, smoke coverage, rollback
-    controls, and recovery procedures are documented and accepted for release.
+   controls, and recovery procedures are documented and accepted for release.
 4. The final release boundary is recorded by the annotated `v1.0.0` tag on
-    `main`.
+   `main`.
 5. Phase 1 Linear work, FF-5 through FF-21, is closed; later roadmap phases
-    remain open independently.
+   remain open independently.
 
 ## Known limitations and next phase
 

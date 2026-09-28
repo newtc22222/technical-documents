@@ -10,15 +10,18 @@ description: End-to-end plan for moving from Render to Google Cloud Platform (Cl
 
 This document outlines the end-to-end plan for migrating **FF RESTaurent** from Render to **Google Cloud Platform (GCP)**.
 
-> [!NOTE]
-> **This migration was successfully completed on July 25, 2026.** 
-> For the historical record of how the migration was actually executed, including post-mortem details and challenges overcome (such as Cloud Build caching and WSL issues), please refer to the [GCP Migration Timeline](./gcp-migration-timeline.md) document. This plan is preserved for historical context.
+:::note
+
+**This migration was successfully completed on July 25, 2026.** 
+For the historical record of how the migration was actually executed, including post-mortem details and challenges overcome (such as Cloud Build caching and WSL issues), please refer to the [GCP Migration Timeline](./gcp-migration-timeline.md) document. This plan is preserved for historical context.
+
+:::
 
 ---
 
 ## 1. Executive Summary & Target Architecture
 
-The goal of this migration is to transition the current monorepo stack (`apps/api`, `apps/web`, and `packages/shared`) from Render to a serverless, scalable GCP architecture.
+The goal of this migration is to transition the current monorepo stack ([apps/api](https://github.com/newtc22222/ff-restaurent/tree/develop/apps/api), [apps/web](https://github.com/newtc22222/ff-restaurent/tree/develop/apps/web), and [packages/shared](https://github.com/newtc22222/ff-restaurent/tree/develop/packages/shared)) from Render to a serverless, scalable GCP architecture.
 
 ### High-Level Architecture Diagram
 
@@ -68,7 +71,7 @@ flowchart TD
 | Component | Current Host (Render) | Target Host (GCP) | Rationale |
 | :--- | :--- | :--- | :--- |
 | **API Backend** | Render Web Service | **Cloud Run** | Native container support, auto-scaling to zero, low cost, fast startup |
-| **Web Frontend** | Render Static Site | **Cloud Run** (or Firebase) | Containerized Nginx handles SPA routes seamlessly |
+| **Web Frontend** | Render Static Site | **Cloud Run** (or Firebase) | Containerized Nginx ([apps/web/Dockerfile](https://github.com/newtc22222/ff-restaurent/blob/develop/apps/web/Dockerfile)) handles SPA routes seamlessly |
 | **Database** | Render PostgreSQL | **Cloud SQL for PostgreSQL** | Managed Postgres 16 with automated backups, high availability, and SSL security |
 | **Secrets & Config** | Render Environment Variables | **GCP Secret Manager** | Secure, versioned secret management integrated directly into Cloud Run |
 | **Containers** | Docker Buildpack | **Artifact Registry** | Secure repository for versioned Docker container images |
@@ -151,8 +154,11 @@ gantt
 
 ### Phase 1: Database Provisioning & Data Migration
 
-> [!IMPORTANT]
-> **Decouple Database Migrations**: Currently, `apps/api/Dockerfile` executes `prisma migrate deploy` upon container startup. Because Cloud Run dynamically scales multiple container instances concurrently, migrations must be separated into a pre-deployment step to prevent database lock contention.
+:::info
+
+**Decouple Database Migrations**: Currently, [apps/api/Dockerfile](https://github.com/newtc22222/ff-restaurent/blob/develop/apps/api/Dockerfile#L24) executes `prisma migrate deploy` upon container startup. Because Cloud Run dynamically scales multiple container instances concurrently, migrations must be separated into a pre-deployment step to prevent database lock contention.
+
+:::
 
 1. **Provision Cloud SQL Instance**:
 
@@ -248,8 +254,11 @@ echo -n "https://app.ff-restaurent.com" | \
 
 ### Phase 4: Web SPA Frontend Deployment
 
-> [!NOTE]
-> `VITE_API_URL` is compiled into static assets at build time. Obtain the deployed API Cloud Run URL (e.g. `https://ff-restaurent-api-xyz.a.run.app`) before building the Web container image.
+:::note
+
+`VITE_API_URL` is compiled into static assets at build time. Obtain the deployed API Cloud Run URL (e.g. `https://ff-restaurent-api-xyz.a.run.app`) before building the Web container image.
+
+:::
 
 1. **Build & Push Web Container**:
 

@@ -2,16 +2,19 @@
 id: release-v1.1.0-rc
 title: Release v1.1.0 Release Candidate
 sidebar_label: v1.1.0-RC
-sidebar_position: 5
+sidebar_position: 7
 description: FF RESTaurent 1.1.0 release candidate procedure and candidate controls (superseded by v1.1.0 final).
 ---
 
 # FF RESTaurent 1.1.0 release candidate
 
-> [!NOTE]
-> **This is the release candidate procedure, superseded by the final
-> [v1.1.0](./release-v1.1.0.md) release.** Final run IDs, report counts, production
-> SHA, and contract evidence live on that page, not here.
+:::note
+
+**This is the release candidate procedure, superseded by the final
+[v1.1.0](./release-v1.1.0.md) release.** Final run IDs, report counts, production
+SHA, and contract evidence live on that page, not here.
+
+:::
 
 Candidate tag: `v1.1.0-rc.1`
 

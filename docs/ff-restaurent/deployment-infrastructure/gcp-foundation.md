@@ -14,20 +14,20 @@ over traffic.
 
 ## Fixed inventory
 
-| Resource | Configuration |
-| --- | --- |
-| Project | `ff-restaurent` (`192523226156`) |
-| Region | `asia-east1` |
-| Cloud SQL | `ff-restaurent-db`, PostgreSQL 16 Enterprise, zonal `db-custom-1-3840`, 10 GB SSD with auto-grow |
-| Database | `ff_restaurent`; application user `ff_app` |
-| Recovery | Daily backup at 18:00 UTC, 14 retained backups, seven days of PITR logs, deletion protection |
-| Database network | Public IP with no authorized networks; Cloud SQL connector/Auth Proxy only |
-| Artifact Registry | `asia-east1` Docker repository `ff-restaurent` |
-| Runtime identity | `ff-runtime@ff-restaurent.iam.gserviceaccount.com` |
-| Deployment identity | `github-deployer@ff-restaurent.iam.gserviceaccount.com` |
-| Workload identity | Pool `github-actions`, provider `ff-restaurent`, immutable repository/owner IDs, `main` subject |
-| Cloud Run placeholders | Private `ff-restaurent-api` and `ff-restaurent-web`, minimum zero and maximum one instance |
-| Budget | VND 2,630,000 per month (approximately USD 100 at the July 23, 2026 market rate); actual alerts at 50%, 80%, and 100%, forecast alert at 100% |
+| Resource               | Configuration                                                                                                                                 |
+| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| Project                | `ff-restaurent` (`192523226156`)                                                                                                              |
+| Region                 | `asia-east1`                                                                                                                                  |
+| Cloud SQL              | `ff-restaurent-db`, PostgreSQL 16 Enterprise, zonal `db-custom-1-3840`, 10 GB SSD with auto-grow                                              |
+| Database               | `ff_restaurent`; application user `ff_app`                                                                                                    |
+| Recovery               | Daily backup at 18:00 UTC, 14 retained backups, seven days of PITR logs, deletion protection                                                  |
+| Database network       | Public IP with no authorized networks; Cloud SQL connector/Auth Proxy only                                                                    |
+| Artifact Registry      | `asia-east1` Docker repository `ff-restaurent`                                                                                                |
+| Runtime identity       | `ff-runtime@ff-restaurent.iam.gserviceaccount.com`                                                                                            |
+| Deployment identity    | `github-deployer@ff-restaurent.iam.gserviceaccount.com`                                                                                       |
+| Workload identity      | Pool `github-actions`, provider `ff-restaurent`, immutable repository/owner IDs, `main` subject                                               |
+| Cloud Run placeholders | Private `ff-restaurent-api` and `ff-restaurent-web`, minimum zero and maximum one instance                                                    |
+| Budget                 | VND 2,630,000 per month (approximately USD 100 at the July 23, 2026 market rate); actual alerts at 50%, 80%, and 100%, forecast alert at 100% |
 
 The runtime identity has Cloud SQL Client at project scope and Secret Manager
 access only on the eight application secrets. The deployment identity can

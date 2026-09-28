@@ -13,19 +13,22 @@ FF RESTaurent stores every notification in the application and uses Firebase Clo
 For authenticated updates to the notification list and unread badge while the
 application is open, see [Real-Time Notification Inbox](./real-time-notification-inbox.md).
 
-> [!IMPORTANT]
-> The notification implementation is merged into `develop`, but the current production web build and Cloud Run deployment do not pass the Firebase environment variables. Complete the [production enablement](#enable-push-delivery-in-production) steps before treating push delivery as active.
+:::info
+
+The notification implementation is merged into `develop`, but the current production web build and Cloud Run deployment do not pass the Firebase environment variables. Complete the [production enablement](#enable-push-delivery-in-production) steps before treating push delivery as active.
+
+:::
 
 ## Understand the delivery contract
 
 The in-app `Notification` row remains the source of truth. Push delivery never blocks or fails the action that creates a restaurant, publishes a Collection, or sends a payment reminder.
 
-| Event | Audience | Default in-app state | Default push state |
-| --- | --- | --- | --- |
-| Payment reminder | Eligible unpaid participants with `paymentRemindersEnabled` enabled | Enabled | Sent when the browser has a current subscription |
-| New restaurant | Active members except the actor | Enabled | Disabled until the member opts in |
-| New public Collection | Active members except the actor | Enabled | Disabled until the member opts in |
-| Meal-voting lifecycle | Reserved for a later phase | Not exposed | Not exposed |
+| Event                 | Audience                                                            | Default in-app state | Default push state                               |
+| --------------------- | ------------------------------------------------------------------- | -------------------- | ------------------------------------------------ |
+| Payment reminder      | Eligible unpaid participants with `paymentRemindersEnabled` enabled | Enabled              | Sent when the browser has a current subscription |
+| New restaurant        | Active members except the actor                                     | Enabled              | Disabled until the member opts in                |
+| New public Collection | Active members except the actor                                     | Enabled              | Disabled until the member opts in                |
+| Meal-voting lifecycle | Reserved for a later phase                                          | Not exposed          | Not exposed                                      |
 
 Product-event publishers use a deduplication key. Repeating the same publish action does not create or resend the same event. Push-only preferences create a hidden source row, so delivery state remains observable without displaying an in-app entry.
 
@@ -190,16 +193,16 @@ Do not mark production push as enabled until all checks pass:
 
 Use the source row and browser state to isolate failures.
 
-| Symptom | Check | Resolution |
-| --- | --- | --- |
-| Browser reports denied permission | Site notification permission | Reset the permission, reload, and enable a push category from Profile again |
-| Browser never asks for permission | Build mode and service worker | Use `vite preview`, confirm `/sw.js` is registered, and retry from a user action |
-| No `PushSubscription` row | Web environment and token registration | Confirm all five `VITE_FIREBASE_*` values and inspect browser service-worker errors |
-| Notification exists with `SKIPPED` | Subscription and API configuration | Confirm the member has a current token, `FIREBASE_PROJECT_ID` is set, and ADC can send messages |
-| API logs `push_send_failed` | FCM API and Identity and Access Management (IAM) | Enable `fcm.googleapis.com` and grant the runtime service account the FCM API Admin role |
-| Actor receives no product notification | Audience rules | This is expected because restaurant and Collection events exclude the actor |
-| Re-publishing a Collection sends nothing | Deduplication key | This is expected because one Collection publish event is delivered once |
-| Token disappears after a send | Firebase token status | This is expected when Firebase reports the token as unregistered |
+| Symptom                                  | Check                                            | Resolution                                                                                      |
+| ---------------------------------------- | ------------------------------------------------ | ----------------------------------------------------------------------------------------------- |
+| Browser reports denied permission        | Site notification permission                     | Reset the permission, reload, and enable a push category from Profile again                     |
+| Browser never asks for permission        | Build mode and service worker                    | Use `vite preview`, confirm `/sw.js` is registered, and retry from a user action                |
+| No `PushSubscription` row                | Web environment and token registration           | Confirm all five `VITE_FIREBASE_*` values and inspect browser service-worker errors             |
+| Notification exists with `SKIPPED`       | Subscription and API configuration               | Confirm the member has a current token, `FIREBASE_PROJECT_ID` is set, and ADC can send messages |
+| API logs `push_send_failed`              | FCM API and Identity and Access Management (IAM) | Enable `fcm.googleapis.com` and grant the runtime service account the FCM API Admin role        |
+| Actor receives no product notification   | Audience rules                                   | This is expected because restaurant and Collection events exclude the actor                     |
+| Re-publishing a Collection sends nothing | Deduplication key                                | This is expected because one Collection publish event is delivered once                         |
+| Token disappears after a send            | Firebase token status                            | This is expected when Firebase reports the token as unregistered                                |
 
 Push failures must not change the originating request result. Investigate warnings and delivery status without retrying the product action solely to force a push.
 
