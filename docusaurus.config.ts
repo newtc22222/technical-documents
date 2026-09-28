@@ -6,8 +6,19 @@ import type * as Preset from "@docusaurus/preset-classic";
 
 const config: Config = {
   title: "Technical Docs",
-  favicon: "img/favicon.ico",
+  favicon: "img/favicon.svg",
   url: "https://github.com",
+
+  headTags: [
+    { tagName: "link", attributes: { rel: "preconnect", href: "https://fonts.googleapis.com" } },
+    {
+      tagName: "link",
+      attributes: { rel: "preconnect", href: "https://fonts.gstatic.com", crossorigin: "anonymous" },
+    },
+  ],
+  stylesheets: [
+    "https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap",
+  ],
 
   // FOR DEPLOY
   baseUrl: "/",
@@ -81,10 +92,10 @@ const config: Config = {
     },
     navbar: {
       title: "Technical Docs",
-      // logo: {
-      //   alt: "Technical Docs Logo",
-      //   src: "img/logo.svg",
-      // },
+      logo: {
+        alt: "",
+        src: "img/favicon.svg",
+      },
       items: [
         {
           type: "docSidebar",
@@ -119,8 +130,11 @@ const config: Config = {
       ],
     },
     footer: {
-      style: "dark",
-      copyright: `Copyright © ${new Date().getFullYear()} Technical Docs, Inc. Built with Docusaurus.`,
+      style: "light",
+      copyright: `© ${new Date().getFullYear()} Technical Docs. Built with Docusaurus.`,
+    },
+    mermaid: {
+      theme: { light: "neutral", dark: "dark" },
     },
     prism: {
       theme: prismThemes.github,

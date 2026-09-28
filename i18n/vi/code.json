@@ -360,5 +360,83 @@
   "theme.SearchPage.noResultsText": {
     "message": "Không tìm thấy kết quả nào",
     "description": "The paragraph for empty search result"
+  },
+  "homepage.ffRestaurent.summary": {
+    "message": "Ứng dụng chia hóa đơn nhóm và theo dõi nhà hàng. Cách phát triển, triển khai và vận hành trên môi trường production."
+  },
+  "homepage.ffRestaurent.development": {
+    "message": "Phát triển"
+  },
+  "homepage.ffRestaurent.domainContracts": {
+    "message": "Quy chuẩn Nghiệp vụ"
+  },
+  "homepage.ffRestaurent.deployment": {
+    "message": "Triển khai & Hạ tầng"
+  },
+  "homepage.ffRestaurent.runbooks": {
+    "message": "Quy trình & Vận hành"
+  },
+  "homepage.ffRestaurent.performance": {
+    "message": "Hiệu năng"
+  },
+  "homepage.ffRestaurent.releases": {
+    "message": "Bản phát hành"
+  },
+  "homepage.linguFlow.summary": {
+    "message": "Luyện thi HSK, JLPT, TOEIC và IELTS bằng bàn phím, có lặp lại ngắt quãng và trợ lý AI."
+  },
+  "homepage.linguFlow.architecture": {
+    "message": "Kiến trúc"
+  },
+  "homepage.linguFlow.features": {
+    "message": "Tính năng"
+  },
+  "homepage.linguFlow.operations": {
+    "message": "Vận hành & DevOps"
+  },
+  "homepage.linguFlow.releases": {
+    "message": "Bản phát hành"
+  },
+  "homepage.laptech.summary": {
+    "message": "Module xác thực và phân quyền trên Spring Boot, dùng JWT, xoay vòng refresh token và phân quyền theo vai trò."
+  },
+  "homepage.laptech.architecture": {
+    "message": "Kiến trúc"
+  },
+  "homepage.laptech.setup": {
+    "message": "Cài đặt"
+  },
+  "homepage.laptech.apiReference": {
+    "message": "Tài liệu API"
+  },
+  "homepage.laptech.troubleshooting": {
+    "message": "Xử lý sự cố"
+  },
+  "homepage.guides.name": {
+    "message": "Hướng dẫn"
+  },
+  "homepage.guides.summary": {
+    "message": "Ghi chú kỹ thuật chung, không gắn với một dự án cụ thể."
+  },
+  "homepage.guides.buildingApp": {
+    "message": "Xây dựng Ứng dụng"
+  },
+  "homepage.guides.libraries": {
+    "message": "Thư viện và Tính năng"
+  },
+  "homepage.guides.llmPrompting": {
+    "message": "Tương tác với LLM"
+  },
+  "homepage.guides.versionControl": {
+    "message": "Quản lý Phiên bản"
+  },
+  "homepage.description": {
+    "message": "Kiến trúc, quy trình vận hành và tài liệu API của FF RESTaurent, LinguFlow và Laptech."
+  },
+  "homepage.title": {
+    "message": "Tài liệu dự án"
+  },
+  "homepage.lead": {
+    "message": "Kiến trúc, quy trình vận hành và tài liệu API của FF RESTaurent, LinguFlow và Laptech, cùng các hướng dẫn kỹ thuật chung."
   }
 }

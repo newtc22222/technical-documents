@@ -59,11 +59,12 @@ Renaming one of these without the underscore publishes it.
 
 ```
 i18n/vi/docusaurus-plugin-content-docs/current/**   # translated docs (mirrors docs/)
-i18n/vi/docusaurus-plugin-content-pages/            # translated src/pages (index.tsx + css)
 i18n/vi/docusaurus-theme-classic/{navbar,footer}.json
 i18n/vi/docusaurus-plugin-content-docs/current.json # sidebar category labels
 i18n/vi/code.json                                   # <Translate> strings from src/
 ```
+
+The homepage (`src/pages/index.tsx`) is one component for both locales: its strings go through `<Translate>`/`translate()` with `homepage.*` ids, so run `write-translations` after changing them and fill the new keys in `code.json`. Its section links are hard-coded to the first doc of each category; the build fails if one goes stale.
 
 A missing Vietnamese file silently falls back to English. Today `guides/` is fully translated, `laptech/` has only `_private/`, and `ff-restaurent/` and `lingu-flow/` have no vi files. Because docs reference images by relative path, `_assets/` is duplicated inside the vi tree too; keep it in sync when adding images.
 

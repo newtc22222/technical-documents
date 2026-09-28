@@ -1,47 +1,140 @@
+/*
+ * Site-wide theme. Quiet chrome so the documents (diagrams, tables, code)
+ * carry the page: one blue accent for links, neutral surfaces, IBM Plex.
+ */
+
 :root {
-  --ifm-color-primary: #034694; /* Chelsea blue */
-  --ifm-color-primary-dark: #023474;
-  --ifm-color-primary-darker: #022e65;
-  --ifm-color-primary-darkest: #021f44;
-  --ifm-color-primary-light: #1569c7;
-  --ifm-color-primary-lighter: #338fff;
-  --ifm-color-primary-lightest: #cce1ff;
-  --ifm-background-color: #ffffff; /* White background */
-  --ifm-navbar-background-color: #034694;
-  --ifm-navbar-link-color: #ffffff;
-  --ifm-footer-background: #034694;
-  --ifm-footer-color: #ffd700; /* Optional: gold accent */
-  --ifm-code-font-size: 95%;
-  --docusaurus-highlighted-code-line-bg: rgba(
-    3,
-    70,
-    148,
-    0.08
-  ); /* light blue tint for code lines */
-  --navbar-link-hover: #ffd700; /* Chelsea gold/yellow */
+  --td-ink: #1a2330;
+  --td-muted: #5b6674;
+  --td-paper: #ffffff;
+  --td-surface: #f3f5f7;
+  --td-rule: #dce1e6;
+  --td-accent: #1f5aa6;
+
+  --ifm-color-primary: #1f5aa6;
+  --ifm-color-primary-dark: #1c5195;
+  --ifm-color-primary-darker: #1a4d8d;
+  --ifm-color-primary-darkest: #163f74;
+  --ifm-color-primary-light: #2263b7;
+  --ifm-color-primary-lighter: #2467bf;
+  --ifm-color-primary-lightest: #2d76d6;
+
+  --ifm-font-family-base: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI",
+    Roboto, sans-serif;
+  --ifm-font-family-monospace: "IBM Plex Mono", ui-monospace, SFMono-Regular,
+    Consolas, monospace;
+  --ifm-heading-font-weight: 600;
+  --ifm-line-height-base: 1.65;
+  --ifm-code-font-size: 90%;
+
+  --ifm-background-color: var(--td-paper);
+  --ifm-font-color-base: var(--td-ink);
+  --ifm-heading-color: var(--td-ink);
+  --ifm-color-emphasis-300: var(--td-rule);
+  --ifm-toc-border-color: var(--td-rule);
+  --ifm-hr-background-color: var(--td-rule);
+
+  --ifm-navbar-background-color: var(--td-paper);
+  --ifm-navbar-shadow: none;
+  --ifm-navbar-link-color: var(--td-ink);
+  --ifm-footer-background-color: var(--td-surface);
+  --ifm-footer-color: var(--td-muted);
+
+  --ifm-table-border-color: var(--td-rule);
+  --ifm-table-head-background: var(--td-surface);
+  --ifm-table-stripe-background: transparent;
+  --ifm-table-cell-padding: 0.625rem 0.875rem;
+
+  --docusaurus-highlighted-code-line-bg: rgb(31 90 166 / 0.08);
 }
 
-.navbar__link:hover,
-.navbar__link--active {
-  color: var(--navbar-link-hover) !important;
-  text-decoration: underline; /* optional: make it stand out */
-  background: none !important; /* remove background highlight if any */
-}
-
-/* For dark mode: black, teal, and white */
 [data-theme="dark"] {
-  --ifm-color-primary: #14bdbd; /* Vibrant teal */
-  --ifm-color-primary-dark: #119e9e;
-  --ifm-color-primary-darker: #137c7c;
-  --ifm-color-primary-darkest: #054545;
-  --ifm-color-primary-light: #3fd6d6;
-  --ifm-color-primary-lighter: #70e5e5;
-  --ifm-color-primary-lightest: #b2ffff;
-  --ifm-background-color: #090d14; /* Nearly black */
-  --ifm-navbar-background-color: #090d14;
-  --ifm-navbar-link-color: #ffffff;
-  --ifm-footer-background: #090d14;
-  --ifm-footer-color: #14bdbd;
-  --ifm-code-font-size: 95%;
-  --docusaurus-highlighted-code-line-bg: rgba(20, 189, 189, 0.12);
+  --td-ink: #e3e8ee;
+  --td-muted: #9aa5b1;
+  --td-paper: #12171d;
+  --td-surface: #1a2029;
+  --td-rule: #2a323d;
+  --td-accent: #86b2ee;
+
+  --ifm-color-primary: #86b2ee;
+  --ifm-color-primary-dark: #6aa0ea;
+  --ifm-color-primary-darker: #5c97e8;
+  --ifm-color-primary-darkest: #327ce1;
+  --ifm-color-primary-light: #a2c4f2;
+  --ifm-color-primary-lighter: #b0cdf4;
+  --ifm-color-primary-lightest: #d9e7f9;
+
+  --docusaurus-highlighted-code-line-bg: rgb(134 178 238 / 0.12);
+}
+
+/* Chrome: a plain bar with a hairline, active page marked by color only. */
+.navbar {
+  border-bottom: 1px solid var(--td-rule);
+}
+
+.navbar__title {
+  font-weight: 600;
+}
+
+.navbar__link--active {
+  color: var(--ifm-color-primary);
+}
+
+.footer {
+  border-top: 1px solid var(--td-rule);
+  font-size: 0.875rem;
+}
+
+/* Reading column */
+.markdown {
+  --ifm-h1-font-size: 2.25rem;
+  --ifm-h2-font-size: 1.625rem;
+  --ifm-h3-font-size: 1.25rem;
+}
+
+.markdown h1,
+.markdown h2 {
+  letter-spacing: -0.015em;
+}
+
+.markdown h2 {
+  margin-top: 2.5rem;
+}
+
+/* Tables: light rules, a tinted header row, numbers that line up. */
+.markdown table {
+  font-size: 0.9375rem;
+  font-variant-numeric: tabular-nums;
+  border-collapse: collapse;
+}
+
+.markdown table th {
+  font-weight: 600;
+  text-align: left;
+}
+
+.markdown table th,
+.markdown table td {
+  vertical-align: top;
+}
+
+/* Diagrams and images sit on the page surface, framed but not boxed in. */
+.docusaurus-mermaid-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: var(--ifm-leading);
+  padding: 1.5rem 1rem;
+  border: 1px solid var(--td-rule);
+  border-radius: 8px;
+  background: var(--td-surface);
+  overflow-x: auto;
+}
+
+.markdown img {
+  border-radius: 6px;
+}
+
+:focus-visible {
+  outline: 2px solid var(--ifm-color-primary);
+  outline-offset: 2px;
 }
