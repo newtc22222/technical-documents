@@ -10,7 +10,9 @@ description: Architecture decision record for replacing Cloudinary with Cloudfla
 
 ## Status
 
-Proposed. This record becomes Accepted when the Product Owner approves it on GitLab issue `laptech/laptech-api#9`.
+Accepted on 2026-09-30 by the Product Owner (GitLab `laptech/laptech-api#9`).
+
+The same acceptance replaces the shared-bucket assumption below: object bytes go in a dedicated R2 bucket named `laptech-store-media`. Laptech does not use the LinguFlow bucket. The `laptech/` key prefix stays, so the key policy in this record is unchanged. The Product Owner creates that bucket and applies CORS. No custom domain is chosen yet; dev public reads stay on `r2.dev` through `R2_PUBLIC_BASE_URL` until the Product Owner names the domain.
 
 ## Date
 
@@ -43,7 +45,7 @@ The upload part name is `file`.
 
 BACKLOG #7: `ProductResponseDTO` exposes only `id`, `name`, `slug`, `sku`, `stockQuantity`, `price`, `description`, and `originalPrice`. `ProductList`, `ProductCard`, `CartDrawer`, and `ProductDetail` therefore have no image URL to render. The client `Product` type already declares optional `image?: string` and `images?: string[]`. `next.config.ts` allows only `your-image-cdn.com` and `localhost`. `CartItem.image` is snapshotted at add-to-cart, so the list payload must carry the thumbnail. The chosen fix is option 1: embed image fields on the product payload.
 
-The staging bucket is LinguFlow's shared R2 bucket. Laptech does not own bucket-level settings. Deployment already has R2 credential variables; this record lists names only.
+Object bytes belong in the dedicated bucket `laptech-store-media`, not in any LinguFlow bucket. Laptech owns that bucket's settings. The Product Owner creates it and applies CORS; this record does not call the Cloudflare API. Deployment already has R2 credential variables; this record lists names only. `R2_BUCKET_NAME` is set to `laptech-store-media` in the git-ignored `.env` when `STORAGE_PROVIDER` is `r2`.
 
 ## Decision drivers
 
@@ -51,7 +53,7 @@ The staging bucket is LinguFlow's shared R2 bucket. Laptech does not own bucket-
 | --- | --- |
 | BACKLOG #7 blocks every storefront image | List and detail payloads carry image URLs |
 | Cloudinary is being retired | New bytes go to R2; rows move; Cloudinary code is removed after that |
-| The bucket is shared with LinguFlow | Laptech may touch only the `laptech/` prefix |
+| The bucket is dedicated to Laptech | Bucket name `laptech-store-media`. Keys still stay under `laptech/` |
 | One new library is approved | `software.amazon.awssdk:s3` is the only new dependency |
 | WSL and CI must run offline | MinIO via Docker Compose supplies the S3 API |
 | Metadata already lives in MySQL | `media` and `media_relationships` stay the system of record |
@@ -73,10 +75,10 @@ Use Cloudflare R2 for media bytes, through the AWS SDK for Java v2 S3 client. Ke
 
 ### Bucket layout
 
-Laptech may read and write only keys under `laptech/`.
+Bucket name: `laptech-store-media`. Laptech may read and write only keys under `laptech/`.
 
 ```text
-<shared-staging-bucket>/
+laptech-store-media/
 └── laptech/
     ├── products/
     │   └── {productId}/
@@ -207,7 +209,7 @@ Persisted `media.provider` is `r2` or `minio`. The `local` implementation does n
 
 MVP decision: store the original only, with no variant objects. When ImageIO can read JPEG or PNG header dimensions, write `width` and `height` into `media.metadata`. A decode miss does not fail the upload, so WebP and AVIF simply omit dimensions. `thumbnailUrl` is that same original URL (selection rules below).
 
-A follow-up ADR decides variants after the custom domain exists, using Cloudflare transformations and no new dependency. Server-side WebP or AVIF thumbnails would need a new library such as TwelveMonkeys ImageIO plugins. That dependency is out of scope until open question 6 is approved.
+A follow-up ADR decides variants after the custom domain exists, using Cloudflare transformations and no new dependency. Server-side WebP or AVIF thumbnails would need a new library such as TwelveMonkeys ImageIO plugins. That dependency stays out of scope. This epic stores originals only.
 
 ### Cache headers
 
@@ -217,7 +219,7 @@ A follow-up ADR decides variants after the custom domain exists, using Cloudflar
 
 CORS is a manual dashboard step for the Product Owner or the bucket owner. This work does not apply it.
 
-Proxied uploads mean the browser never sends `PUT` to R2. A plain `img` load needs no CORS. CORS matters when the storefront uses `fetch` or canvas. Merge the following placeholder rule into the existing bucket configuration. Do not replace the rule set: the bucket is shared with LinguFlow, and a replace would drop LinguFlow origins. Methods stay `GET` and `HEAD`.
+Proxied uploads mean the browser never sends `PUT` to R2. A plain `img` load needs no CORS. CORS matters when the storefront uses `fetch` or canvas. The Product Owner applies the following rule on `laptech-store-media`. This work does not call Cloudflare. Methods stay `GET` and `HEAD`.
 
 ```json
 [
@@ -236,26 +238,26 @@ Proxied uploads mean the browser never sends `PUT` to R2. A plain `img` load nee
 
 ### Configuration
 
-Names only. No values, account ids, or secrets appear here. `.env` stays git-ignored and values are never committed. MinIO variables are local-only credentials and are still secret. The R2 access key should be a bucket-scoped token limited to `laptech/` if Cloudflare allows that scope (open question 2).
+Names only. No values, account ids, or secrets appear here. `.env` stays git-ignored and values are never committed. MinIO variables are local-only credentials and are still secret. The R2 access key is scoped to the dedicated bucket `laptech-store-media`. It is not a key for any LinguFlow bucket.
 
 | Name | Purpose | Required when | Sensitive |
 | --- | --- | --- | --- |
 | `R2_ACCOUNT_ID` | Existing. Account id for the R2 client. | `STORAGE_PROVIDER` is `r2` | No |
 | `R2_ACCESS_KEY_ID` | Existing. Access key id. Static provider only. | `STORAGE_PROVIDER` is `r2` | Yes |
 | `R2_SECRET_ACCESS_KEY` | Existing. Secret key. Never logged. | `STORAGE_PROVIDER` is `r2` | Yes |
-| `R2_BUCKET_NAME` | Existing. Shared staging bucket name. | `STORAGE_PROVIDER` is `r2` | No |
+| `R2_BUCKET_NAME` | Existing. Dedicated bucket. Value in `.env` is the name `laptech-store-media`, not a secret. | `STORAGE_PROVIDER` is `r2` | No |
 | `R2_ENDPOINT_URL` | Existing. S3 API endpoint. Not the public URL. | `STORAGE_PROVIDER` is `r2` | No |
 | `STORAGE_PROVIDER` | New. `r2`, `minio`, or `local`. | The new storage path is on | No |
 | `STORAGE_KEY_PREFIX` | New. Default `laptech`, non-empty, no slash or `..`. | `StorageService` is active | No |
 | `R2_PUBLIC_BASE_URL` | New. Public base. `r2.dev` now, custom domain later. | `STORAGE_PROVIDER` is `r2` | No |
-| `STORAGE_MAX_UPLOAD_BYTES` | New. Proposed 5242880. | Uploads are enabled | No |
+| `STORAGE_MAX_UPLOAD_BYTES` | New. Accepted value 5242880. | Uploads are enabled | No |
 | `MINIO_ENDPOINT_URL` | New. Local S3 endpoint. | `STORAGE_PROVIDER` is `minio` | No |
 | `MINIO_ACCESS_KEY` | New. Local access key. | `STORAGE_PROVIDER` is `minio` | Yes |
 | `MINIO_SECRET_KEY` | New. Local secret. | `STORAGE_PROVIDER` is `minio` | Yes |
-| `MINIO_BUCKET_NAME` | New. Local bucket, never the shared R2 bucket. | `STORAGE_PROVIDER` is `minio` | No |
+| `MINIO_BUCKET_NAME` | New. Local bucket, never `laptech-store-media`. | `STORAGE_PROVIDER` is `minio` | No |
 | `MINIO_PUBLIC_BASE_URL` | New. Local public base, with a bucket segment if MinIO serves path-style URLs. | `STORAGE_PROVIDER` is `minio` | No |
 
-The MinIO bean refuses to start unless `MINIO_ENDPOINT_URL` is localhost or the Compose service name, so the `minio` profile cannot be aimed at the shared R2 endpoint. Uploads use `R2_ENDPOINT_URL`. Browsers use `R2_PUBLIC_BASE_URL`.
+The MinIO bean refuses to start unless `MINIO_ENDPOINT_URL` is localhost or the Compose service name, so the `minio` profile cannot be aimed at R2. Uploads use `R2_ENDPOINT_URL`. Browsers use `R2_PUBLIC_BASE_URL`.
 
 ### Data migration of Cloudinary rows
 
@@ -280,7 +282,7 @@ media_migration_audit
   migrated_at
 ```
 
-Rollback copies `old_provider`, `old_public_id`, and `old_url` back onto `media`. Logs record the media id and the new key, not secrets or query strings. Zero production rows make the job a successful no-op (open question 5).
+Rollback copies `old_provider`, `old_public_id`, and `old_url` back onto `media`. Logs record the media id and the new key, not secrets or query strings. Zero production rows make the job a successful no-op.
 
 ### How this fixes BACKLOG #7
 
@@ -372,12 +374,12 @@ The client already has `image?: string` and `images?: string[]`. Map `thumbnailU
 | Positive. Storefront can show images | BACKLOG #7 gets `thumbnailUrl` and `images` on the payload |
 | Positive. Small dependency change | Only `software.amazon.awssdk:s3` is added |
 | Negative. `r2.dev` is rate-limited | That host is for dev, not the production edge |
-| Negative. 5 MiB ceiling | Larger files wait on `STORAGE_MAX_UPLOAD_BYTES` (open question 1) |
-| Negative. Shared bucket | A bad key, a bucket-wide list, or a CORS replace can affect LinguFlow |
+| Negative. 5 MiB ceiling | Larger files need a later change to `STORAGE_MAX_UPLOAD_BYTES` |
+| Positive. Dedicated bucket | `laptech-store-media` holds Laptech objects only. The `laptech/` prefix is a second guard |
 | Negative. Proxy cost | Each upload holds up to 5 MiB on the API and a request thread for the R2 round trip |
 | Negative. No format-preserving thumbnail | ImageIO cannot write WebP or AVIF without a new dependency |
 | Negative. Dual run until phase 5 | Cloudinary and R2 both exist through migration |
-| Negative. Snapshotted URLs can 404 | `CartItem.image` copies a URL that dies if that object is deleted (open question 9) |
+| Negative. Snapshotted URLs can 404 | `CartItem.image` copies a URL. The MVP does not delete replaced objects |
 
 ## Alternatives considered
 
@@ -402,17 +404,17 @@ Product routes keep `product:media:create`, `product:media:update`, `product:med
 
 Open question 7 decides whether those three endpoint groups ship in this epic. The key policy reserves the prefixes now, so a product upload cannot land in another area.
 
-The bucket has no public listing. Credentials stay in the server environment. Logs omit access keys, secret keys, and credential headers. Isolation is the key policy plus a prefix-scoped token when the provider can issue one (open question 2).
+The bucket has no public listing. Credentials stay in the server environment. Logs omit access keys, secret keys, and credential headers. Isolation is the dedicated bucket `laptech-store-media` plus the `laptech/` key policy. The access key is scoped to that bucket.
 
 API responses send `X-Content-Type-Options: nosniff`. Objects use the sniffed `Content-Type`. SVG is excluded so a public URL cannot carry markup. A `nosniff` header on the media host waits for the custom domain and is not applied here.
 
-When ImageIO can read a JPEG or PNG header, reject the upload if either edge is above 8000 pixels. Read the header only; do not rasterise on the request thread. WebP and AVIF are not measured without a new dependency; the 5 MiB cap still applies (open question 6). Malware scanning is out of scope until open question 8. Upload routes use the API rate limiter, with a stricter limit on review uploads than on admin product uploads.
+When ImageIO can read a JPEG or PNG header, reject the upload if either edge is above 8000 pixels. Read the header only; do not rasterise on the request thread. WebP and AVIF are not measured without a new dependency; the 5 MiB cap still applies. Malware scanning is out of scope for the MVP. Upload routes use the API rate limiter, with a stricter limit on review uploads than on admin product uploads.
 
 ## Test strategy
 
 Testcontainers would be a new dependency. This work does not add it. Adopting it later needs its own approval.
 
-Integration tests run against MinIO from Docker Compose on WSL, tagged `minio`, under Spring profile `minio`. The default unit-test run does not start Compose. `MINIO_BUCKET_NAME` is a local bucket, never the shared LinguFlow bucket.
+Integration tests run against MinIO from Docker Compose on WSL, tagged `minio`, under Spring profile `minio`. The default unit-test run does not start Compose. `MINIO_BUCKET_NAME` is a local bucket, never `laptech-store-media`.
 
 Unit tests use an in-memory `StorageService`. Prefix rules live in one key policy shared by the fake, `R2StorageService`, and the MinIO implementation.
 
@@ -442,15 +444,17 @@ The `minio` profile uploads one PNG and reads it back through `MINIO_PUBLIC_BASE
 
 Objects under `laptech/` are removed only after the Product Owner approves a prefix-scoped cleanup. That cleanup is not a bucket-wide delete and not `delete` of a bare prefix. An empty inventory in phase 3 is a successful no-op.
 
-## Open questions
+## Decisions on the former open questions
 
-1. Is 5 MiB (5242880 bytes) the accepted per-image ceiling for every prefix, including banners?
-2. Can Cloudflare issue an R2 token scoped to this bucket and to the `laptech/` prefix only?
-3. What custom domain replaces the `r2.dev` host, and on what timeline? Transformations wait on that domain.
-4. Who merges the CORS rule into the shared bucket, and in which window? This work does not apply CORS.
-5. Do any production `media` rows have `provider = cloudinary`? A zero count makes the migration a no-op.
-6. Will a later ADR approve a dependency such as TwelveMonkeys so the server can decode WebP and AVIF?
-7. Do avatar, review, and banner upload endpoints belong in this epic, or does the epic ship product media plus the reserved key layout only?
-8. Is malware scanning required before `put`, and with which scanner? It stays out of scope until answered.
-9. What retention applies to replaced and soft-deleted objects, and when may a sweeper delete keys under `laptech/`? Cart and order snapshots copy the public URL.
-10. Do product images need alt text in this epic, as a column or in `media.metadata`?
+Accepted with this record on 2026-09-30.
+
+1. The per-object ceiling is 5 MiB (5242880 bytes), including banners.
+2. The bucket is dedicated: `laptech-store-media`. The access key is scoped to that bucket. Laptech does not use a prefix-scoped token on a shared LinguFlow bucket.
+3. The custom domain is not chosen. The Product Owner will name it later. Until `R2_PUBLIC_BASE_URL` changes, dev reads use `r2.dev`. Image transformations wait on that domain.
+4. The Product Owner applies the CORS rule on `laptech-store-media`. This work does not call Cloudflare.
+5. Run the Cloudinary migration only when production rows with `provider = cloudinary` exist. A zero count is a successful no-op.
+6. No new image-decoding dependency in this epic. Store originals only.
+7. This epic ships product images plus the reserved key layout. Avatar, review, and banner upload endpoints are out of scope.
+8. No malware scanning in the MVP.
+9. No physical deletion of replaced or soft-deleted objects in the MVP. A sweeper under `laptech/` needs a later approval. Cart and order snapshots copy the public URL.
+10. No alt-text field in this epic.
