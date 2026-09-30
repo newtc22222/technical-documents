@@ -73,10 +73,10 @@ PowerShell:
 .\dev\up.ps1
 ```
 
-Equivalent compose commands from the API repository root (project name `laptech-dev` in `docker-compose.yml`):
+The compose file sets `name: laptech-dev`, so a bare `docker compose` from the API root uses that project. The scripts also pass `-p` and honor `LAPTECH_DEV_PROJECT`. A throwaway stack has to go through the scripts, or through `docker compose -p <name>`. Exporting `LAPTECH_DEV_PROJECT` does not change a bare `docker compose` command.
 
 ```bash
-docker compose up -d
+docker compose up -d --wait
 docker compose ps
 ```
 
@@ -123,7 +123,7 @@ Dev uses Hibernate `ddl-auto: update` with Flyway off. Prod applies each service
 |---|---|---|
 | `dev` | Local compose stack | `ddl-auto: update`, Flyway off. Existing `application-dev.yml` files already target compose. |
 | `test` | Automated tests only | Identity and catalog load `src/test/resources/application-test.yml` and use Testcontainers MySQL 9.4. They must not use shared databases. |
-| `prod` | Deployed environments | All secrets required, no defaults. Flyway enabled with `ddl-auto: validate`. |
+| `prod` | Deployed environments | All secrets required, no defaults. Startup fails if `APP_JWT_SECRET` is missing. A missing or blank `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, `RABBITMQ_HOST`, `RABBITMQ_PORT`, `RABBITMQ_USERNAME`, or `RABBITMQ_PASSWORD` throws `IllegalStateException` naming each one. Flyway enabled with `ddl-auto: validate`. |
 
 The full table is in the API repository at `docs/local-stack.md`.
 
