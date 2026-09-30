@@ -12,7 +12,7 @@ description: Architecture decision record for replacing Cloudinary with Cloudfla
 
 Accepted on 2026-09-30 by the Product Owner (GitLab `laptech/laptech-api#9`).
 
-The same acceptance replaces the shared-bucket assumption below: object bytes go in a dedicated R2 bucket named `laptech-store-media`. Laptech does not use the LinguFlow bucket. The `laptech/` key prefix stays, so the key policy in this record is unchanged. The Product Owner creates that bucket and applies CORS. No custom domain is chosen yet; dev public reads stay on `r2.dev` through `R2_PUBLIC_BASE_URL` until the Product Owner names the domain.
+The same acceptance replaces the shared-bucket assumption below: object bytes go in a dedicated R2 bucket named `laptech-store-media`. Laptech does not use the LinguFlow bucket. The `laptech/` key prefix stays, so the key policy in this record is unchanged. The Product Owner creates that bucket and applies CORS. On 2026-09-30 the Product Owner set `R2_PUBLIC_BASE_URL` in the git-ignored `laptech-api/.env` to this bucket's `r2.dev` public URL. That host is not copied into this record. It is the dev public base, not a production custom domain. Image transformations stay deferred until a custom domain exists.
 
 ## Date
 
@@ -61,14 +61,14 @@ Object bytes belong in the dedicated bucket `laptech-store-media`, not in any Li
 
 ## Decision
 
-Use Cloudflare R2 for media bytes, through the AWS SDK for Java v2 S3 client. Keep metadata on the existing MySQL media tables. Proxy uploads through `laptech-catalog`. Public reads use an `r2.dev` base URL in dev and a custom domain later.
+Use Cloudflare R2 for media bytes, through the AWS SDK for Java v2 S3 client. Keep metadata on the existing MySQL media tables. Proxy uploads through `laptech-catalog`. Public reads use the `r2.dev` base in `R2_PUBLIC_BASE_URL` for dev. A production custom domain comes later.
 
 ### Approved decisions
 
 - The only new dependency is `software.amazon.awssdk:s3`.
 - Offline dev and integration tests use a MinIO container.
 - MVP uploads are proxied by the API. Direct browser upload is a later decision.
-- Dev public URLs use the `r2.dev` host. A custom domain follows later.
+- Dev public URLs use the `r2.dev` host stored in `R2_PUBLIC_BASE_URL`. A production custom domain follows later.
 - `ProductResponseDTO` gains `thumbnailUrl` and `images`.
 - Cloudinary is removed after the data migration, not before it.
 - Media metadata stays on MySQL. MongoDB GridFS is rejected under Alternatives.
@@ -249,7 +249,7 @@ Names only. No values, account ids, or secrets appear here. `.env` stays git-ign
 | `R2_ENDPOINT_URL` | Existing. S3 API endpoint. Not the public URL. | `STORAGE_PROVIDER` is `r2` | No |
 | `STORAGE_PROVIDER` | New. `r2`, `minio`, or `local`. | The new storage path is on | No |
 | `STORAGE_KEY_PREFIX` | New. Default `laptech`, non-empty, no slash or `..`. | `StorageService` is active | No |
-| `R2_PUBLIC_BASE_URL` | New. Public base. `r2.dev` now, custom domain later. | `STORAGE_PROVIDER` is `r2` | No |
+| `R2_PUBLIC_BASE_URL` | New. Dev public base. Set in `.env` to the bucket's `r2.dev` URL. The host is not written in this record. A production custom domain is later. | `STORAGE_PROVIDER` is `r2` | No |
 | `STORAGE_MAX_UPLOAD_BYTES` | New. Accepted value 5242880. | Uploads are enabled | No |
 | `MINIO_ENDPOINT_URL` | New. Local S3 endpoint. | `STORAGE_PROVIDER` is `minio` | No |
 | `MINIO_ACCESS_KEY` | New. Local access key. | `STORAGE_PROVIDER` is `minio` | Yes |
@@ -450,7 +450,7 @@ Accepted with this record on 2026-09-30.
 
 1. The per-object ceiling is 5 MiB (5242880 bytes), including banners.
 2. The bucket is dedicated: `laptech-store-media`. The access key is scoped to that bucket. Laptech does not use a prefix-scoped token on a shared LinguFlow bucket.
-3. The custom domain is not chosen. The Product Owner will name it later. Until `R2_PUBLIC_BASE_URL` changes, dev reads use `r2.dev`. Image transformations wait on that domain.
+3. The dev public base is the bucket's `r2.dev` URL in `R2_PUBLIC_BASE_URL`, set by the Product Owner on 2026-09-30. The host stays in the git-ignored `.env` and is not copied here. A production custom domain is not chosen. Image transformations wait on that domain.
 4. The Product Owner applies the CORS rule on `laptech-store-media`. This work does not call Cloudflare.
 5. Run the Cloudinary migration only when production rows with `provider = cloudinary` exist. A zero count is a successful no-op.
 6. No new image-decoding dependency in this epic. Store originals only.
