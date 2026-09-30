@@ -12,6 +12,7 @@
     "serve": "http-server ./build --single",
     "write-translations": "docusaurus write-translations",
     "sync:ff-wiki": "node scripts/sync-ff-wiki.mjs",
+    "sync:laptech-wiki": "node scripts/sync-laptech-wiki.mjs",
     "write-heading-ids": "docusaurus write-heading-ids",
     "typecheck": "tsc"
   },
