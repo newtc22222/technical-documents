@@ -590,7 +590,7 @@ POST /api/carts/items
 { "productId": 5, "quantity": 1 }
 ```
 
-If the product already exists in the cart, its quantity is **increased** by the given amount. Returns the full updated `CartResponse`.
+If the product already exists in the cart, its quantity is **increased** by the given amount, and the line's unit price is replaced with the current catalog price. The request does not send a price. A quantity-only update does not refresh the price. Returns the full updated `CartResponse`.
 
 ### Update Item Quantity
 
@@ -626,7 +626,7 @@ DELETE /api/carts/items
 POST /api/carts/recalculate
 ```
 
-Use this after applying a voucher or changing shipping method. Returns updated `CartResponse`.
+Returns the current `CartResponse`. This call does not apply a voucher or a shipping fee. Checkout does not accept a voucher code (see ADR-0002).
 
 ---
 
@@ -642,14 +642,28 @@ POST /api/orders
 
 ```json
 {
-  "cartId":          10,
-  "paymentMethod":   "COD",
-  "shippingAddress": "123 Nguyen Hue, Quan 1, HCM",
-  "shipmentNotes":   { "note": "Leave at the gate" }
+  "cartId": 10,
+  "paymentMethod": "COD",
+  "shippingAddress": {
+    "street": "123 Nguyen Hue",
+    "ward": "Ben Nghe",
+    "district": "Quan 1",
+    "city": "Ho Chi Minh",
+    "receiverName": "Preview Shopper",
+    "receiverPhone": "0900000000"
+  },
+  "shipmentNotes": { "note": "Leave at the gate" }
 }
 ```
 
-`201 Created` — returns `ResponseEnvelope<OrderResponse>`.
+`201 Created` — returns `ResponseEnvelope<OrderResponse>`. The charge is the cart's frozen unit price. Checkout re-reads the catalog and continues only when that price still matches. There is no voucher field. `discountTotal` is `0` and `shippingFee` is `0`.
+
+| Status | `errorCode` | When |
+| --- | --- | --- |
+| 409 | `PRICE_CHANGED` | Catalog price and cart price differ. The cart is kept. |
+| 409 | `409` | The cart is empty. |
+| 404 | | The product or the cart does not exist. |
+| 502 | `502` | Catalog could not be read. The cart is kept. |
 
 ### List My Orders
 
