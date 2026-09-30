@@ -12,6 +12,8 @@ description: Architecture decision record for replacing Cloudinary with Cloudfla
 
 Accepted on 2026-09-30 by the Product Owner (GitLab `laptech/laptech-api#9`).
 
+`laptech-api` !15 (`780a316`) implemented this record and removed Cloudinary. `STORAGE_PROVIDER` is required (`r2`, `minio`, or `local`). There is no Cloudinary fallback. `local` does not persist media rows. Detach and soft-delete do not delete the stored object. The Cloudinary row migration was not part of that merge. Run it only when production rows with `provider = cloudinary` exist. The rollout table later in this record is the original plan; the cutover and the Cloudinary removal shipped together.
+
 The same acceptance replaces the shared-bucket assumption below: object bytes go in a dedicated R2 bucket named `laptech-store-media`. Laptech does not use the LinguFlow bucket. The `laptech/` key prefix stays, so the key policy in this record is unchanged. The Product Owner creates that bucket and applies CORS. On 2026-09-30 the Product Owner set `R2_PUBLIC_BASE_URL` in the git-ignored `laptech-api/.env` to this bucket's `r2.dev` public URL. That host is not copied into this record. It is the dev public base, not a production custom domain. Image transformations stay deferred until a custom domain exists.
 
 ## Date
