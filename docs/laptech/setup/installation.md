@@ -6,6 +6,10 @@ sidebar_position: 1
 description: Instructions for setting up the authentication module.
 ---
 
+:::note
+The current local setup is the [Local setup](./local-setup.md) page. The rest of this file describes an older single-module layout.
+:::
+
 ### 1.1. Minimum Requirements
 
 * **JDK 21** (Temurin/Adoptium, Zulu, Oracle — all fine)
