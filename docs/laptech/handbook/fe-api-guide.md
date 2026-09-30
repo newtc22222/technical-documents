@@ -553,6 +553,8 @@ Returns `ResponseEnvelope<PaginationResponse<ProductResponseDTO>>`.
 
 Base: `/api/carts` · Requires `Authorization: Bearer <token>` + `cart:*` permissions
 
+While signed out, the storefront keeps its cart in `localStorage` under `laptech_cart`. On login, and when a refresh cookie restores the session, it loads `GET /api/carts`, keeps the larger quantity for each shared product, `PUT`s a line only when that quantity differs, and `POST`s only products that are not already on the server cart. `POST` both adds quantity and re-snapshots the catalog price, so an existing line is not posted just to change quantity. After those writes succeed, the storefront shows a second `GET` (server `unitPrice`; a null `imageUrl` is the local placeholder) and then removes `laptech_cart`. Logout drops the in-memory cart and does not copy the server cart back. Checkout calls `POST /api/orders` with that server cart id.
+
 ### Get Cart
 
 ```
