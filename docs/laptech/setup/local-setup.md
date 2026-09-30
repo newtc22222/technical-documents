@@ -75,10 +75,7 @@ PowerShell:
 
 The compose file sets `name: laptech-dev`, so a bare `docker compose` from the API root uses that project. The scripts also pass `-p` and honor `LAPTECH_DEV_PROJECT`. A throwaway stack has to go through the scripts, or through `docker compose -p <name>`. Exporting `LAPTECH_DEV_PROJECT` does not change a bare `docker compose` command.
 
-```bash
-docker compose up -d --wait
-docker compose ps
-```
+`dev/up.sh` and `dev/up.ps1` wait until mysql, redis, rabbitmq, mailpit, minio, and adminer are healthy, then run the one-shot `rabbitmq-definitions` import. A bare `docker compose up -d --wait` returns exit code 1 after that importer exits 0, even when the other services are healthy. Use the scripts.
 
 Plain `up` starts infra only (mysql, redis, rabbitmq, rabbitmq-definitions, mailpit, adminer, minio). The `app` service is behind Compose profile `app` (containerised gateway image). Leave it off for normal local Java runs. To include it: `dev/up.sh --app` or `.\dev\up.ps1 -App`.
 
@@ -104,7 +101,7 @@ Scripts in `dev/` wrap the compose stack (project `laptech-dev`), each in bash (
 
 | Script | What it does | Flags |
 |---|---|---|
-| `up` | Checks `.env` exists and these names are non-empty, reporting names only: `MYSQL_ROOT_PASSWORD`, `MYSQL_USER`, `MYSQL_PASSWORD`, `REDIS_PASSWORD`, `RABBITMQ_USERNAME`, `RABBITMQ_PASSWORD`, `MINIO_ROOT_USER`, `MINIO_ROOT_PASSWORD`, `APP_JWT_SECRET`; then `docker compose up -d --wait` | `--app` / `-App`, `--check` / `-Check` |
+| `up` | Checks `.env` exists and these names are non-empty, reporting names only: `MYSQL_ROOT_PASSWORD`, `MYSQL_USER`, `MYSQL_PASSWORD`, `REDIS_PASSWORD`, `RABBITMQ_USERNAME`, `RABBITMQ_PASSWORD`, `MINIO_ROOT_USER`, `MINIO_ROOT_PASSWORD`, `APP_JWT_SECRET`; then waits until the long-running services are healthy and runs the RabbitMQ definition import | `--app` / `-App`, `--check` / `-Check` |
 | `down` | `docker compose down`, volumes kept | `--app` / `-App` |
 | `reset` | `docker compose down -v` for the project only, then up; asks you to type yes | `-y`, `--yes` / `-Yes` and `--app` / `-App` |
 | `seed` | Applies `docs/seed_dev_data.sql` to the compose MySQL as root; idempotent | (none) |
