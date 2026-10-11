@@ -2,7 +2,7 @@
 id: release-v2.3.0-rc.1
 title: Release v2.3.0-rc.1 (Staging)
 sidebar_label: v2.3.0-rc.1 (Staging)
-sidebar_position: 1
+sidebar_position: 4
 description: FF RESTaurent 2.3.0-rc.1 Staging release candidate, with bill notifications and auto-archive, cuisine images, cookbooks, meal votes, and Honor Badges.
 ---
 
@@ -22,6 +22,8 @@ description: FF RESTaurent 2.3.0-rc.1 Staging release candidate, with bill notif
 | 4 | Cookbook = Collection + `cuisineId` | Yes | Not yet | Schema on `develop` + PRs [#129](https://github.com/newtc22222/ff-restaurent/pull/129) (API), [#133](https://github.com/newtc22222/ff-restaurent/pull/133) (web) |
 | 5 | Meal voting survey (+ wheels) | Yes (API + web) | Not yet | API [#130](https://github.com/newtc22222/ff-restaurent/pull/130); web [#127](https://github.com/newtc22222/ff-restaurent/pull/127) |
 | 6 | Honor Badge API + UI | Yes (API + UI) | Not yet | API [#130](https://github.com/newtc22222/ff-restaurent/pull/130); UI [#136](https://github.com/newtc22222/ff-restaurent/pull/136) (merged → `develop`) |
+| 7 | Cuisines + Meal Votes UI redesign (SVG lucky wheel) | Yes (web) | Not yet | PR [#138](https://github.com/newtc22222/ff-restaurent/pull/138) (merged → `develop`) |
+| 8 | Meal-vote lucky wheel chances (per-option weights) | Yes (API + UI) | Not yet | API [#140](https://github.com/newtc22222/ff-restaurent/pull/140) + migration `20260926090000_add_meal_vote_option_wheel_weight`; UI [#139](https://github.com/newtc22222/ff-restaurent/pull/139) (merged → `develop`) |
 
 ---
 
@@ -124,6 +126,7 @@ List/create/update cuisine routes remain; body/response schemas accept the new l
 - Routes: **`/meal-votes`** (list), **`/meal-votes/:mealVoteId`** (detail).
 - Detail tabs: **`survey`** | **`wheels`**.
 - Wheels: client-side weighted spin over option pool (`all` or `top` by `voteCount`); not a separate backend wheel API.
+- Later on Staging: UI redesign with a custom SVG wheel (see [7](#7-cuisines--meal-votes-ui-redesign)) and persisted per-option wheel weights (see [8](#8-lucky-wheel-chances-api--ui)).
 - Aligns to OpenAPI from #130 (`PUT .../ballot` with `{ optionId }`, `OPEN|CLOSED`, tallies / `myOptionId`).
 
 ---
@@ -186,10 +189,72 @@ Per **Senior Engineering Lead**, Honor Badge **UI is in Staging RC scope** (not 
 
 ---
 
-## Migrations / Staging ops
+## 7. Cuisines + Meal Votes UI redesign
 
-Apply Prisma migrations from the feature PRs on Staging (notification enum `BILL_CREATED`, cuisine locale + images, meal-vote + honor-badge tables/seeds). Use the existing Staging migrate path in the Deployment wiki — do not invent a new procedure.
+**PR:** [#138](https://github.com/newtc22222/ff-restaurent/pull/138) (`feat/cuisines-meal-votes-ui-redesign` → `develop`, **merged** 2026-09-26) - web only; no API or schema changes.
+
+**Cuisines**
+- Image-forward 4:3 cards; cards / table toggle (md+, persisted as `ff-cuisines-layout`).
+- Detail hero with `RestaurantBanner`; gallery with multi-upload, default star, confirm dialogs, and image preview.
+
+**Meal Votes**
+- Card list with OPEN / CLOSED chips; create-modal polish.
+- Detail with **Survey** / **Wheels** tabs (`role=tablist`); saffron progress bars with `aria-pressed`; past-deadline lock; Close confirm.
+- **Wheels** tab: custom SVG lucky wheel (`apps/web/src/features/meal-votes/LuckyWheel.tsx`).
+- EN/VI strings, including VI `wheelsTab` / `wheelsTitle` / `wheelTop`.
+
+**Known gaps (from PR)**
+- The past-deadline ballot lock is client-side only. The API still accepts votes until a manager closes the vote.
+- Dining-area cards still use the old faded overlay (out of scope).
+
+---
+
+## 8. Lucky wheel chances (API + UI)
+
+### API - PR [#140](https://github.com/newtc22222/ff-restaurent/pull/140) (`feat/meal-vote-wheel-weights` → `develop`, **merged** 2026-09-26)
+
+**Schema**
+- `MealVoteOption.wheelWeight Int @default(1)` plus DB `CHECK` constraint `MealVoteOption_wheelWeight_range` (1-100). Existing options default to 1, so every current wheel stays even.
+- Migration `20260926090000_add_meal_vote_option_wheel_weight` (with `rollback.sql`). Rolling back only drops custom weights, which puts every wheel back to equal shares.
+
+**HTTP**
+| Method | Path | Auth |
+| --- | --- | --- |
+| PUT | `/meal-votes/:id/wheel-weights` | sous chef or head chef, then creator-or-head-chef (same rule as close / add-option) |
+
+- Body `{ weights: [{ optionId, weight }] }`: 1-20 entries; each weight is an integer from 1 to 100. Partial update: omitted options keep their current weight. Returns the updated vote.
+- OPEN votes only; uses the same transactional `updateMany where status=OPEN` guard as ballots, so a vote that closes mid-request can't be changed.
+- Errors: 400 `VALIDATION_ERROR`, 400 `MEAL_VOTE_WEIGHT_DUPLICATE`, 400 `MEAL_VOTE_OPTION_INVALID`, 403 `MEAL_VOTE_FORBIDDEN`, 404 `MEAL_VOTE_NOT_FOUND`, 409 `MEAL_VOTE_CLOSED`.
+- Every option in meal-vote responses (list, detail, create, add option, ballot, close) now includes `wheelWeight`.
+- Weights have **no effect** on tallies or the official winner.
+
+### UI - PR [#139](https://github.com/newtc22222/ff-restaurent/pull/139) (`feat/meal-vote-wheel-chances` → `develop`, **merged** 2026-09-26; stacked on #138)
+
+- Every wheel option starts with an equal share (weight 1). Each option shows its chance as a percentage share.
+- The vote owner (creator or head chef) on an **OPEN** vote gets **Edit chances**: set a weight from 1 to 100 per option; the percentages and the wheel preview update live. Reset to equal or cancel.
+- Save sends only the changed weights (intent `update-meal-vote-wheel-weights`). Invalid weights block saving.
+- The hint under the wheel switches between "same chance" and "custom chances".
+- Missing `wheelWeight` (older API) falls back to 1.
+- Weights affect only the wheel, not tallies or the official winner.
+- Component: `apps/web/src/features/meal-votes/WheelOddsEditor.tsx`. New EN/VI strings in `mealVotes.json` and `toast.json` (VI wording pending Technical Writer review).
+
+> **Follow-up pending:** a UX/copy follow-up PR for the meal-vote wheel is pending and not yet merged. These notes will be updated when it lands.
+
+---
+
+## Migrations / Staging ops
+Apply Prisma migrations from the feature PRs on Staging (notification enum `BILL_CREATED`, cuisine locale + images, meal-vote + honor-badge tables/seeds, meal-vote option `wheelWeight`). Use the existing Staging migrate path in the Deployment wiki — do not invent a new procedure.
+
+### Staging evidence - meal-vote wheel chances (2026-09-26)
+
+| Item | Value |
+| --- | --- |
+| PRs merged → `develop` | #138 and #140 at 11:31 ICT; #139 at 11:41 ICT |
+| `develop` tip | `680ebb9` (merge of #139) |
+| Deploy run | [GCP deploy 36218575818](https://github.com/newtc22222/ff-restaurent/actions/runs/36218575818) - success |
+| Migration | `20260926090000_add_meal_vote_option_wheel_weight` applied on Staging at 11:48 ICT |
+| Cloud Run revisions | API `00089-q7t`; web `00086-8x9` |
+| Production | Untouched |
 
 ## Production
-
 No production promote for this RC until Staging checklist sign-off and the normal `develop` → `main` path.

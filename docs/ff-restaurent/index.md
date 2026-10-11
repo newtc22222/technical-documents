@@ -19,10 +19,10 @@ and how to run it in production.
 [Production Runbook](./runbooks-operations/production-runbook.md) for operating the live service.
 
 > [!NOTE]
-> **Current state.** Production runs [v2.2.2](./releases/release-v2.2.2.md)
-> (2026-08-20). Staging (`develop`) has
-> [v2.3.0-rc.1](./releases/release-v2.3.0-rc.1.md) in progress; it is not in
-> production yet.
+> **Current state.** Production runs [v2.4.0](./releases/release-v2.4.0.md)
+> (2026-09-29). Staging (`develop`) runs
+> [v2.4.5](./releases/release-v2.4.5.md), verified 2026-10-11; it is not in
+> production yet. Planned work is on the [Roadmap](./planning/roadmap.md).
 
 ---
 
@@ -62,6 +62,9 @@ and how to run it in production.
 | [Real-Time Notification Inbox](./runbooks-operations/real-time-notification-inbox.md) | Operating the authenticated SSE stream that refreshes the in-app notification list and unread badge in real time. |
 | [Root Admin Operations](./runbooks-operations/root-admin-operations.md) | Singleton `ROOT_ADMIN` — bootstrap, in-app ownership transfer, and emergency operator recovery. |
 | [Password Recovery Operations](./runbooks-operations/password-recovery-operations.md) | Root-Admin-assisted password recovery via out-of-band identity checks without SMS/email. |
+| [Production Measurements](./runbooks-operations/production-measurements.md) | Operator checklist for the v2.4 performance follow-up — row counts, `max_connections`, timeouts, pending notifications, cold-start P95, custom domain versus `run.app`, and egress. |
+| [Public Image Object Sizes](./runbooks-operations/public-image-object-sizes.md) | Operator check for object counts and sizes in the public images bucket, before and after WebP conversion on upload. |
+| [Bill-Created Notification Risk](./runbooks-operations/bill-created-notification-risk.md) | The accepted risk that any active member can be added to a bill, and the rate limits and notification preferences that limit it. |
 | [Phase 2 Migration Runbook](./runbooks-operations/phase-2-migration-runbook.md) | Phase 2 contract verification gate — deployment gate, post-deployment verification, and failure response. |
 
 ## Performance
@@ -70,11 +73,20 @@ and how to run it in production.
 | --- | --- |
 | [FF-27 Optimization Evidence](./performance/ff-27-optimization.md) | Database index coverage across four query shapes, and web bundle delivery before and after chunk splitting. |
 
+## Planning
+
+| Document | What it covers |
+| --- | --- |
+| [Roadmap](./planning/roadmap.md) | Draft plan after 2.4.x — cuisine type i18n, private meal tracking, and feature-flagged AI assessment, suggestion, and bill detection on the 2.5.x line. Not shipped behavior. |
+
 ## Releases
 
 | Release | Date | Summary |
 | --- | --- | --- |
-| [v2.3.0-rc.1 (Staging)](./releases/release-v2.3.0-rc.1.md) | 2026-09-19 | Staging release candidate: bill-created notifications and auto-archive, dining area detail editing, cuisine EN/VI names and images, meal-vote surveys and wheels, and Honor Badges. Not in production yet. |
+| [v2.4.5 (Staging)](./releases/release-v2.4.5.md) | TBD | Performance and safety follow-up to 2.4.0, cuisine price range and team average spend, province-grouped Catalog, Recipes, restaurant brands and branches, cuisine type labels with a Vietnamese-first form, and red destructive buttons with breadcrumbs. Five additive migrations. Not in production yet. |
+| [v2.4.0](./releases/release-v2.4.0.md) | 2026-09-29 | Card redesign across all list pages, reworked filters and restaurant form, Stats and Profile / Honor Badge redesign, restaurant counts on cuisines and dining areas, and rate-limit messaging fixes. |
+| [v2.3.0](./releases/release-v2.3.0.md) | 2026-09-28 | Everything in 2.3.0-rc.1 plus pagination with page totals on six lists, web caching and fetch fixes, per-client API rate limiting, and trusted proxies by address. |
+| [v2.3.0-rc.1 (Staging)](./releases/release-v2.3.0-rc.1.md) | 2026-09-19 | Staging release candidate: bill-created notifications and auto-archive, dining area detail editing, cuisine EN/VI names and images, meal-vote surveys and wheels, and Honor Badges. Superseded by v2.3.0. |
 | [v2.2.2](./releases/release-v2.2.2.md) | 2026-08-20 | Member cost formulas for bill splitting, mobile responsiveness across the app, and Docker Compose standardization. |
 | [v2.2.0](./releases/release-v2.2.0.md) | 2026-08-02 | Real-time SSE notification stream, FCM push delivery, dining area media, custom accent themes, consolidated Settings, and automated verification. |
 | [v2.1.0](./releases/release-v2.1.0.md) | 2026-07-30 | Phase 2.5/2B hardening: staging CI/CD, OpenAPI transport generation, filter/date improvements, avatars, and agent tooling. |
