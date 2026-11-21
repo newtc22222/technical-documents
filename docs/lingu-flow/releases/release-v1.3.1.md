@@ -1,16 +1,16 @@
 ---
 id: release-v1.3.1
 title: LinguFlow 1.3.1
-sidebar_label: v1.3.1
-sidebar_position: 2
+sidebar_label: "v1.3.1"
+sidebar_position: 6
 description: Release notes for LinguFlow v1.3.1, adding TOEIC part6/part7 passage sets, editable Question Bank sets, and markdown-table passages.
 ---
 
 # LinguFlow 1.3.1
 
 **Release version:** `v1.3.1`  
-**Status:** Superseded by [v1.4.0](./release-v1.4.0.md)  
-**GitHub Release:** https://github.com/newtc22222/lingu-flow/releases/tag/v1.3.1  
+**Status:** Current production  
+**GitHub Release:** [https://github.com/newtc22222/lingu-flow/releases/tag/v1.3.1](https://github.com/newtc22222/lingu-flow/releases/tag/v1.3.1)  
 **Previous:** [v1.3.0](./release-v1.3.0.md) · [v1.2.1](./release-v1.2.1.md)
 
 Production cut of staging since v1.3.0. AI generation gains TOEIC part6 (text

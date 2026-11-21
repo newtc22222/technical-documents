@@ -8,7 +8,9 @@ description: Self-contained implementation blueprint for adding LLM-powered feat
 
 # AI Feature Implementation Guide
 
-This document is a **self-contained implementation blueprint** for adding LLM-powered features to LinguFlow. Read this file in full before writing any code. Do not assume any other guide document exists.
+> **Historical blueprint.** The AI layer shipped. Do not treat this page as the current contract. Question generation is `POST /api/generate` and requires `ai.generate_question` — see [Roles and Permissions](./roles-and-permissions.md) and [AI Features](./ai-features.md).
+
+This document is the original implementation blueprint for adding LLM-powered features to LinguFlow.
 
 ## 1. Feature Overview
 
@@ -74,14 +76,14 @@ Today, `GEMINI_API_KEY` and `OPENAI_API_KEY` exist only as reserved, empty-by-de
 **Frontend (`frontend/src/`):**
 
 - `utils/api.ts` (`apiFetch`) — the only sanctioned HTTP primitive for all three features' calls.
-- Explain: an action/button on the exam-results view and on card study/detail views.
+- Explain: an action/button on the exam-results view and on card study/detail views. Locate the actual component names via the `features/exam/` and `features/flashcards/`/`features/library/` directories — do not assume exact filenames without checking.
 - Generate: UI lives in the question bank / exam composer area (wherever admins/users currently manage questions) — new generator form + job-status polling.
 - Hint: a control inside the exam-taking view (`features/exam/`), keyboard-accessible, opt-in (a button the user must click — never auto-fires).
 - **Every AI UI control must be self-contained: local `try/catch` and a local error `ref`, not a shared/store-level error state.** A failed AI call must never taint or block unrelated parts of the view it lives in.
 
 **Data model (new):**
 
-- A job table for async question generation — columns roughly: `id`, `user_id`, `status` (`pending`/`running`/`succeeded`/`failed`), `payload` (the generation request/prompt), `result` (generated question IDs or raw output), `error`, `created_at`, `updated_at`.
+- A job table for async question generation — columns roughly: `id`, `user_id`, `status` (`pending`/`running`/`succeeded`/`failed`), `payload` (the generation request/prompt), `result` (generated question IDs or raw output), `error`, `created_at`, `updated_at`. Exact column types/names should follow the conventions of existing tables in `backend/app/models/` (check an existing model file for style before writing this one).
 - No new columns needed on `Question`/`AnswerRecord`/`ExamTemplate` for explain or hints — both read existing data, they don't need new storage (explain may optionally cache its output; see §5).
 
 ## 5. Implementation Steps
@@ -92,7 +94,7 @@ Work in this order; each step is intended to land as its own PR/commit.
 
 1. Build `services/ai/client.py` exposing one interface, e.g.:
 
-   ```python
+   ```text
    class AIClient:
        async def complete(self, messages, *, model_hint=None, response_schema=None, timeout=...) -> AIResponse: ...
    ```
@@ -111,7 +113,7 @@ Work in this order; each step is intended to land as its own PR/commit.
 2. `explain-card`: caller must own the card (reuse whatever ownership check the existing card service already uses — do not write a second one).
 3. `explain` (for a completed exam answer): **only ever allowed for a completed session review, never mid-exam** — this is a hard requirement, since exposing an explanation mid-attempt could leak the correct answer. Reuse the existing exam authz pattern (`ExamService.readable_template_or_404` — `is_public OR owned`, else 404 never 403) for any template/session lookup involved; do not bypass or reimplement it.
 4. Add a cache keyed by `(kind, subject_id_or_content_hash, locale)` — a small Postgres table or in-process LRU is sufficient; **do not introduce Redis** for this.
-5. Wrap the AI client call: any exception (timeout, provider error, malformed response) $\rightarrow$ 503, never 500.
+5. Wrap the AI client call: any exception (timeout, provider error, malformed response) → 503, never 500.
 6. Frontend: an "Explain" action on the exam-results view and on card study/detail views, each with its own local loading/error state.
 
 ### Step 3 — AI question generator (async job)
@@ -119,7 +121,7 @@ Work in this order; each step is intended to land as its own PR/commit.
 1. Write the Alembic migration for the job table (see §4 Data model).
 2. `POST /api/ai/generate-questions` validates the request, inserts a `pending` job row, and returns `202 {"jobId": ...}` immediately — it must not block on the actual generation.
 3. The generation work itself runs as an in-process background task (acceptable for a single-worker deployment) structured like `jobs/cleanup_guests.py`: it opens its own session, does the work, and commits/updates the job row itself — the request-handling transaction (owned by `get_db()`) must not be the one that commits this background work.
-4. On success, the generated content is validated against the bank's schema using the client's `response_schema` param from Step 1, then inserted as `Question` rows owned by the requesting user (`user_id = caller`). **Never auto-attach generated questions to a public/built-in exam template** — they land in the bank as the user's own, unattached questions, consistent with the existing "questions are a shared bank, not exam property" model.
+4. On success, the generated content is validated against the bank's schema using the client's `response_schema` param from Step 1, then inserted as `Question` rows owned by the requesting user (`user_id = caller`). **Never auto-attach generated questions to a public/built-in exam template** — they land in the bank as the user's own, unattached questions, consistent with the existing "questions are a shared bank, not exam property" model (a question only becomes part of an exam via the `exam_template_questions` join table, and that's a separate, explicit user action outside this guide's scope).
 5. `GET /api/ai/jobs/{jobId}` returns status/result/error; scope it to the requesting user (a job belongs to whoever created it — reject or 404 on cross-user access, same reasoning as the media-key scoping pattern elsewhere in this codebase).
 6. Frontend: a generator form in the question bank / exam composer area, with job-status polling (simple interval poll is fine for v1 — no websockets/SSE), i18n'd in both locales.
 
@@ -127,8 +129,8 @@ Work in this order; each step is intended to land as its own PR/commit.
 
 1. `POST /api/ai/hint` takes `sessionId` + `questionId`.
 2. The caller must own an **in-progress** session (not completed, not someone else's).
-3. The question must appear in that session's frozen `AnswerRecord` snapshot for that session — **resolve from `AnswerRecord`, not the exam template's current/live question set.**
-4. The prompt sent to the AI client, and any post-processing of its response, must guarantee `correct_answer` (and anything that trivially implies it, e.g. "the answer is not X, Y, or Z" when only one option remains) never appears in the hint payload returned to the client. Write this as an explicit assertion in the response-building code, not just an instruction in the LLM prompt.
+3. The question must appear in that session's frozen `AnswerRecord` snapshot for that session — **resolve from `AnswerRecord`, not the exam template's current/live question set.** This mirrors the same invariant the codebase already enforces for exam results (a template's composition can change after a session starts; only the session's own frozen record is trustworthy).
+4. The prompt sent to the AI client, and any post-processing of its response, must guarantee `correct_answer` (and anything that trivially implies it, e.g. "the answer is not X, Y, or Z" when only one option remains) never appears in the hint payload returned to the client. Write this as an explicit assertion in the response-building code, not just an instruction in the LLM prompt (prompts are not a reliable enforcement mechanism on their own).
 5. Server-side exam time limits/grace period continue to apply unchanged — a hint call must not extend or pause the exam clock.
 6. Frontend: a hint control in the exam-taking view, keyboard-accessible, opt-in only (never auto-fires on question load).
 
@@ -163,18 +165,18 @@ No code outside `services/ai/` should import `openai` or `google.generativeai` (
 
 **`GET /api/ai/jobs/{jobId}`** — auth required, scoped to the job's owner. Response: `{"status": "pending"|"running"|"succeeded"|"failed", "result": ..., "error": ...}` (adjust field names to match the project's existing camelCase schema convention).
 
-**`POST /api/ai/hint`** — auth required, non-guest, caller must own an in-progress session containing the given question in its `AnswerRecord` set. Response: hint text, guaranteed free of the correct answer. 503 on provider failure, 404/403 if the session/question pairing is invalid.
+**`POST /api/ai/hint`** — auth required, non-guest, caller must own an in-progress session containing the given question in its `AnswerRecord` set. Response: hint text, guaranteed free of the correct answer. 503 on provider failure, 404/403 (pick whichever matches the existing convention for session-ownership violations elsewhere in the exam routers) if the session/question pairing is invalid.
 
 ## 7. Dependencies & Assumptions
 
-- **External libraries:** an OpenAI SDK and a Gemini SDK (add to `backend/requirements.txt`).
+- **External libraries:** an OpenAI SDK and a Gemini SDK (add to `backend/requirements.txt`) — confirm exact package names/versions against what's current, since training data may be stale; do not guess a version number, check PyPI or the vendor's docs at implementation time.
 - **Environment variables:** `GEMINI_API_KEY`, `OPENAI_API_KEY` — both optional, default `""`. The client factory must treat an empty key as "this provider is unavailable," not throw at import/startup time.
 - **Existing invariants this guide must not violate (from the project's own documented rules):**
   - `ExamService.readable_template_or_404` is the only path for by-id template reads (`is_public OR owned`, else 404 never 403). Explain/hint routes that touch a template must go through it.
-  - Session answer keys are gated on the **session's** status (`completed`), not on question ownership — built-in/seeded questions have no owner (`user_id = NULL`), so gating on question ownership instead would break every seeded exam's results page.
+  - Session answer keys are gated on the **session's** status (`completed`), not on question ownership — built-in/seeded questions have no owner (`user_id = NULL`), so gating on question ownership instead would break every seeded exam's results page. Reuse the existing `build_session_question_response` pattern for anything session-scoped; do not switch it to a question-ownership-gated serializer.
   - Questions are a shared, mutable bank; an answered question's `options`/`correct_answer` are frozen once any `AnswerRecord` references it (409 on attempted edit) — the question generator in Step 3 only ever *inserts new* questions, it must never modify an existing question's content.
   - `get_db()` is the sole HTTP-request commit point; services `flush()` but never `commit()`/`rollback()`. The Step 3 background job is the deliberate exception (like `cleanup_guests.py`), since it isn't running inside a request's transaction.
-- **Assumption:** registered, non-guest users only for every AI route.
+- **Assumption:** registered, non-guest users only for every AI route — if the product later wants to allow guests, that's a scope change requiring a fresh decision, not an default to fall into silently.
 
 ## 8. Edge Cases & Error Handling
 
@@ -183,10 +185,10 @@ No code outside `services/ai/` should import `openai` or `google.generativeai` (
 - **Provider returns a 4xx/5xx:** caught and mapped to 503 (the AI provider's specific error code is an internal detail — never forward it raw to the client, and never turn it into a 500).
 - **Provider returns malformed/unparseable structured output** (fails `response_schema` validation): treated as a failure, mapped to 503 (explain/hint) or a `failed` job status with a generic error message (generate) — never let a bad model response propagate as an unhandled exception.
 - **Hint requested for a completed or foreign session:** 403/404 per the session-ownership convention; never silently return a hint anyway.
-- **Hint response accidentally contains the answer** (model didn't follow instructions): must be caught by the explicit post-processing check in Step 4.5, not assumed away.
+- **Hint response accidentally contains the answer** (model didn't follow instructions): must be caught by the explicit post-processing check in Step 4.5, not assumed away — write the regression test for this (see §9).
 - **Generation produces zero valid questions** (e.g. schema validation fails on every candidate): job ends in `failed` status with an error message, not a `succeeded` status with an empty result.
-- **Guest user calls any AI route:** 403.
-- **Rate limit exceeded:** 429 with `Retry-After`, following `SlidingWindowLimiter`'s existing response shape exactly.
+- **Guest user calls any AI route:** 403 (or whatever status the codebase's existing "feature not available to this account type" pattern uses — check `require_root_admin`'s style for reference, though that one is a different check).
+- **Rate limit exceeded:** 429 with `Retry-After`, following `SlidingWindowLimiter`'s existing response shape exactly — no custom rate-limit error format.
 - **AI kill switch disabled (if implemented per Step 1.7):** every `/api/ai/*` route short-circuits to 503 before attempting any provider call.
 - **App/health checks during a full provider outage:** `/api/health` and `/api/health/ready` must show green throughout — neither route touches AI providers.
 
@@ -194,10 +196,10 @@ No code outside `services/ai/` should import `openai` or `google.generativeai` (
 
 Backend (`cd backend && ./venv/Scripts/python.exe -m pytest`):
 
-- [ ] `services/ai/client.py` unit tests: provider selection logic, empty-key $\rightarrow$ unavailable behavior, timeout/retry behavior — all with the HTTP/SDK layer mocked, zero live provider calls.
+- [ ] `services/ai/client.py` unit tests: provider selection logic, empty-key → unavailable behavior, timeout/retry behavior — all with the HTTP/SDK layer mocked, zero live provider calls.
 - [ ] `explain`/`explain-card`: happy path, 401 (no token), 403/404 (guest or non-owner), 503 (mocked provider exception), 503 (mocked malformed response).
-- [ ] `generate-questions`: happy path returns 202 + jobId; job polling reflects `pending` $\rightarrow$ `succeeded`/`failed`; generated questions land unattached to any public template; a second user cannot read the first user's job.
-- [ ] `hint`: happy path; rejected for a completed session; rejected for a question not in that session's `AnswerRecord` set; **explicit regression test asserting the hint response never contains the session's `correct_answer` value for that question**.
+- [ ] `generate-questions`: happy path returns 202 + jobId; job polling reflects `pending`→`succeeded`/`failed`; generated questions land unattached to any public template; a second user cannot read the first user's job.
+- [ ] `hint`: happy path; rejected for a completed session; rejected for a question not in that session's `AnswerRecord` set; **explicit regression test asserting the hint response never contains the session's `correct_answer` value for that question** (this is the single most important test in this guide — do not skip it).
 - [ ] Re-run `backend/tests/test_exam_visibility.py` after wiring generate/hint, since both touch exam/session authz paths — confirm zero regressions on the existing invariants.
 - [ ] A "provider down" test per new endpoint confirming 503 (never 500) and no stack trace in the response body.
 
@@ -209,4 +211,4 @@ Frontend (`cd frontend`):
 
 **Degraded-mode smoke test (required before considering this guide done):**
 
-- [ ] Blank out `GEMINI_API_KEY`/`OPENAI_API_KEY`, restart the backend, and manually confirm: app boots, health checks pass, card CRUD works, flashcard study/grading works, and a full exam attempt (create session $\rightarrow$ answer $\rightarrow$ submit $\rightarrow$ view results) works end-to-end — only the AI-specific buttons (explain/generate/hint) should show an error state, and none of them should be reachable from a blocking/required step in any of those flows.
+- [ ] Blank out `GEMINI_API_KEY`/`OPENAI_API_KEY`, restart the backend, and manually confirm: app boots, health checks pass, card CRUD works, flashcard study/grading works, and a full exam attempt (create session → answer → submit → view results) works end-to-end — only the AI-specific buttons (explain/generate/hint) should show an error state, and none of them should be reachable from a blocking/required step in any of those flows.

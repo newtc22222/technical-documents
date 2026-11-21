@@ -96,7 +96,7 @@ Built-in seeded Part 1 items may have no R2 objects — the player shows
 
 ## 📦 Media contract
 
-Same presign $\rightarrow$ browser PUT $\rightarrow$ confirm flow as cards. Pass
+Same presign → browser PUT → confirm flow as cards. Pass
 `purpose: "question"` so the final key is under `questions/`, not `cards/`.
 
 ```mermaid
@@ -106,7 +106,7 @@ sequenceDiagram
     participant UI as Composer
     participant API as FastAPI
     participant R2 as Cloudflare R2
-    participant DB as PostgreSQL
+    participant DB as Postgres
 
     Author->>UI: pick Part 3/4, attach one clip
     UI->>API: POST /api/media/presign-upload<br/>(purpose "question", audio type)
@@ -179,9 +179,16 @@ so the bucket must allow that header.
 
 ---
 
+## ⏱️ Synthesis deadline
+
+`POST /api/listening/synthesize` speaks every turn, stitches one WAV, and uploads it to R2 inside a single budget: `LISTENING_SYNTH_DEADLINE_SECONDS` (default **55**) in `backend/app/config.py`. Turns run at most three at a time (`TTS_CONCURRENCY` in `backend/app/services/assessment/listening.py`). The per-call cap `LISTENING_TTS_TIMEOUT_SECONDS` (default **90**) does not bound the whole request.
+
+If the budget expires, the remaining speech calls are cancelled and awaited, any staging object the upload had started is deleted, and the route answers **503** with `AI features are temporarily unavailable`. The client receives no staging key. Keep the deadline under the reverse proxy's read timeout so that 503 arrives instead of a gateway error.
+
+---
+
 ## 🚫 Out of scope (this feature)
 
 - Official 200-item TOEIC seed with real R2 clips
-- TTS / generated audio
 - A first-class Passage / Clip entity (sets stay a `passageGroup` marker)
 - Redis, CDN invalidation, or an upload queue

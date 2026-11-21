@@ -1,8 +1,8 @@
 ---
 id: release-v1.2.0
 title: LinguFlow 1.2.0
-sidebar_label: v1.2.0
-sidebar_position: 5
+sidebar_label: "v1.2.0"
+sidebar_position: 9
 description: Release notes for LinguFlow v1.2.0, adding five new item types and IELTS exam support.
 ---
 
@@ -10,7 +10,7 @@ description: Release notes for LinguFlow v1.2.0, adding five new item types and 
 
 **Release version:** `v1.2.0`  
 **Status:** Superseded by [v1.2.1](./release-v1.2.1.md)  
-**GitHub Release:** https://github.com/newtc22222/lingu-flow/releases/tag/v1.2.0  
+**GitHub Release:** [https://github.com/newtc22222/lingu-flow/releases/tag/v1.2.0](https://github.com/newtc22222/lingu-flow/releases/tag/v1.2.0)  
 **Previous:** [v1.1.1](./release-v1.1.1.md) · [v1.0.0](./release-v1.0.0.md)
 
 Production cut of staging since v1.1.1. The exam system is no longer TOEIC-only:

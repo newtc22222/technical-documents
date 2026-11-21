@@ -22,9 +22,9 @@ LinguFlow is a modern, high-performance, keyboard-driven language certification 
 | --- | --- |
 | [**Application Overview**](./architecture/application-overview.md) | What LinguFlow is, the feature set, technology stack, and repository layout. |
 | [**Architecture & Database Schema**](./architecture/architecture-and-database-schema.md) | Layered architecture, ER diagrams, PostgreSQL models, Alembic migrations, and database design. |
-| [**Database design**](./architecture/database-design.md) | Column-level Postgres reference for assessment v2, flashcards, sharing, and migrations through `0021`. |
+| [**Database design**](./architecture/database-design.md) | Column-level Postgres reference for assessment v2, flashcards, sharing, notifications, and migrations through `0029`. |
 | [**API Documentation**](./architecture/api-documentation.md) | OpenAPI-oriented docs for Auth, Flashcards, Decks, Exams, Question Bank, and Media. |
-| [**Question & Exam Design (Dev)**](./architecture/question-and-exam-design.md) | End-to-end design of the question bank, assessment v2 DSL, sitting, and grading. |
+| [**Question & Exam Design (Dev)**](./architecture/question-and-exam-design.md) | End-to-end design of the question bank, assessment v2 DSL, bank authoring pages, sitting, and grading. |
 | [**Spaced Repetition (SM-2)**](./architecture/spaced-repetition-sm2.md) | Deep dive into the SM-2 mathematical model, quality mapping, ease factor bounds, and review queues. |
 
 ### Features
@@ -32,10 +32,14 @@ LinguFlow is a modern, high-performance, keyboard-driven language certification 
 | Wiki Page | Description |
 | --- | --- |
 | [**AI Features (User Guide)**](./features/ai-features.md) | How to use explain, question generate, and non-spoiling exam hints. |
+| [**Roles and Permissions**](./features/roles-and-permissions.md) | Client vs Operator vs env root admin. Stage 1 gates AI question generate. |
 | [**AI Service Layer (Dev)**](./features/ai-service-layer.md) | Provider-agnostic client, `/api/ai/*` contracts, kill switch, migrations, and operator guide. |
 | [**AI Feature Implementation Guide**](./features/ai-feature-guide.md) | Self-contained implementation blueprint for adding LLM-powered features. |
 | [**Exam-Type Feature Flags**](./features/exam-type-feature-flags.md) | Backend-owned enable/disable flags per exam type — content-readiness gating, kill switch, data model, and operator guide. |
 | [**TOEIC Listening Items**](./features/toeic-listening.md) | Parts 1–4 audio/photo on the shared bank, set-level clips, session play URLs, and the tape player. |
+| [**Notifications & Reminders**](./features/notifications-and-reminders.md) | Inbox, live updates over SSE, Web Push (VAPID), and the hourly study-reminder job. |
+| [**Themes & Appearance**](./features/themes-and-appearance.md) | The four presets, per-user `themeOverrides`, derived contrast, and the exam theme lock. |
+| [**Deck Sharing**](./features/deck-sharing.md) | Share links that let a signed-in user preview a deck and copy it into their library; paged loading for big decks. |
 | [**Practice Mode**](./features/practice-mode.md) | Drills from exams or the bank: `mode=practice`, pause, notes, optional immediate feedback, resits. |
 | [**Card Image Uploads (R2 + CORS)**](./features/card-image-uploads.md) | Presign → browser PUT → confirm pipeline, required **bucket** CORS, and `.env` reload caveats. |
 
@@ -43,17 +47,22 @@ LinguFlow is a modern, high-performance, keyboard-driven language certification 
 
 | Wiki Page | Description |
 | --- | --- |
-| [**Deployment & DevOps Guide**](./operations/deployment-guide.md) | Deployment blueprints for Vercel (Frontend), Railway (FastAPI + PostgreSQL), Cloudflare R2, and Docker Compose. |
-| [**Deployment Plan (Phase 1)**](./operations/deployment-plan.md) | Target infrastructure, platform setup steps, env-var matrix, and the deployment verification checklist. |
-| [**Domain cutover**](./operations/domain-cutover.md) | Staging preview (no custom domain) and the move of production to `lingu-flow.com`. |
+| [**Deployment & DevOps Guide**](./operations/deployment-guide.md) | Current production: Vercel (SPA), a VPS running FastAPI and PostgreSQL in Docker Compose behind Caddy, Cloudflare R2, and the vercel.app proxy. |
+| [**VPS deploy**](./operations/vps-deploy.md) | GitHub Actions build to GHCR and SSH deploy behind Caddy, for `main` (production) and `staging`. |
+| [**Deployment Plan (Phase 1)**](./operations/deployment-plan.md) | The earlier Railway plan, kept for history. Not how the app is deployed now. |
+| [**Domains and staging**](./operations/domain-cutover.md) | The phivo.dev and vercel.app hosts per environment, how a change reaches staging and production, and what a further domain move touches. |
 
 ### Releases
 
 | Wiki Page | Description |
 | --- | --- |
-| [**Release v1.4.0**](./releases/release-v1.4.0.md) | **Current production** — Assessment v2 architecture, Question DSL, Exam Composer & Booth. |
+| [**Release v2.2.0**](./releases/release-v2.2.0.md) | **Current production** — flashcards and decks redesign, full-page bank authoring, admin console redesign, deck share links, vercel.app proxy. |
+| [**Release v2.1.0**](./releases/release-v2.1.0.md) | Notification inbox with live SSE updates, Web Push and study reminders, per-user themes, practice hints, gzip and bundle performance. |
+| [**Release v2.0.1**](./releases/release-v2.0.1.md) | Server-side section clocks, practice re-sit gates, bank drill cap. |
+| [**Release v2.0.0**](./releases/release-v2.0.0.md) | Practice mode, exam blueprints, RBAC, AI listening, speaking prompts, skeletons & empty states. |
+| [**Release v1.4.0**](./releases/release-v1.4.0.md) | Assessment v2 Question DSL, exam composer & booth, Question Bank console, AI provenance. |
 | [**Release v1.3.1**](./releases/release-v1.3.1.md) | TOEIC part6/7 AI generation, editable passage sets, markdown-table passages. |
-| [**Release v1.3.0**](./releases/release-v1.3.0.md) | AI tutor, flashcard TTS, sheet import, Learn batch mode. |
+| [**Release v1.3.0**](./releases/release-v1.3.0.md) | AI tutor, flashcard TTS, sheet import, Learn. |
 | [**Release v1.2.1**](./releases/release-v1.2.1.md) | Three-theme system and the OMR answer sheet. |
 | [**Release v1.2.0**](./releases/release-v1.2.0.md) | Multi-exam-type foundation: five new item types, IELTS registered, single-source version. |
 | [**Release v1.1.1**](./releases/release-v1.1.1.md) | TOEIC Listening (bank media + player) and exam-integrity sitting lock. |
@@ -69,13 +78,16 @@ graph TD
     Client["Vue 3 Frontend (Vite, Pinia, TypeScript, Pixel Arcade CSS)"]
     Vercel["Vercel Edge Network"]
     Backend["FastAPI Async Backend (Python 3.12, Uvicorn, Pydantic v2)"]
-    Railway["Railway Cloud Hosting"]
+    VPS["VPS (Docker Compose behind Caddy)"]
     DB[("PostgreSQL 16 (asyncpg + SQLAlchemy)")]
     R2[("Cloudflare R2 Storage (S3 API)")]
     AI["AI Engine (Gemini Flash / OpenAI GPT-4o)"]
 
-    Client -->|HTTPS / JSON API| Vercel
-    Vercel -->|Proxy / Reverse Proxy| Backend
+    Client -->|Static SPA| Vercel
+    Client -->|HTTPS / JSON API| Backend
+    Vercel -->|vercel.app pages: /api proxy| Backend
+    VPS -->|Hosts| Backend
+    VPS -->|Hosts| DB
     Backend -->|Async Connection Pool| DB
     Backend -->|Presigned S3 PUT/GET| R2
     Backend -->|Async AI Gateway| AI
@@ -103,4 +115,4 @@ graph TD
 > - **SM-2 Spaced Repetition**: Dynamic card scheduling based on user memory retention scores (1-4).
 > - **Full Exam Simulator**: Timed certification exams with version-pinned attempts, section clocks, multi-scale scores, and a separate **practice** mode (bank/exam draws, optional immediate feedback). TOEIC Listening (Parts 1–4) plays from shared stimulus blocks — see [TOEIC Listening Items](./features/toeic-listening.md) and [Question & Exam Design](./architecture/question-and-exam-design.md).
 > - **In-Place Guest Account Migration**: Guest users can register at any time without losing a single flashcard or study deck.
-> - **Optional AI tutor**: Explain cards/attempt items, generate unattached bank questions — core flows never depend on a vendor. See [AI Features](./features/ai-features.md).
+> - **Optional AI tutor**: Explain cards/attempt items. Question generate is Operator-only; clients keep listening/TTS. See [AI Features](./features/ai-features.md) and [Roles and Permissions](./features/roles-and-permissions.md).

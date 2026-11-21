@@ -1,8 +1,8 @@
 ---
 id: release-v1.1.1
 title: LinguFlow 1.1.1
-sidebar_label: v1.1.1
-sidebar_position: 6
+sidebar_label: "v1.1.1"
+sidebar_position: 10
 description: Release notes for LinguFlow v1.1.1, introducing TOEIC Listening media, passage sets, and exam integrity lock.
 ---
 
@@ -10,7 +10,7 @@ description: Release notes for LinguFlow v1.1.1, introducing TOEIC Listening med
 
 **Release version:** `v1.1.1`  
 **Status:** Superseded by [v1.2.0](./release-v1.2.0.md)  
-**GitHub Release:** https://github.com/newtc22222/lingu-flow/releases/tag/v1.1.1  
+**GitHub Release:** [https://github.com/newtc22222/lingu-flow/releases/tag/v1.1.1](https://github.com/newtc22222/lingu-flow/releases/tag/v1.1.1)  
 **Previous:** [v1.1.0](https://github.com/newtc22222/lingu-flow/releases/tag/v1.1.0) · [v1.0.0](./release-v1.0.0.md)
 
 Production cut of staging after the TOEIC listening track and exam-integrity sitting lock. Version strings are `1.1.1` on the package, OpenAPI, `GET /api/health`, and arcade footer.

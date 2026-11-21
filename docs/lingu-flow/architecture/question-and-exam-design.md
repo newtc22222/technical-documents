@@ -6,7 +6,7 @@ sidebar_position: 5
 description: End-to-end design of the question bank, assessment v2 DSL, sitting, and grading.
 ---
 
-# 📝 Question & Exam Design (Dev)
+# 📝 Question & Exam Design (dev)
 
 End-to-end design of the question bank and exam/practice subsystem across
 **both halves** of LinguFlow — FastAPI/PostgreSQL backend and Vue 3 frontend.
@@ -130,13 +130,13 @@ resolution does not.
 
 ### Practice vs exam
 
-| | Exam attempt | Practice attempt |
-| --- | --- | --- |
-| Start | `POST /api/attempts` with `examId` | `POST /api/practice/from-exam` or `/from-bank` |
-| `exam_version_id` | required (published version) | nullable for bank draws |
-| Feedback | typically `none` until finish | may be `immediate` |
-| Notes | — | `PUT /api/practice/notes` upserts per question identity |
-| Guests | allowed where product rules say so | refused |
+|                   | Exam attempt                       | Practice attempt                                        |
+| ----------------- | ---------------------------------- | ------------------------------------------------------- |
+| Start             | `POST /api/attempts` with `examId` | `POST /api/practice/from-exam` or `/from-bank`          |
+| `exam_version_id` | required (published version)       | nullable for bank draws                                 |
+| Feedback          | typically `none` until finish      | may be `immediate`                                      |
+| Notes             | —                                  | `PUT /api/practice/notes` upserts per question identity |
+| Guests            | allowed where product rules say so | refused                                                 |
 
 Bank draws sample from the **full** matching published set
 (`sample_question_ids`), not “newest N then shuffle”.
@@ -174,13 +174,13 @@ Bank draws sample from the **full** matching published set
 
 Keep this shape — do not add DDD folders or repositories.
 
-| Layer | Path | Rule |
-| --- | --- | --- |
-| Router | `app/routers/assessment_*.py` | HTTP path, Pydantic schema, one service call. **No SQLAlchemy queries.** |
-| Service | `app/services/assessment/` | Business logic + queries. `flush()` ok, no `commit()`. |
-| Model | `app/models/assessment.py` | SQLAlchemy tables. |
-| Schema | `app/schemas/assessment.py` | Request/response with **camelCase aliases** for the Vue app. |
-| DSL | `app/domain/dsl/` | Stimulus/question body blocks (text, audio, image, …). |
+| Layer   | Path                          | Rule                                                                     |
+| ------- | ----------------------------- | ------------------------------------------------------------------------ |
+| Router  | `app/routers/assessment_*.py` | HTTP path, Pydantic schema, one service call. **No SQLAlchemy queries.** |
+| Service | `app/services/assessment/`    | Business logic + queries. `flush()` ok, no `commit()`.                   |
+| Model   | `app/models/assessment.py`    | SQLAlchemy tables.                                                       |
+| Schema  | `app/schemas/assessment.py`   | Request/response with **camelCase aliases** for the Vue app.             |
+| DSL     | `app/domain/dsl/`             | Stimulus/question body blocks (text, audio, image, …).                   |
 
 **Files for this subsystem:**
 
@@ -215,16 +215,30 @@ boundaries.**
 ```txt
 features/assessment/
   bank/          QuestionBankView + store
-  authoring/     QuestionForm, PassageSetForm, editors
+  authoring/     NewItemChooser; QuestionEditorView, PassageSetEditorView and
+                 ListeningEditorView (full pages, useLeaveGuard asks before
+                 discarding); QuestionForm, PassageSetForm (four steps:
+                 passage, questions, answers, review; setSteps.ts), editors
   composer/      ExamComposerView, BlueprintEditor, draft helpers
   runtime/       ExamListView, ExamBriefingView, AttemptView, ResultsView,
                  attemptStore, ExamHud, answer sheet, integrity
   practice/      PracticeSetupView
   components/    BlockList, ResponseInput, block/response views
-features/admin/  AdminBlueprintsPanel (per-type blueprint overrides)
+features/admin/  AdminBlueprintsPanel (per-type blueprint overrides: search,
+                 card grid, New blueprint and edit dialogs)
 ```
 
-**Routes:** `/questions` · `/exams` · `/exams/new` · `/exams/:examId/edit` ·
+Bank generate leaves the status filter alone. While `POST /api/generate` is in flight, `QuestionBankView` draws `pendingGenerateCount` placeholder rows (one per requested question, at least one) at the top of the list. They are removed when the request finishes.
+
+The bank's **New** button opens `NewItemChooser`: pick the kind (question,
+passage set, listening) and the method (write, import, generate). Writing opens
+the matching editor page; editing a published item notes that saving creates a
+new version.
+
+**Routes:** `/questions` · `/questions/new` · `/questions/:questionId/edit` ·
+`/questions/sets/new` · `/questions/sets/:stimulusId/edit` ·
+`/questions/listening/new` · `/questions/listening/:stimulusId/edit` ·
+`/exams` · `/exams/new` · `/exams/:examId/edit` ·
 `/exams/:examId/start` · `/practice` · `/attempts/:attemptId` ·
 `/attempts/:attemptId/results` · `/admin`
 
@@ -241,44 +255,44 @@ timers.
 
 ### Question bank — `/api/questions` (+ stimuli)
 
-| Method | Path | Notes |
-| --- | --- | --- |
-| `GET` | `/questions` | paged bank (`QuestionPageOut`); filters hit columns on `questions`, never version JSON |
-| `GET` | `/questions/facets` | present values only: response kinds, difficulties, locales, skills, tags |
-| `POST` | `/questions` | create (draft); optional attach to an existing stimulus |
-| `GET` `PUT` | `/questions/{id}` | authoring read includes the key (edit permission required) |
-| `POST` | `/questions/{id}/publish` | |
-| `DELETE` | `/questions/{id}` | soft delete (`archived_at`) |
-| `GET` | `/questions/{id}/preview` | readable body **without** answer key |
-| `GET` `PUT` | `/questions/{id}/sharing` | |
-| `POST` | `/passage-sets` | one stimulus + stems that share it |
-| `POST` | `/stimuli` | create stimulus alone |
-| `GET` `PUT` `DELETE` | `/stimuli/{id}` | shared source material |
-| `GET` | `/stimuli/{id}/questions` | stems on a stimulus |
+| Method               | Path                      | Notes                                                                                  |
+| -------------------- | ------------------------- | -------------------------------------------------------------------------------------- |
+| `GET`                | `/questions`              | paged bank (`QuestionPageOut`); filters hit columns on `questions`, never version JSON |
+| `GET`                | `/questions/facets`       | present values only: response kinds, difficulties, locales, skills, tags               |
+| `POST`               | `/questions`              | create (draft); optional attach to an existing stimulus                                |
+| `GET` `PUT`          | `/questions/{id}`         | authoring read includes the key (edit permission required)                             |
+| `POST`               | `/questions/{id}/publish` |                                                                                        |
+| `DELETE`             | `/questions/{id}`         | soft delete (`archived_at`)                                                            |
+| `GET`                | `/questions/{id}/preview` | readable body **without** answer key                                                   |
+| `GET` `PUT`          | `/questions/{id}/sharing` |                                                                                        |
+| `POST`               | `/passage-sets`           | one stimulus + stems that share it                                                     |
+| `POST`               | `/stimuli`                | create stimulus alone                                                                  |
+| `GET` `PUT` `DELETE` | `/stimuli/{id}`           | shared source material                                                                 |
+| `GET`                | `/stimuli/{id}/questions` | stems on a stimulus                                                                    |
 
 ### Exams & attempts — `/api/exams`, `/api/attempts`
 
-| Method | Path | Notes |
-| --- | --- | --- |
-| `GET` `POST` | `/exams` | list / create |
-| `GET` | `/exams/{id}` | |
-| `GET` `PUT` | `/exams/{id}/draft` | working structure |
-| `POST` | `/exams/{id}/publish` | freeze version |
-| `GET` `PUT` | `/exams/{id}/sharing` | |
-| `POST` | `/attempts` | start exam attempt (**403** if type disabled) |
-| `GET` | `/attempts`, `/attempts/{id}` | |
-| `PUT` | `/attempts/{id}/responses` | |
-| `POST` | `/attempts/{id}/pause` · `/resume` · `/finish` | |
-| `GET` | `/attempts/{id}/results` | |
+| Method       | Path                                           | Notes                                         |
+| ------------ | ---------------------------------------------- | --------------------------------------------- |
+| `GET` `POST` | `/exams`                                       | list / create                                 |
+| `GET`        | `/exams/{id}`                                  |                                               |
+| `GET` `PUT`  | `/exams/{id}/draft`                            | working structure                             |
+| `POST`       | `/exams/{id}/publish`                          | freeze version                                |
+| `GET` `PUT`  | `/exams/{id}/sharing`                          |                                               |
+| `POST`       | `/attempts`                                    | start exam attempt (**403** if type disabled) |
+| `GET`        | `/attempts`, `/attempts/{id}`                  |                                               |
+| `PUT`        | `/attempts/{id}/responses`                     |                                               |
+| `POST`       | `/attempts/{id}/pause` · `/resume` · `/finish` |                                               |
+| `GET`        | `/attempts/{id}/results`                       |                                               |
 
 ### Practice — `/api/practice`
 
-| Method | Path | Notes |
-| --- | --- | --- |
-| `POST` | `/practice/from-exam` | |
-| `POST` | `/practice/from-bank` | uniform sample of matching published items |
-| `POST` | `/practice/drills/{id}/resit` | |
-| `PUT` | `/practice/notes` | upsert note for a question identity |
+| Method | Path                          | Notes                                      |
+| ------ | ----------------------------- | ------------------------------------------ |
+| `POST` | `/practice/from-exam`         |                                            |
+| `POST` | `/practice/from-bank`         | uniform sample of matching published items |
+| `POST` | `/practice/drills/{id}/resit` |                                            |
+| `PUT`  | `/practice/notes`             | upsert note for a question identity        |
 
 ### HTTP caching
 

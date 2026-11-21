@@ -2,11 +2,11 @@
 id: release-v0.1.0
 title: Release Notes — v0.1.0 (MVP)
 sidebar_label: v0.1.0 (MVP)
-sidebar_position: 8
+sidebar_position: 12
 description: Release notes for LinguFlow v0.1.0, representing the initial MVP release and migration to FastAPI & PostgreSQL.
 ---
 
-> **Latest official release:** [**v1.4.0**](./release-v1.4.0.md) — Assessment v2 Question DSL, exam composer & booth, Question Bank console, AI provenance. Earlier: [v1.3.1](./release-v1.3.1.md), [v1.3.0](./release-v1.3.0.md), [v1.2.1](./release-v1.2.1.md), [v1.2.0](./release-v1.2.0.md), [v1.1.1](./release-v1.1.1.md), [v1.0.0](./release-v1.0.0.md).
+> **Latest official release:** [**v2.0.1**](./release-v2.0.1.md) — Server-side section clocks, practice re-sit gates, bank drill cap. Earlier: [v2.0.0](./release-v2.0.0.md), [v1.4.0](./release-v1.4.0.md), [v1.3.1](./release-v1.3.1.md), [v1.3.0](./release-v1.3.0.md), [v1.2.1](./release-v1.2.1.md), [v1.2.0](./release-v1.2.0.md), [v1.1.1](./release-v1.1.1.md), [v1.0.0](./release-v1.0.0.md).
 
 ---
 
