@@ -119,6 +119,37 @@ function useDocSets(): DocSet[] {
       ],
     },
     {
+      name: "Bug Tracking",
+      to: "/docs/bug-tracking/",
+      summary: translate({
+        id: "homepage.bugTracking.summary",
+        message:
+          "Self-hosted bug & feedback tracker built with Next.js 16, PostgreSQL 16, Prisma 6, Auth.js v5, and a Chrome MV3 extension.",
+      }),
+      sections: [
+        {
+          label: translate({ id: "homepage.bugTracking.architecture", message: "Architecture & data model" }),
+          to: "/docs/bug-tracking/architecture/system-overview/",
+        },
+        {
+          label: translate({ id: "homepage.bugTracking.triage", message: "Triage & global inbox" }),
+          to: "/docs/bug-tracking/features/triage-and-inbox/",
+        },
+        {
+          label: translate({ id: "homepage.bugTracking.integrations", message: "AI & integrations" }),
+          to: "/docs/bug-tracking/features/ai-and-integrations/",
+        },
+        {
+          label: translate({ id: "homepage.bugTracking.apiReference", message: "API reference" }),
+          to: "/docs/bug-tracking/api-reference/endpoints/",
+        },
+        {
+          label: translate({ id: "homepage.bugTracking.operations", message: "Operations & setup" }),
+          to: "/docs/bug-tracking/operations/deployment-and-runbook/",
+        },
+      ],
+    },
+    {
       name: "Laptech",
       to: "/docs/laptech/intro/",
       summary: translate({
@@ -205,7 +236,7 @@ export default function Home(): ReactNode {
       description={translate({
         id: "homepage.description",
         message:
-          "Architecture, runbooks and API references for FF RESTaurent, Grocery Store, LinguFlow and Laptech.",
+          "Architecture, runbooks and API references for FF RESTaurent, Grocery Store, Bug Tracking, LinguFlow and Laptech.",
       })}
     >
       <main className={styles.page}>
@@ -216,7 +247,7 @@ export default function Home(): ReactNode {
           <p className={styles.lead}>
             <Translate id="homepage.lead">
               Architecture, runbooks and API references for FF RESTaurent,
-              Grocery Store, LinguFlow and Laptech, plus general engineering guides.
+              Grocery Store, Bug Tracking, LinguFlow and Laptech, plus general engineering guides.
             </Translate>
           </p>
         </header>

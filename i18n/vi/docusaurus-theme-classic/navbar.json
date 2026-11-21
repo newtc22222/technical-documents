@@ -23,6 +23,10 @@
     "message": "Grocery Store",
     "description": "Navbar item with label Grocery Store"
   },
+  "item.label.Bug Tracking": {
+    "message": "Bug Tracking",
+    "description": "Navbar item with label Bug Tracking"
+  },
   "item.label.Laptech": {
     "message": "Laptech",
     "description": "Navbar item with label Laptech"
