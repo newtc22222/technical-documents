@@ -105,10 +105,10 @@ POST /api/auth/register
 |---|---|---|---|
 | `email` | `string` | ✅ | Must be a valid email |
 | `name` | `string` | ✅ | Full name |
-| `password` | `string` | ✅ | Must pass password strength rules |
+| `password` | `string` | ✅ | Must pass password strength rules (max 64 characters — BCrypt DoS guard) |
+| `gender` | `string` | ✅ | Required (`@NotBlank`): `MALE`, `FEMALE`, or `NOT_MENTION` |
 | `phone` | `string` | ❌ | Optional |
 | `dob` | `string` | ❌ | ISO date `YYYY-MM-DD` |
-| `gender` | `string` | ❌ | `MALE`, `FEMALE`, or `NOT_MENTION` |
 
 **Response:** `201 Created` — no body.
 
@@ -171,22 +171,42 @@ POST /api/auth/refresh-token
 
 No request body needed. The browser automatically sends the `laptech_rt` cookie.
 
+:::important CSRF Guard
+Cookie endpoints (`POST /api/auth/refresh-token` and `POST /api/auth/logout`) require either the custom header `X-Laptech-Client: web` **or** an `Origin` header present in `APP_CORS_ALLOWED_ORIGINS`. Requests without either receive **`403 Forbidden`**. Both the storefront and admin workbench send `X-Laptech-Client: web` on auth requests and use a single-flight refresh lock so concurrent 401s do not race and revoke the rotated cookie.
+:::
+
 **Response `200 OK`:** Same shape as login — a new `accessToken` and a rotated refresh token cookie.
 
-**Typical FE flow:**
+**Typical FE flow (single-flight refresh):**
 
 ```typescript
-// Interceptor example (axios)
+let refreshPromise: Promise<string> | null = null;
+
+async function refreshSession(): Promise<string> {
+  if (!refreshPromise) {
+    refreshPromise = axios
+      .post('/api/auth/refresh-token', {}, {
+        withCredentials: true,
+        headers: { 'X-Laptech-Client': 'web' },
+      })
+      .then(({ data }) => {
+        const newToken = data.data.accessToken;
+        store.setToken(newToken);
+        return newToken;
+      })
+      .finally(() => {
+        refreshPromise = null;
+      });
+  }
+  return refreshPromise;
+}
+
 axiosInstance.interceptors.response.use(
   (res) => res,
   async (error) => {
     if (error.response?.status === 401 && !error.config._retry) {
       error.config._retry = true;
-      const { data } = await axios.post('/api/auth/refresh-token', {}, {
-        withCredentials: true,
-      });
-      const newToken = data.data.accessToken;
-      store.setToken(newToken);
+      const newToken = await refreshSession();
       error.config.headers['Authorization'] = `Bearer ${newToken}`;
       return axiosInstance(error.config);
     }
@@ -203,7 +223,7 @@ axiosInstance.interceptors.response.use(
 POST /api/auth/logout
 ```
 
-No body. The server revokes the refresh token and clears the cookie.
+No body. Include `withCredentials: true` and `X-Laptech-Client: web`. The server revokes the refresh token and clears the `laptech_rt` cookie.
 
 **Response `200 OK`:**
 
@@ -273,12 +293,13 @@ PATCH /api/auth/me
 PATCH /api/auth/me/change-password
 ```
 
-**Request Body:**
+**Request Body** (`ChangePasswordRequestDTO`, 6–64 chars for passwords):
 
 ```json
 {
-  "currentPassword": "OldPass123!",
-  "newPassword":     "NewPass456!"
+  "oldPassword":        "OldPass123!",
+  "newPassword":        "NewPass456!",
+  "confirmNewPassword": "NewPass456!"
 }
 ```
 
@@ -292,7 +313,7 @@ PATCH /api/auth/me/change-password
 }
 ```
 
-> **Warning:** After a successful password change, the server clears the security context. Redirect the user to the login page and clear all client-side tokens immediately.
+> **Warning:** After a successful password change, the server updates `password_changed_at`, writes a distributed revocation timestamp to Redis (`laptech:auth:revoked-before:{userId}`), and revokes refresh tokens. Clear all client-side tokens and redirect to login (or re-authenticate) immediately.
 
 ---
 
@@ -375,17 +396,15 @@ No body. Returns the updated address with `isDefault: true`.
 
 Base: `/api/products` · **No auth required**
 
-### List Products (paginated)
+### List & Search Products (paginated, combinable filters)
 
 ```
 GET /api/products
-GET /api/products?page=0&size=20&sort=name,asc
-GET /api/products?categoryId=3
-GET /api/products?brandId=5
-GET /api/products?tags=laptop,gaming
+GET /api/products/search
+GET /api/products?q=xps&minPrice=15000000&maxPrice=40000000&categoryId=3&brandId=5&tags=laptop,gaming&sort=price,asc&page=0&size=20
 ```
 
-> When `categoryId`, `brandId`, or `tags` are provided, only one filter is applied at a time (last one wins in current implementation). Combine filters via the `/api/categories/{id}/products` or `/api/brands/{id}/products` sub-routes.
+All filter parameters (`q`, `minPrice`, `maxPrice`, `categoryId`, `brandId`, `tags` (any-of), and `sort` such as `price,asc`, `price,desc`, `createdAt,desc`) are **combinable** in a single query. Passing an unknown `brandId` or `categoryId` returns `200 OK` with an empty page rather than `404`.
 
 **Response** (Spring Page — **not** wrapped in `ResponseEnvelope`):
 
@@ -683,6 +702,15 @@ GET /api/orders/{orderId}
 
 Returns `ResponseEnvelope<OrderResponse>`.
 
+### Admin Orders & Status Counts _(requires `order:view` + `order:update`)_
+
+```
+GET /api/admin/orders?status=PENDING&page=0&size=20
+GET /api/admin/orders/status-counts
+```
+
+> **Note:** Send repeated or comma-separated `status` query params, **not** axios bracket notation (`status[]`), which is rejected with `400 Bad Request`.
+
 ### Update Order Status _(admin / staff only)_
 
 ```
@@ -733,7 +761,19 @@ POST /api/payments/initiate
 }
 ```
 
-> For redirect-based providers (MoMo, VNPay), redirect the user to `paymentUrl`. The user returns to your site via the configured callback URL. Provider-to-server callbacks are handled by the backend.
+> For redirect-based providers (MoMo, VNPay, Stripe), redirect the user to `paymentUrl`. Full live sandbox callback handling for VNPay/Stripe is scheduled for Phase 2 of the platform roadmap.
+
+### Admin Payment Provider Config _(requires `payment:provider:view` / `payment:provider:update`)_
+
+```
+GET    /api/admin/payment-providers
+POST   /api/admin/payment-providers
+PUT    /api/admin/payment-providers/{id}
+PATCH  /api/admin/payment-providers/{id}/toggle
+```
+
+- Uses optimistic locking (`version` field).
+- `ProviderConfigPolicy` enforces a maximum config payload of 500 bytes and JSON nesting depth ≤ 3. Secret-looking keys are rejected unless they end with `Env` / `_env` and reference an uppercase environment variable name; secret keys are masked on read.
 
 ---
 
@@ -787,13 +827,16 @@ GET /api/{productId}/comments?page=0&sort=createAt,desc
 POST /api/{productId}/comments
 ```
 
-### Delete Comment _(requires `comment:delete`)_
+### Delete Comment
 
 ```
-DELETE /api/comments/{id}
+DELETE /api/me/comments/{id}     # Author self-delete (routed to content-service)
+DELETE /api/comments/{id}        # Moderator delete (requires comment:delete / comment:moderate)
 ```
 
-> **Note:** The Reviews & Comments service is still in active development. Response shapes are not yet finalized. Consult the backend team before building UI that depends on these endpoints.
+> **Security & Threading Notes:**
+> - Comment text is stored **raw** on the backend; frontends must always escape/render it safely (never inject raw HTML).
+> - Deleting a parent comment that still has live replies replaces it with a `[deleted]` placeholder so child threads remain intact.
 
 ---
 
@@ -872,21 +915,19 @@ Paginated responses wrapped in `PaginationResponse`:
 
 ## 14. Permissions Reference
 
-The `permissions` array in the login response controls what the logged-in user can do. Check permissions client-side to conditionally render UI elements.
+`laptech-identity` seeds **5 roles** (`ADMIN`, `MANAGER`, `EMPLOYEE`, `SELLER`, `USER`), **69 permissions**, and **201 grants** on boot via `PermissionRoleSeeder`. The `permissions` array in the login response controls what the logged-in user can do. Check permissions client-side to conditionally render UI elements (e.g. `PermissionGuard` in `laptech-admin-web-ui`).
 
-| Permission | Endpoint Access |
+| Permission | Endpoint / Feature Access |
 |---|---|
-| `cart:view` | `GET /api/carts` |
-| `cart:create` | `POST /api/carts/items` |
-| `cart:update` | `PUT /api/carts/items/{id}`, `POST /api/carts/recalculate` |
-| `cart:delete` | `DELETE /api/carts/items/**` |
-| `order:view` | `GET /api/orders/**` |
-| `order:create` | `POST /api/orders` |
-| `order:update` | `PATCH /api/orders/{id}/status`, `POST /api/payments/initiate` |
-| `review:create` | `POST /api/{productId}/reviews` |
-| `review:delete` | `DELETE /api/reviews/{id}` |
-| `comment:create` | `POST /api/{productId}/comments` |
-| `comment:delete` | `DELETE /api/comments/{id}` |
+| `cart:view` / `cart:create` / `cart:update` / `cart:delete` | `GET/POST/PUT/DELETE /api/carts/**` |
+| `order:view` / `order:create` / `order:update` / `order:refund` | `/api/orders/**`, `/api/admin/orders/**`, `POST /api/payments/initiate` |
+| `payment:provider:view` / `payment:provider:update` | `/api/admin/payment-providers/**` |
+| `product:view` / `product:create` / `product:update` / `product:delete` | `/api/admin/products/**` |
+| `product:media:upload` / `product:media:delete` | `/api/admin/media/**` (R2 / MinIO uploads) |
+| `category:*`, `brand:*`, `tag:*`, `attribute:*` | `/api/admin/categories/**`, `/brands/**`, `/tags/**`, `/attributes/**` |
+| `user:*`, `role:*`, `permission:*` | `/api/admin/users/**`, `/roles/**`, `/permissions/**` |
+| `review:create` / `review:delete` | `POST /api/{productId}/reviews`, `DELETE /api/reviews/{id}` |
+| `comment:create` / `comment:delete` / `comment:moderate` | `POST /api/{productId}/comments`, `DELETE /api/comments/{id}` |
 
 > **Tip:** Store `permissions` as a `Set<string>` in your auth store and use a helper `can('cart:create')` to gate UI features. This avoids role-checking (which is less flexible) and keeps the logic aligned with backend `@PreAuthorize` rules.
 
@@ -899,8 +940,11 @@ import axios from 'axios';
 
 const api = axios.create({
   baseURL: 'http://localhost:8080',
-  withCredentials: true, // Required for HttpOnly refresh-token cookie
-  headers: { 'Content-Type': 'application/json' },
+  withCredentials: true, // Required for HttpOnly laptech_rt refresh cookie
+  headers: {
+    'Content-Type': 'application/json',
+    'X-Laptech-Client': 'web', // Required by CSRF guard on /refresh-token and /logout
+  },
 });
 
 // Attach access token
@@ -910,7 +954,9 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// Auto-refresh on 401
+// Single-flight auto-refresh on 401
+let refreshInFlight: Promise<string> | null = null;
+
 api.interceptors.response.use(
   (res) => res,
   async (err) => {
@@ -918,9 +964,19 @@ api.interceptors.response.use(
     if (err.response?.status === 401 && !original._retry) {
       original._retry = true;
       try {
-        const { data } = await api.post('/api/auth/refresh-token');
-        authStore.setToken(data.data.accessToken);
-        original.headers['Authorization'] = `Bearer ${data.data.accessToken}`;
+        if (!refreshInFlight) {
+          refreshInFlight = api
+            .post('/api/auth/refresh-token')
+            .then(({ data }) => {
+              authStore.setToken(data.data.accessToken);
+              return data.data.accessToken as string;
+            })
+            .finally(() => {
+              refreshInFlight = null;
+            });
+        }
+        const token = await refreshInFlight;
+        original.headers['Authorization'] = `Bearer ${token}`;
         return api(original);
       } catch {
         authStore.logout();

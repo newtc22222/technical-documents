@@ -95,6 +95,13 @@ RabbitMQ users come from `.env` (`RABBITMQ_USERNAME` / `RABBITMQ_PASSWORD`). Exc
 - `MINIO_ROOT_PASSWORD`
 - `APP_JWT_SECRET`
 
+Additional runtime variables to configure for host services and frontends:
+
+- `STORAGE_PROVIDER` — required for `laptech-catalog` to boot (`r2`, `minio`, or `local`; Cloudinary has been removed).
+- `APP_CORS_ALLOWED_ORIGINS` — comma-separated origins allowed by `laptech-gateway` and accepted by the cookie CSRF guard on `/api/auth/refresh-token` and `/api/auth/logout` (e.g. `http://localhost:3000,http://localhost:5173`).
+- `APP_AUTH_REFRESH_COOKIE_SAME_SITE` — defaults to `Lax` (`None` also sets `Secure`, required for cross-site HTTPS deployments).
+- `REDIS_PASSWORD` — must match the compose Redis container; used for both Spring Cache and distributed access-token revocation (`laptech:auth:revoked-before:{userId}`).
+
 ## Helper scripts (`dev/`)
 
 Scripts in `dev/` wrap the compose stack (project `laptech-dev`), each in bash (`.sh`) and PowerShell (`.ps1`) form; run from any directory. Prerequisites: Docker with the compose plugin, and a `.env` copied from `.env.example` with every password/secret filled.
@@ -112,17 +119,36 @@ Scripts in `dev/` wrap the compose stack (project `laptech-dev`), each in bash (
 
 Seed runs only through `dev/seed.sh` or `dev/seed.ps1`. The SQL targets the per-service schema `laptech_catalog` (not `MYSQL_DATABASE`). Start laptech-catalog once so its tables exist (Flyway or Hibernate `ddl-auto` depending on profile); until then seed exits with a clear message. Then `dev/seed.sh` / `.\dev\seed.ps1` can be re-run any number of times.
 
-Dev uses Hibernate `ddl-auto: update` with Flyway off. Prod applies each service `V1` baseline.
+Dev uses Hibernate `ddl-auto: update` with Flyway off. Prod applies each service's `V1` baseline and `V2` migrations (`V2__tag_slug_unique.sql` in catalog, `V2__comments_phone_nullable.sql` in content, `V2__order_admin_indexes.sql` in order, `V2__payment_providers_enabled_version.sql` in payment).
+
+`laptech-identity` automatically runs `PermissionRoleSeeder` (`permissions_roles.sql`) on boot to seed and re-sync the 5 roles, 69 permissions, 201 grants, and role hierarchy DAG.
 
 ## Spring profiles
 
 | Profile | Use | Schema / secrets |
 |---|---|---|
 | `dev` | Local compose stack | `ddl-auto: update`, Flyway off. Existing `application-dev.yml` files already target compose. |
-| `test` | Automated tests only | Identity and catalog load `src/test/resources/application-test.yml` and use Testcontainers MySQL 9.4. They must not use shared databases. |
-| `prod` | Deployed environments | All secrets required, no defaults. Startup fails if `APP_JWT_SECRET` is missing. A missing or blank `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, `RABBITMQ_HOST`, `RABBITMQ_PORT`, `RABBITMQ_USERNAME`, or `RABBITMQ_PASSWORD` throws `IllegalStateException` naming each one. Flyway enabled with `ddl-auto: validate`. |
+| `test` | Automated tests only | Services load `src/test/resources/application-test.yml`, run Flyway (`V1`+`V2`), and use Testcontainers MySQL 9.4. They must not use shared databases. |
+| `prod` | Deployed environments | All secrets required, no defaults. `RequiredSecretsEnvironmentPostProcessor` fails startup fast if `APP_JWT_SECRET` (≥ 32 raw UTF-8 bytes), `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, `RABBITMQ_HOST`, `RABBITMQ_PORT`, `RABBITMQ_USERNAME`, `RABBITMQ_PASSWORD`, or `REDIS_PASSWORD` is missing or blank. Flyway enabled with `ddl-auto: validate`. |
 
 The full table is in the API repository at `docs/local-stack.md`.
+
+## Running the Frontends Locally
+
+Requires **Node.js 24**. Ensure `APP_CORS_ALLOWED_ORIGINS` on `laptech-gateway` includes `http://localhost:3000,http://localhost:5173`.
+
+- **Storefront (`laptech-client-web-ui`, port `3000`):**
+  ```bash
+  cp .env.example .env.local
+  # Set NEXT_PUBLIC_API_URL=http://localhost:8080 and optionally NEXT_PUBLIC_CURRENCY=VND
+  npm install && npm run dev
+  ```
+- **Admin Workbench (`laptech-admin-web-ui`, port `5173`):**
+  ```bash
+  cp .env.example .env.local
+  # Set VITE_API_BASE=http://localhost:8080/api
+  npm install && npm run dev
+  ```
 
 ## R2
 

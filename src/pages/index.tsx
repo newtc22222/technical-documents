@@ -84,12 +84,47 @@ function useDocSets(): DocSet[] {
       ],
     },
     {
+      name: "Grocery Store",
+      to: "/docs/grocery-store/",
+      summary: translate({
+        id: "homepage.groceryStore.summary",
+        message:
+          "WCAG AAA Vietnamese retail POS and tax compliance app built with Go 1.23, Angular 19, PostgreSQL 16 and Redis.",
+      }),
+      sections: [
+        {
+          label: translate({ id: "homepage.groceryStore.architecture", message: "System architecture" }),
+          to: "/docs/grocery-store/architecture/overview/",
+        },
+        {
+          label: translate({ id: "homepage.groceryStore.businessLogic", message: "Tax & business logic" }),
+          to: "/docs/grocery-store/business-logic/tax-engine/",
+        },
+        {
+          label: translate({ id: "homepage.groceryStore.apiReference", message: "API reference" }),
+          to: "/docs/grocery-store/api-reference/overview/",
+        },
+        {
+          label: translate({ id: "homepage.groceryStore.uiUx", message: "UI & UX design" }),
+          to: "/docs/grocery-store/ui-ux/accessibility-wcag-aaa/",
+        },
+        {
+          label: translate({ id: "homepage.groceryStore.operations", message: "Operations & setup" }),
+          to: "/docs/grocery-store/operations/local-setup/",
+        },
+        {
+          label: translate({ id: "homepage.groceryStore.releases", message: "Releases" }),
+          to: "/docs/grocery-store/releases/changelog/",
+        },
+      ],
+    },
+    {
       name: "Laptech",
       to: "/docs/laptech/intro/",
       summary: translate({
         id: "homepage.laptech.summary",
         message:
-          "Spring Boot authentication and authorization module, with JWT, refresh-token rotation and role-based access.",
+          "Multi-service e-commerce platform: Spring Boot 3.5 modular backend (9 modules), Next.js 16 storefront, and Ant Design 6 admin workbench.",
       }),
       sections: [
         {
@@ -97,8 +132,12 @@ function useDocSets(): DocSet[] {
           to: "/docs/laptech/overview/architecture/",
         },
         {
-          label: translate({ id: "homepage.laptech.setup", message: "Setup & installation" }),
-          to: "/docs/laptech/setup/installation/",
+          label: translate({ id: "homepage.laptech.setup", message: "Local setup" }),
+          to: "/docs/laptech/setup/local-setup/",
+        },
+        {
+          label: translate({ id: "homepage.laptech.handbook", message: "Handbook" }),
+          to: "/docs/laptech/handbook/",
         },
         {
           label: translate({ id: "homepage.laptech.apiReference", message: "API reference" }),
@@ -166,7 +205,7 @@ export default function Home(): ReactNode {
       description={translate({
         id: "homepage.description",
         message:
-          "Architecture, runbooks and API references for FF RESTaurent, LinguFlow and Laptech.",
+          "Architecture, runbooks and API references for FF RESTaurent, Grocery Store, LinguFlow and Laptech.",
       })}
     >
       <main className={styles.page}>
@@ -177,7 +216,7 @@ export default function Home(): ReactNode {
           <p className={styles.lead}>
             <Translate id="homepage.lead">
               Architecture, runbooks and API references for FF RESTaurent,
-              LinguFlow and Laptech, plus general engineering guides.
+              Grocery Store, LinguFlow and Laptech, plus general engineering guides.
             </Translate>
           </p>
         </header>

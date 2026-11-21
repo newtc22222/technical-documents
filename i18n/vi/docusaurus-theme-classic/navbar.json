@@ -19,6 +19,10 @@
     "message": "FF RESTaurent",
     "description": "Navbar item with label FF RESTaurent"
   },
+  "item.label.Grocery Store": {
+    "message": "Grocery Store",
+    "description": "Navbar item with label Grocery Store"
+  },
   "item.label.Laptech": {
     "message": "Laptech",
     "description": "Navbar item with label Laptech"

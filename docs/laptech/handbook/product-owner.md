@@ -9,13 +9,17 @@ Laptech API is an advanced E-commerce platform. For the Product Owner, the prima
 
 ## Business Capabilities by Domain
 The system is divided into bounded contexts (domains) to align with business functions:
-* **Identity**: Manages users, authentication, and Permission-Based Access Control (PBAC).
-* **Catalog**: Manages products, categories, brands, and media. Supports Redis caching for fast product browsing.
-* **Inventory**: Tracks stock levels and manages allocations during checkout to prevent overselling.
-* **Order**: Manages shopping carts, order creation, and tracking.
-* **Payment**: Processes payments and shipping. Designed with the Strategy Pattern to quickly integrate new payment gateways (e.g., VNPay, Momo).
-* **Promotion**: Handles discount logic and vouchers, featuring "best-deal optimization" for users.
-* **Content**: Manages user feedback, reviews, and notifications.
+* **Identity**: Manages users, authentication (JWT + rotated HttpOnly refresh cookie + Redis revocation), and Permission-Based Access Control (PBAC — 5 seeded roles, 69 permissions, role hierarchy DAG).
+* **Catalog**: Manages products, combinable search/filters, categories, brands, tags, attributes, and Cloudflare R2 media. Uses Redis caching for fast storefront browsing.
+* **Inventory**: Tracks stock levels and warehouses. *(Async RabbitMQ stock reservation during checkout is scheduled for Phase 3.)*
+* **Order**: Manages guest-to-server shopping cart merge, checkout with catalog price verification ([ADR-0002](../adr/0002-order-snapshot-and-checkout-price.md)), order lifecycle, and admin status counts.
+* **Payment**: Manages payment initiation (`COD`, `MOMO`, `VNPAY`, `STRIPE` strategy) and admin payment-provider configuration. *(Live VNPay/Stripe sandbox callbacks are scheduled for Phase 2.)*
+* **Promotion**: Promotion and voucher domain. *(Checkout voucher/discount wiring is planned; currently `discountTotal` is `0`.)*
+* **Content**: Manages product reviews and threaded comments (including `[deleted]` placeholder retention for active reply threads).
+
+## Web Applications
+* **Storefront (`laptech-client-web-ui`)**: Next.js 16 customer experience with Shop by Need / Laptop Finder, VND currency tiers, brand/price/tag filters, search, compare, and guest/server cart checkout.
+* **Admin Workbench (`laptech-admin-web-ui`)**: Ant Design 6 flat workbench with `PermissionGuard` PBAC for catalog, R2 media, orders, users, roles/permissions, and payment provider settings.
 
 ## Strategic Value
 * **Modular Monolith Architecture**: Provides the simplicity of a monolith with the strict boundaries of microservices. This means faster initial delivery, easier maintenance, and the ability to seamlessly split into microservices in the future when traffic demands it.
