@@ -9,14 +9,16 @@ description: Working on the web app in apps/web — React 19, React Router 7 loa
 # Frontend Development Guide
 
 This guide explains how to work on the FF RESTaurent web application in
-`apps/web`. It reflects the current route-based React app shipped with v1.1.0.
+`apps/web`.
+
+Stack versions were checked on 2026-10-22 against `apps/web/package.json` on `develop` and `main` (React Router 8.4, Vite 8.3, Tailwind CSS 4.3). The tree below matches that checkout. Production web hosting is [VPS and Vercel Hosting](../runbooks-operations/vps-and-vercel-hosting.md). The `/api` proxy in `apps/web/middleware.ts` is on `main` only.
 
 ## Technology Stack
 
 - React 19 with TypeScript
-- React Router 7 route loaders and actions
-- Vite 7
-- Tailwind CSS 3 plus app CSS in `src/index.css`
+- React Router 8 route loaders and actions
+- Vite 8
+- Tailwind CSS 4 plus app CSS in `src/index.css`
 - `react-hot-toast` for localized transient feedback
 - `lucide-react` for icons
 - Recharts for responsive statistics charts
@@ -25,68 +27,67 @@ This guide explains how to work on the FF RESTaurent web application in
 
 ## Source Layout
 
+There is no `src/pages` directory. Each domain lives under `src/features`.
+
 ```text
 apps/web/src/
 |-- main.tsx
 |-- index.css
+|-- api/
+|   |-- client.ts            ApiClient and ApiError
+|   |-- endpoints.ts
+|   |-- types.ts
+|   `-- generated/           api-types.ts from the OpenAPI contract
 |-- app/
 |   |-- App.tsx
-|   |-- router.ts
-|   |-- router.test.ts
-|   `-- providers/
-|       |-- app-context.tsx
-|       |-- i18n.tsx
-|       `-- theme.tsx
-|-- pages/
-|   |-- LoginPage.tsx
-|   |-- BillsPage.tsx
-|   |-- BillDetailPage.tsx
-|   |-- CreateBillPage.tsx
-|   |-- CollectionsPage.tsx
-|   |-- CollectionDetailPage.tsx
-|   |-- ParticipantGroupsPage.tsx
-|   |-- StatsPage.tsx
-|   |-- ProfilePage.tsx
-|   `-- AdminPage.tsx
+|   |-- router.ts            composes the feature route modules
+|   |-- root.routes.ts
+|   |-- mutation-action.ts   one action for form mutations
+|   |-- mutation-invalidation.ts
+|   `-- providers/           app-context, i18n, theme, accent, query
 |-- features/
-|   `-- restaurants/
-|       |-- RestaurantsPage.tsx
-|       |-- RestaurantDetailPage.tsx
-|       |-- RestaurantCatalogFields.tsx
-|       |-- RestaurantProfileFields.tsx
-|       |-- RestaurantBanner.tsx
-|       |-- RestaurantFeedback.tsx
-|       `-- PlatformLinksEditor.tsx
+|   |-- address/
+|   |-- admin/
+|   |-- auth/
+|   |-- bills/
+|   |-- catalog/
+|   |-- collections/
+|   |-- meal-votes/
+|   |-- members/
+|   |-- notifications/
+|   |-- participant-groups/
+|   |-- profile/
+|   |-- recipes/
+|   |-- restaurants/
+|   `-- stats/
 |-- components/
 |   |-- ui/
-|   |-- layout/
-|   `-- address/
+|   `-- layout/
 |-- hooks/
-|   `-- useMutation.ts
+|   |-- useRouteMutation.ts
+|   |-- useStoredState.ts
+|   `-- useUrlFilters.ts
 `-- lib/
-    |-- api.ts
-    |-- helpers.ts
+    |-- session.ts
+    |-- permissions.ts
+    |-- currency.ts
+    |-- push.ts
     |-- pwa.ts
     |-- result-messages.ts
-    |-- session.ts
-    `-- translations.ts
+    `-- translations/        en/ and vi/ JSON, assembled by translations/index.ts
 ```
 
-Tests are colocated with the source they cover as `*.test.ts`, `*.test.tsx`, or
-focused JavaScript policy tests.
+A feature folder holds its pages, its `*.routes.ts` loaders and actions, and colocated tests (`*.test.ts`, `*.test.tsx`).
 
 ## Routing and Data Flow
 
 The app uses React Router, configured in `src/app/router.ts`.
 
 - `App.tsx` owns the shell and route error boundary.
-- `router.ts` defines the route tree, loaders, actions, redirects, and lazy page
-  loading.
-- Page components read loader data and action results through React Router APIs.
-- Shared app state, including the authenticated user and i18n/theme providers,
-  lives under `src/app/providers/`.
-- Form mutations should use route `action`s when they are navigation-coupled.
-  Component-local actions can use the existing `useMutation` hook.
+- `router.ts` composes route modules from `src/features/*/*.routes.ts`. Those modules define loaders, intents, and redirects.
+- Page components read loader data through React Router APIs. TanStack Query, provided by `src/app/providers/query.tsx`, caches client reads. `mutation-invalidation.ts` drops the queries a successful mutation affects.
+- Shared app state, including the authenticated user and i18n, theme, and accent providers, lives under `src/app/providers/`.
+- Form mutations submit to `mutationAction` in `src/app/mutation-action.ts`. Pages use `useRouteMutation` (`src/hooks/useRouteMutation.ts`) for the shared submit and toast flow. There is no `useMutation` hook.
 
 Do not reintroduce the obsolete `tab`/`screen` state-router pattern or
 page-level result banners. Mutation outcomes, background warnings, and API
@@ -95,9 +96,10 @@ validation error or route error boundary is more appropriate.
 
 ## API Client and Session Handling
 
-`src/lib/api.ts` contains the `ApiClient`, API error type, request/response
-types, and formatting helpers. Keep it aligned with API response serializers and
-Prisma include/select shapes.
+`src/api/client.ts` contains `ApiClient` and `ApiError`. Request and response
+types live in `src/api/types.ts` and in `src/api/generated/api-types.ts`.
+Regenerate the generated file from the repository root with
+`npm run openapi:generate` when the API contract changes. Do not hand-edit it.
 
 Session storage is isolated in `src/lib/session.ts`. JWTs include a
 `sessionVersion`; password changes, assisted resets, and root transfers can
@@ -114,8 +116,7 @@ the API returns a fresh one.
 - Use `ConfirmDialog.tsx` or `Modal.tsx` for destructive confirmations and
   focused modal workflows.
 - Keep reusable shell pieces in `components/layout`.
-- Keep domain-specific restaurant UI in `features/restaurants`; follow that
-  pattern when extracting other large domains.
+- Keep domain UI in the matching `features/<domain>` folder. Restaurants, bills, catalog, recipes, collections, and meal votes already follow that split.
 
 ## Domain Rules
 
@@ -135,10 +136,11 @@ the API returns a fresh one.
 
 ## Shared Package Consumption
 
-Development and typechecking resolve `@ff-restaurent/shared` to
-`packages/shared/src/index.ts` through the web `tsconfig` and Vite alias.
+Vite aliases `@ff-restaurent/shared` to `packages/shared/src/index.ts`
+(`apps/web/vite.config.ts`). The web `tsconfig` typechecks shared through a
+project reference, not a path alias.
 
-The root build and packaged API still rely on compiled workspace output, so
+The root build and the API still use the compiled workspace output, so
 rebuild shared before production builds or when validating changes that touch
 shared exports:
 
@@ -195,9 +197,8 @@ npm run build --workspace @ff-restaurent/shared
 
 - Add or update route loaders/actions when page data or navigation-coupled
   mutations change.
-- Keep API response types in `src/lib/api.ts` aligned with backend responses.
-- Use localized strings from `src/lib/translations.ts`; avoid hard-coded user
-  facing text in feature UI.
+- Keep hand-written API types in `src/api/types.ts` aligned with backend responses, and regenerate `src/api/generated/api-types.ts` when the OpenAPI contract changes.
+- Use localized strings from `src/lib/translations`; avoid hard-coded user-facing text in feature UI.
 - Keep transient mutation feedback in toasts.
 - Keep validation close to the field or route action that owns it.
 - Preserve integer-cent handling for money.

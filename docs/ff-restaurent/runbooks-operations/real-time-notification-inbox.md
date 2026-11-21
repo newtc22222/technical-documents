@@ -8,6 +8,12 @@ description: Operating the authenticated Server-Sent Events (SSE) stream that re
 
 # Operate the real-time notification inbox
 
+:::note
+
+**Hosting changed.** The API now runs on a VPS behind Caddy; "Cloud Run instance" below means an API container. Caddy must not time out the stream before 70 seconds (see [VPS and Vercel Hosting](./vps-and-vercel-hosting.md)).
+
+:::
+
 FF RESTaurent keeps the notification list and unread badge current while a
 member is signed in. The browser opens an authenticated Server-Sent Events
 (SSE) connection, receives lightweight invalidation events, and refetches the
@@ -88,14 +94,16 @@ No operator setup is required. In particular, FF-88 adds:
 - no new environment variable or secret
 - no sticky-session requirement
 
-Deploy the API and web application through the normal workflow. The API is
-stateless: every Cloud Run instance polls the shared PostgreSQL database, so a
+Deploy the API and web application through the [VPS and Vercel](./vps-and-vercel-hosting.md) workflow. The API is
+stateless: it reads the shared PostgreSQL database, so a
 restart or reconnect can recover from the stored cursor. A temporary mixed
 deployment degrades safely: an older web build does not open the stream, while
 a newer web build silently retries if the API endpoint is not available yet.
 
 The API CORS policy must continue allowing `Authorization` and
 `Last-Event-ID`. The checked-in application configuration includes both.
+Browsers may cache that preflight for 7200 seconds. The stream response itself
+sends the CORS allow-origin header (`apps/api/src/routes/notification-routes.cors.test.ts`).
 
 ## Verify locally
 
@@ -143,7 +151,7 @@ silent failure.
 | Browser blocks the preflight                        | CORS response headers                                   | Confirm `Authorization` and `Last-Event-ID` are allowed                                        |
 | Stream stays pending with no events                 | Heartbeat frames and source rows                        | A pending request is normal; confirm a visible notification was created for that user          |
 | Header does not update within five seconds          | `/notifications/stream`, `/notifications`, and API logs | Confirm the invalidation arrived and the authoritative refetch succeeded                       |
-| Stream reconnects periodically                      | Cloud Run or network request lifetime                   | This is expected; cursor recovery and connection-time refetch handle missed rows               |
+| Stream reconnects periodically                      | Proxy or platform request lifetime                      | This is expected; cursor recovery and connection-time refetch handle missed rows               |
 | Push works but the open tab does not update         | SSE endpoint and web revision                           | Push and the real-time inbox are separate channels; verify FF-88 is deployed to both apps      |
 | Live inbox works but no system notification appears | Firebase and browser permission                         | Follow [Push Notifications](./push-notifications.md); SSE does not grant or require push permission |
 

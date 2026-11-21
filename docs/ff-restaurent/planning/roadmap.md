@@ -10,6 +10,18 @@ description: Draft FF RESTaurent roadmap after 2.4.x, covering cuisine type i18n
 
 :::note
 
+**Hosting changed.** The Cloud Run / Vertex AI runtime notes below predate the move to a VPS. The AI gateway needs a new credential plan for the VPS before it is built; see [VPS and Vercel Hosting](../runbooks-operations/vps-and-vercel-hosting.md).
+
+:::
+
+:::note
+
+**Release numbering.** [v2.5.0](../releases/release-v2.5.0.md) shipped on 2026-11-20 without the M2 meal tracking milestone this plan assigned to it (it was a design, meal-vote and platform release). Meal tracking and the AI milestones are still unbuilt; treat the release table below as unscheduled.
+
+:::
+
+:::note
+
 Source: `ROADMAP.md` on the [`docs/roadmap-and-wiki`](https://github.com/newtc22222/ff-restaurent/tree/docs/roadmap-and-wiki) branch (snapshot `702f576`). It was moved off `develop` by [#172](https://github.com/newtc22222/ff-restaurent/pull/172) and is a draft plan, not shipped behavior. Since it was written, the cuisine type labels (`typeEn` / `typeVi`, milestone M1) shipped in [#170](https://github.com/newtc22222/ff-restaurent/pull/170) as part of [v2.4.5](../releases/release-v2.4.5.md) rather than a separate 2.4.1.
 
 :::
@@ -152,9 +164,8 @@ credentials to the web app.
 ### T3.2 Config and credentials
 
 - `config.ts` / `.env.example`: `AI_ENABLED` (default `false`), `AI_MODEL`, `GOOGLE_CLOUD_LOCATION`, optional `GEMINI_API_KEY` (local dev only).
-- **Production uses Vertex AI with Application Default Credentials**, the same no-secret pattern as Firebase Admin: `new GoogleGenAI({ vertexai: true, project, location })`. The Cloud Run runtime service account (`ff-runtime@ff-restaurent.iam.gserviceaccount.com`) needs `roles/aiplatform.user`, and the Vertex AI API must be enabled in the project.
+- **Production was planned on Vertex AI with Application Default Credentials**, the same no-secret pattern as Firebase Admin: `new GoogleGenAI({ vertexai: true, project, location })`. That plan named the Cloud Run runtime service account `ff-runtime@ff-restaurent.iam.gserviceaccount.com`. Phase 8 removed that identity and `gcp-deploy.yml`. A later implementation has to choose credentials for the VPS instead, and must not add an API key as a `VITE_` variable. See [VPS and Vercel Hosting](../runbooks-operations/vps-and-vercel-hosting.md).
 - Local development can use an AI Studio API key instead.
-- Update the GCP deploy workflow and the deployment wiki; do not add any API key as a `VITE_` variable.
 - **Accept:** startup with `AI_ENABLED=false` needs no AI settings; a missing credential with `AI_ENABLED=true` fails fast with a clear message; `config.test.ts` covers both.
 
 ### T3.3 Usage metering, quotas, and rate limits

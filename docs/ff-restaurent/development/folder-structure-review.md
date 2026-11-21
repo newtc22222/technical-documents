@@ -8,6 +8,12 @@ description: Review of the monorepo layout with proposed target structure and mi
 
 # FF RESTaurent — Folder Structure Review & Recommendations
 
+:::warning
+
+Historical review. The "current structure" below is the pre-split tree. As of 2026-10-22 the API already uses `src/schemas/`, `src/services/`, `src/http/`, and `src/contracts/`. The web app already uses `src/features/*`, `src/api/`, and `src/lib/translations/` JSON files. There is no `src/pages` directory and no `useMutation.ts`. Do not apply this migration order again. The living maps are [Backend Development](./backend-development.md) and [Frontend Development](./frontend-development.md).
+
+:::
+
 ---
 
 ## 1. Current Structure at a Glance

@@ -8,8 +8,9 @@ description: Working on the API in apps/api — the Fastify 5 / Prisma 6 / Postg
 
 # Backend Development Guide
 
-This guide explains how to work on the FF RESTaurent API in `apps/api`. It
-reflects the current Fastify/Prisma backend shipped with v1.1.0.
+This guide explains how to work on the FF RESTaurent API in `apps/api`.
+
+Stack versions were checked on 2026-10-22 against `apps/api/package.json` on `develop` and `main` (Fastify 5.12, Prisma 7.10). The tree below matches that checkout.
 
 ## Technology Stack
 
@@ -17,7 +18,8 @@ reflects the current Fastify/Prisma backend shipped with v1.1.0.
 - Fastify 5
 - `@fastify/jwt` for bearer-token authentication
 - `@fastify/cors`, `@fastify/rate-limit`, `@fastify/multipart`
-- Prisma 6 with PostgreSQL
+- Prisma 7 with PostgreSQL, through the `pg` driver adapter
+- CORS preflights may be cached for 7200 seconds (`CORS_PREFLIGHT_MAX_AGE_SECONDS` in `apps/api/src/app.ts`). The notification stream response includes CORS headers.
 - Zod request validation
 - Swagger UI at `/api/docs`
 - Supabase storage for restaurant media and payment QR images
@@ -31,54 +33,34 @@ apps/api/
 |-- prisma/
 |   |-- schema.prisma
 |   |-- migrations/
-|   |-- seed.ts
-|   |-- seed-if-empty.ts
-|   |-- seed-popular-cuisines.ts
-|   |-- backfill-user-phones.ts
-|   |-- bootstrap-root-admin.ts
-|   |-- recover-root-admin.ts
-|   |-- verify-final-query-indexes.ts
-|   `-- verify-phase2-contract.ts
+|   |-- scripts/          backfill, root bootstrap and recover, index and contract checks, notification prune
+|   `-- seed/             seed.ts, seed-if-empty, popular cuisines, honor badges
+|-- scripts/
+|   `-- run-release-job.sh
 `-- src/
-    |-- app.ts
-    |-- server.ts
-    |-- config.ts
-    |-- prisma.ts
-    |-- roles.ts
-    |-- schemas.ts
-    |-- types.d.ts
-    |-- collection-service.ts
-    |-- restaurant-contract.ts
-    |-- root-admin-service.ts
-    |-- storage.ts
-    |-- phone-backfill.ts
-    |-- popular-cuisine-seed.ts
-    |-- pagination.ts
-    |-- search-normalization.ts
-    |-- catalog-normalization.ts
-    |-- address-directory.ts
-    |-- http/
-    |   |-- auth-guards.ts
-    |   `-- error-handler.ts
-    |-- routes/
-    |   |-- auth-routes.ts
-    |   |-- profile-routes.ts
-    |   |-- member-routes.ts
-    |   |-- restaurant-routes.ts
-    |   |-- catalog-routes.ts
-    |   |-- collection-routes.ts
-    |   |-- feedback-routes.ts
-    |   |-- media-routes.ts
-    |   |-- bill-routes.ts
-    |   |-- notification-routes.ts
-    |   |-- participant-group-routes.ts
-    |   |-- stats-routes.ts
-    |   `-- address-routes.ts
-    `-- data/
-        `-- vietnam-wards-full.json
+    |-- app.ts            composition only
+    |-- server.ts         listen and shutdown
+    |-- config/           config.ts, server-config.ts
+    |-- contracts/        restaurant-contract.ts, route-contracts.ts
+    |-- data/vietnam-wards-full.json
+    |-- http/             auth-guards, error-handler, rate-limit, request-log
+    |-- lib/              prisma, roles, pagination, password, search and catalog normalization
+    |-- routes/           one register function per area
+    |-- schemas/          Zod modules, imported through schemas/index.ts
+    `-- services/         domain rules, serializers, storage, push, seeds
 ```
 
-Tests are colocated with source files as `*.test.ts`.
+Route modules in `src/routes`:
+
+- `address-routes.ts`, `auth-routes.ts`, `password-reset-routes.ts`
+- `profile-routes.ts`, `member-routes.ts`
+- `restaurant-routes.ts`, `brand-routes.ts`, `catalog-routes.ts`
+- `collection-routes.ts`, `feedback-routes.ts`, `media-routes.ts`
+- `bill-routes.ts`, `recipe-routes.ts`, `meal-vote-routes.ts`
+- `honor-badge-routes.ts`, `notification-routes.ts`
+- `participant-group-routes.ts`, `stats-routes.ts`
+
+Tests are colocated as `*.test.ts`.
 
 ## Request Flow
 
@@ -103,33 +85,27 @@ concerns there.
 
 ## Route Modules
 
-Route files under `src/routes` own one API area each. Keep request parsing,
-resource ownership checks, Prisma query shape, and response shaping close to the
-route when that logic is route-specific.
+Route files under `src/routes` own one API area each. A route module keeps
+authentication, Zod parsing, and status codes. Ownership, visibility, and
+persistence belong in `src/services` when more than one route needs them.
 
-Use shared services only when logic is reused or has an independent domain
-contract:
-
-- `collection-service.ts` owns collection/favorite/recommended behavior.
-- `restaurant-contract.ts` derives backward-compatible restaurant response
-  aliases from normalized persistence.
-- `root-admin-service.ts` owns root transfer behavior.
-- `storage.ts` owns Supabase-backed media access.
-- `phone-backfill.ts` and `popular-cuisine-seed.ts` support idempotent startup
-  operations.
+- `services/collection-service.ts` owns collection, favorite, and recommended behavior.
+- `contracts/restaurant-contract.ts` derives backward-compatible restaurant response aliases from normalized persistence.
+- `services/root-admin-service.ts` owns root transfer behavior.
+- `services/storage.ts` owns Supabase-backed media access.
+- `services/phone-backfill.ts` and `services/popular-cuisine-seed.ts` support the release job and the local Compose command. `server.ts` does not run them.
 
 ## Validation and Errors
 
-All request validation belongs in `src/schemas.ts` unless the schema has already
-been moved into a more focused module. Route handlers should parse with Zod
-instead of manually validating request bodies.
+Request validation lives in `src/schemas`. Route modules import the barrel
+`src/schemas/index.ts` and parse with Zod. Do not validate request bodies by hand.
 
 When changing request or response fields:
 
 1. Update the Zod schema.
-2. Update the route handler and Prisma select/include shape.
-3. Update serializers such as `restaurant-contract.ts` when relevant.
-4. Update web API types in `apps/web/src/lib/api.ts`.
+2. Update the route handler and the service that owns the Prisma query.
+3. Update serializers such as `contracts/restaurant-contract.ts` when relevant.
+4. From the repository root, run `npm run openapi:generate`, then `npm run openapi:check`. The check fails when `apps/api/openapi.json` or `apps/web/src/api/generated/api-types.ts` is behind the contract.
 5. Add or update focused tests.
 
 The global error mapper in `src/http/error-handler.ts` should remain the place
@@ -154,11 +130,12 @@ CUSTOMER < SOUS_CHEF < HEAD_CHEF < ROOT_ADMIN
 roles or ROOT_ADMIN ownership.
 
 Use auth pre-handlers from `src/http/auth-guards.ts` for broad route access.
-Use route-local checks for ownership rules that require loading the target
-record, such as bill creator checks or participant payment checks.
+Use service checks for ownership rules that require loading the target record,
+such as bill creator checks or participant payment checks.
 
-Always sanitize users through the role/public-user helpers before returning user
-objects. Never serialize password hashes, reset-code hashes, or session-version
+`src/lib/roles.ts` re-exports the hierarchy from `@ff-restaurent/shared` and
+owns `sanitizeUser` and `publicUserSelect`. Always return users through those
+helpers. Never serialize password hashes, reset-code hashes, or session-version
 internals.
 
 ## Money and Bill Splitting
@@ -212,7 +189,7 @@ The v1.1.0 Phase 2 contract is complete:
   restaurants.
 - `Cuisine` and `RestaurantCuisine` are the cuisine authority.
 - `RestaurantPlatformLink` rows are the platform-link authority.
-- Legacy restaurant response aliases are derived by `restaurant-contract.ts`.
+- Legacy restaurant response aliases are derived by `contracts/restaurant-contract.ts`.
 - The deprecated `links` write input is still accepted and translated to
   normalized platform links.
 
@@ -225,8 +202,9 @@ npm run prisma:phase2:contract:verify --workspace @ff-restaurent/api
 ## Phone, Password, and Root Operations
 
 Vietnamese phone parsing is shared, but the API is authoritative. Optional phone
-numbers persist as canonical E.164 values. Startup runs the idempotent phone
-backfill after migrations.
+numbers persist as canonical E.164 values. The release job and the local
+Compose command run the idempotent phone backfill after migrations. The API
+process does not.
 
 JWTs carry `sessionVersion`. Password changes, assisted password resets, and
 root transfers invalidate affected older sessions.
@@ -258,9 +236,11 @@ Swagger:  http://localhost:4000/api/docs
 Web:      http://localhost:5173
 ```
 
-Run only the API:
+Run only the API. Build the shared package first. The API imports its compiled output:
 
 ```powershell
+npm run build --workspace @ff-restaurent/shared
+npm run prisma:generate --workspace @ff-restaurent/api
 npm run dev --workspace @ff-restaurent/api
 ```
 
@@ -315,5 +295,5 @@ npm run build
 - Return sanitized users only.
 - Preserve ROOT_ADMIN-only governance.
 - Preserve Phase 2 normalized restaurant persistence contracts.
-- Update web API types when API response contracts change.
+- Regenerate the OpenAPI contract when API response contracts change (`npm run openapi:check`).
 - Add focused tests before broad verification.

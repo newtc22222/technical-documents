@@ -1,25 +1,39 @@
 {
   "docsDir": "docs/ff-restaurent",
-  "exclude": ["^_", "^Pre-release-Checklist-"],
+  "exclude": [
+    "^_",
+    "^Pre-release-Checklist-"
+  ],
   "replacements": [
     {
       "regex": true,
       "from": "\\s*[—-]?\\s*see also the \\[RC checklist\\]\\(Pre-release-Checklist-[^)]*\\)",
       "to": ""
     },
-    { "regex": true, "from": "^Related: \\[Pre-release-Checklist-[^\\n]*\\n\\n?", "to": "" },
-    { "regex": true, "from": "^\\| \\[RC checklist[^\\n]*\\n", "to": "" }
+    {
+      "regex": true,
+      "from": "^Related: \\[Pre-release-Checklist-[^\\n]*\\n\\n?",
+      "to": ""
+    },
+    {
+      "regex": true,
+      "from": "^\\| \\[RC checklist[^\\n]*\\n",
+      "to": ""
+    }
   ],
   "pages": {
-    "Home": { "path": "index.md", "manual": true },
+    "Home": {
+      "path": "index.md",
+      "manual": true
+    },
     "Release-v2.4.5": {
       "path": "releases/release-v2.4.5.md",
       "frontMatter": {
         "id": "release-v2.4.5",
-        "title": "Release v2.4.5 (Staging)",
-        "sidebar_label": "v2.4.5 (Staging)",
-        "sidebar_position": 1,
-        "description": "FF RESTaurent 2.4.5 release notes (Staging, production pending), with the 2.4.0 performance follow-up, cuisine pricing, the Catalog, Recipes, restaurant brands, and cuisine type labels."
+        "title": "Release v2.4.5",
+        "sidebar_label": "v2.4.5",
+        "sidebar_position": 2,
+        "description": "FF RESTaurent 2.4.5 release notes, with the 2.4.0 performance follow-up, cuisine pricing, the Catalog, Recipes, restaurant brands, and cuisine type labels."
       }
     },
     "Release-v2.4.0": {
@@ -28,7 +42,7 @@
         "id": "release-v2.4.0",
         "title": "Release v2.4.0",
         "sidebar_label": "v2.4.0",
-        "sidebar_position": 2,
+        "sidebar_position": 3,
         "description": "FF RESTaurent 2.4.0 release notes, with the card redesign across list pages, reworked filters and restaurant form, and the Stats, Profile and Honor Badge redesign."
       }
     },
@@ -38,7 +52,7 @@
         "id": "release-v2.3.0",
         "title": "Release v2.3.0",
         "sidebar_label": "v2.3.0",
-        "sidebar_position": 3,
+        "sidebar_position": 4,
         "description": "FF RESTaurent 2.3.0 release notes, with everything from 2.3.0-rc.1 plus pagination totals, per-client rate limiting, and trusted proxies by address."
       },
       "replacements": [
@@ -112,7 +126,7 @@
         "id": "release-v2.3.0-rc.1",
         "title": "Release v2.3.0-rc.1 (Staging)",
         "sidebar_label": "v2.3.0-rc.1 (Staging)",
-        "sidebar_position": 4,
+        "sidebar_position": 5,
         "description": "FF RESTaurent 2.3.0-rc.1 Staging release candidate, with bill notifications and auto-archive, cuisine images, cookbooks, meal votes, and Honor Badges."
       }
     },
@@ -122,15 +136,59 @@
         "id": "release-v2.2.2",
         "title": "Release v2.2.2",
         "sidebar_label": "v2.2.2",
-        "sidebar_position": 5,
+        "sidebar_position": 6,
         "description": "FF RESTaurent 2.2.2 release notes, with member cost formulas, mobile responsiveness, and Docker Compose standardization."
       }
     },
-    "Release-v2.2.0": { "frontMatter": { "sidebar_position": 6 } },
-    "Release-v2.1.0": { "frontMatter": { "sidebar_position": 7 } },
-    "Release-v2.0.0": { "frontMatter": { "sidebar_position": 8 } },
-    "Release-v1.1.0": { "frontMatter": { "sidebar_position": 9 } },
-    "Release-v1.1.0-RC": { "frontMatter": { "sidebar_position": 10 } },
-    "Release-v1.0.0": { "frontMatter": { "sidebar_position": 11 } }
+    "Release-v2.2.0": {
+      "frontMatter": {
+        "sidebar_position": 7
+      }
+    },
+    "Release-v2.1.0": {
+      "frontMatter": {
+        "sidebar_position": 8
+      }
+    },
+    "Release-v2.0.0": {
+      "frontMatter": {
+        "sidebar_position": 9
+      }
+    },
+    "Release-v1.1.0": {
+      "frontMatter": {
+        "sidebar_position": 10
+      }
+    },
+    "Release-v1.1.0-RC": {
+      "frontMatter": {
+        "sidebar_position": 11
+      }
+    },
+    "Release-v1.0.0": {
+      "frontMatter": {
+        "sidebar_position": 12
+      }
+    },
+    "Release-v2.5.0": {
+      "path": "releases/release-v2.5.0.md",
+      "frontMatter": {
+        "id": "release-v2.5.0",
+        "title": "Release v2.5.0",
+        "sidebar_label": "v2.5.0",
+        "sidebar_position": 1,
+        "description": "FF RESTaurent 2.5.0 release notes, with the design pass, meal-vote veto and dietary tags, the catalog food map, offset pagination, VPS and Vercel hosting, and Zod 4."
+      }
+    },
+    "VPS-and-Vercel-Hosting": {
+      "path": "runbooks-operations/vps-and-vercel-hosting.md",
+      "frontMatter": {
+        "id": "vps-and-vercel-hosting",
+        "title": "VPS and Vercel Hosting",
+        "sidebar_label": "VPS and Vercel Hosting",
+        "sidebar_position": 10,
+        "description": "Current hosting, with the API in Docker Compose behind Caddy on a VPS, the web app on Vercel, the deploy workflow, trusted proxies, and backups."
+      }
+    }
   }
 }

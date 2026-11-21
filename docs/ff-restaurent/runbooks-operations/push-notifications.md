@@ -8,6 +8,12 @@ description: Configuring Firebase Cloud Messaging (FCM), browser push delivery, 
 
 # Configure and operate push notifications
 
+:::note
+
+**Hosting changed.** The API no longer runs on Cloud Run. On the VPS, FCM authenticates with a service-account key mounted at `/run/secrets/fcm.json` and `GOOGLE_APPLICATION_CREDENTIALS`, not a runtime service account. See [VPS and Vercel Hosting](./vps-and-vercel-hosting.md). References to Cloud Run below are historical.
+
+:::
+
 FF RESTaurent stores every notification in the application and uses Firebase Cloud Messaging (FCM) for best-effort browser delivery. This guide explains how to configure Firebase, test push delivery locally, prepare the production runtime, and diagnose failed delivery.
 
 For authenticated updates to the notification list and unread badge while the
@@ -15,7 +21,7 @@ application is open, see [Real-Time Notification Inbox](./real-time-notification
 
 :::info
 
-The notification implementation is merged into `develop`, but the current production web build and Cloud Run deployment do not pass the Firebase environment variables. Complete the [production enablement](#enable-push-delivery-in-production) steps before treating push delivery as active.
+Push stays off until production has the Vercel `VITE_FIREBASE_*` build variables and `FIREBASE_PROJECT_ID` on the API. Unset `FIREBASE_PROJECT_ID` disables delivery. The in-app inbox still works. Complete the [production enablement](#enable-push-delivery-in-production) steps before treating push delivery as active. This page does not record that those values are set.
 
 :::
 
@@ -42,7 +48,7 @@ The implementation silently skips push delivery when:
 
 ## Prepare the Firebase project
 
-Use the existing FF RESTaurent Google Cloud project so Cloud Run can authenticate with its service identity.
+Use the FF RESTaurent Google Cloud project. On the VPS the API reads a service-account key file. It no longer uses a Cloud Run runtime identity.
 
 1. Open the [Firebase console](https://console.firebase.google.com/).
 2. Select **Add Firebase to Google Cloud project** and choose the FF RESTaurent project.
@@ -143,11 +149,11 @@ The API removes tokens that Firebase reports as unregistered.
 
 ## Enable push delivery in production
 
-Production requires both a configured web build and an authorized API runtime. The checked-in deployment workflow does not yet provide the required Firebase values.
+Production needs a configured Vercel build and an authorized API runtime. The VPS deploy workflow does not inject Firebase values. Set them on Vercel and on the server. See [VPS and Vercel Hosting](./vps-and-vercel-hosting.md).
 
-### Pass Firebase values into the web image
+### Pass Firebase values into the Vercel build
 
-Add build arguments and matching environment assignments for these values in `apps/web/Dockerfile`:
+Set these as Vercel build-time environment variables. They are public client config, not secrets:
 
 - `VITE_FIREBASE_API_KEY`
 - `VITE_FIREBASE_PROJECT_ID`
@@ -155,33 +161,25 @@ Add build arguments and matching environment assignments for these values in `ap
 - `VITE_FIREBASE_APP_ID`
 - `VITE_FIREBASE_VAPID_KEY`
 
-Store the values as GitHub repository variables and pass them to the web image build in `.github/workflows/gcp-deploy.yml`. Vite embeds these values in the static assets, so changing them requires a new web build and deployment.
+Vite embeds them in the static assets (`apps/web/src/lib/push.ts`). Changing them requires a new Vercel deployment. Do not pass them through `gcp-deploy.yml`. That workflow is gone from `main`.
 
-### Configure the Cloud Run API
+### Configure the VPS API
 
-Set `FIREBASE_PROJECT_ID` on the API service. Keep service-account JSON keys out of Cloud Run because the Firebase Admin SDK uses the attached runtime service account through ADC.
+`apps/api/src/services/push-messaging.ts` calls `initializeApp({ projectId })` and then uses Application Default Credentials.
 
-Grant that runtime service account permission to send FCM messages:
+- Mount the service-account key read-only at `/run/secrets/fcm.json`, owned by uid 1000 with mode `0400`.
+- Set `GOOGLE_APPLICATION_CREDENTIALS=/run/secrets/fcm.json`.
+- Set `FIREBASE_PROJECT_ID`. Unset, push delivery stays off.
 
-```powershell
-$projectId = 'your_project_id_here'
-$runtimeServiceAccount = `
-  'your_runtime_service_account@your_project_id_here.iam.gserviceaccount.com'
-
-gcloud projects add-iam-policy-binding $projectId `
-  --member "serviceAccount:$runtimeServiceAccount" `
-  --role roles/firebasecloudmessaging.admin
-```
-
-Google documents the [Firebase Cloud Messaging API Admin role](https://cloud.google.com/iam/docs/roles-permissions/firebasecloudmessaging) and [Cloud Run service identity](https://cloud.google.com/run/docs/configuring/services/service-identity) behavior.
+The key needs permission to send FCM messages. Google documents the [Firebase Cloud Messaging API Admin role](https://cloud.google.com/iam/docs/roles-permissions/firebasecloudmessaging).
 
 ### Complete the production smoke test
 
 Do not mark production push as enabled until all checks pass:
 
 1. Confirm the deployed web assets contain the Firebase Web configuration.
-2. Confirm the Cloud Run API has `FIREBASE_PROJECT_ID`.
-3. Confirm the runtime service account has `roles/firebasecloudmessaging.admin`.
+2. Confirm the API has `FIREBASE_PROJECT_ID` and `GOOGLE_APPLICATION_CREDENTIALS`.
+3. Confirm the mounted key can send FCM messages.
 4. Register a real browser from the production Profile page.
 5. Confirm the database contains its `PushSubscription` row.
 6. Trigger an event from another member account.
@@ -198,8 +196,8 @@ Use the source row and browser state to isolate failures.
 | Browser reports denied permission        | Site notification permission                     | Reset the permission, reload, and enable a push category from Profile again                     |
 | Browser never asks for permission        | Build mode and service worker                    | Use `vite preview`, confirm `/sw.js` is registered, and retry from a user action                |
 | No `PushSubscription` row                | Web environment and token registration           | Confirm all five `VITE_FIREBASE_*` values and inspect browser service-worker errors             |
-| Notification exists with `SKIPPED`       | Subscription and API configuration               | Confirm the member has a current token, `FIREBASE_PROJECT_ID` is set, and ADC can send messages |
-| API logs `push_send_failed`              | FCM API and Identity and Access Management (IAM) | Enable `fcm.googleapis.com` and grant the runtime service account the FCM API Admin role        |
+| Notification exists with `SKIPPED`       | Subscription and API configuration               | Confirm the member has a current token, `FIREBASE_PROJECT_ID` is set, and the API can read `GOOGLE_APPLICATION_CREDENTIALS` |
+| API logs `push_send_failed`              | FCM API and the mounted key                      | Enable `fcm.googleapis.com` and confirm `/run/secrets/fcm.json` (uid 1000, mode `0400`) is allowed to send        |
 | Actor receives no product notification   | Audience rules                                   | This is expected because restaurant and Collection events exclude the actor                     |
 | Re-publishing a Collection sends nothing | Deduplication key                                | This is expected because one Collection publish event is delivered once                         |
 | Token disappears after a send            | Firebase token status                            | This is expected when Firebase reports the token as unregistered                                |

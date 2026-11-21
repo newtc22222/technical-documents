@@ -8,6 +8,12 @@ description: FF-56 recovery-ready GCP foundation — resource inventory, secure 
 
 # GCP Foundation Operations
 
+:::warning
+
+**Historical.** The GCP foundation was removed when hosting moved to a VPS and Vercel (2026-10-17 to 2026-10-20). See [VPS and Vercel Hosting](../runbooks-operations/vps-and-vercel-hosting.md).
+
+:::
+
 FF-56 provisions the recovery-ready GCP foundation without deploying the FF
 RESTaurent application, restoring production data, changing Render, or cutting
 over traffic.

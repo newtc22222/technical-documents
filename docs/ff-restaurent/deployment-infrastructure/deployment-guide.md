@@ -8,6 +8,12 @@ description: Preparation work and deployment-stage steps for releasing FF RESTau
 
 # Deployment Guide
 
+:::warning
+
+**Partly outdated.** The Cloud Run, Cloud SQL and Render sections describe hosting that has been removed. The API now deploys to a VPS and the web app to Vercel; see [VPS and Vercel Hosting](../runbooks-operations/vps-and-vercel-hosting.md). The CI, environment and readiness notes still apply in general.
+
+:::
+
 This guide lists the preparation work and deployment-stage steps for releasing FF RESTaurent. It assumes the current monorepo layout:
 
 - `apps/api` - Fastify API, Prisma, PostgreSQL, JWT auth
@@ -23,326 +29,169 @@ The app can be deployed as:
 - A Docker Compose stack on a VPS, running Postgres, API, and web containers together.
 - A split deployment, with Postgres on a managed database, the API on a Node/container host, and the web app on a static host or CDN.
 
-The current repository already includes:
+The repository includes:
 
-- `apps/api/Dockerfile`
-- `apps/web/Dockerfile`
-- `docker-compose.yml`
+- `apps/api/Dockerfile` (`vps` target; this is the production API image)
+- `apps/web/Dockerfile` (Compose or a local web image; production web does not use it)
+- `apps/web/vercel.json`
+- `docker-compose.yml` (local stack)
 - `.github/workflows/ci.yml`
+- `.github/workflows/vps-deploy.yml`
+
+`render.yaml` is obsolete. `main` has deleted it. `develop` may still contain the file.
+
+## Current production path
+
+Production does not use the Compose stack or a web image. The API image and the Vercel project are specified in [VPS and Vercel Hosting](../runbooks-operations/vps-and-vercel-hosting.md). The checklist below is the release procedure for that path. `docker-compose.yml` is for local runs.
 
 ---
 
 ## Prepare Before Deployment
 
-### 1. Confirm Required Environment Variables
+### 1. Confirm environment
 
-Create production values for every required variable. Do not reuse local development secrets.
+Production values live on the VPS and in the Vercel project, never in Git. The names and the rules for `TRUSTED_PROXIES` and `EDGE_PROXY_SECRET` are in [VPS and Vercel Hosting](../runbooks-operations/vps-and-vercel-hosting.md).
 
-```env
-DATABASE_URL=postgresql://USER:PASSWORD@HOST:5432/ff_restaurent?schema=public
-JWT_SECRET=replace-with-a-long-random-production-secret
-API_PORT=4000
-VITE_API_URL=https://api.example.com
-```
+The API image sets `PORT=8080` and `NODE_ENV=production`. Do not set `API_PORT` on the VPS. `API_PORT` is the local Compose port (`4000`). `VITE_API_URL` is a Vercel build variable. Changing it requires a new Vercel deployment.
 
-Important notes:
+`JWT_SECRET` must be at least 32 characters. Rotating it invalidates existing sessions.
 
-- `JWT_SECRET` must be a long, random secret and must not be committed.
-- `VITE_API_URL` is baked into the frontend build at build time.
-- For Docker Compose on one host, the API can use the internal Postgres host name from Compose.
-- For managed Postgres, use the provider connection string and confirm SSL requirements.
+### 2. Review the database
 
-### 2. Review Database State
+Before a release that includes migrations:
 
-Before deploying a new API build:
+1. Confirm migration files are committed under `apps/api/prisma/migrations`.
+2. Back up the production database. The VPS nightly backup is the operator backup. It is not a GitHub workflow.
+3. Read the migration for destructive changes. Prisma migrations are forward-only unless a tested rollback script is in the migration directory.
 
-1. Confirm the production database is reachable from the deployment environment.
-2. Confirm migration files are committed under `apps/api/prisma/migrations`.
-3. Back up the production database before applying migrations.
-4. Check whether the migration includes destructive changes.
+Do not run `prisma migrate dev` against production. The release job runs `prisma migrate deploy`.
 
-Production migrations should use Prisma deploy mode:
+### 3. Run the same checks CI runs
+
+From the repository root, with Node.js 22:
 
 ```bash
-npm run prisma:migrate:deploy -w @ff-restaurent/api
-npm run prisma:cuisines:seed -w @ff-restaurent/api
-```
-
-Do not run `prisma migrate dev` against production.
-
-### 3. Run Local Verification
-
-Run these from the repository root before promoting a release:
-
-```bash
-npm install
+npm ci
 npm run build -w @ff-restaurent/shared
+npm run prettier:check
+npm run lint
+npm run prisma:generate -w @ff-restaurent/api
+npm run openapi:check
 npm run typecheck
 npm test
 npm run build
 ```
 
-If `packages/shared` changes, rebuild it before API or web verification because both apps consume the compiled `dist` output.
+Rebuild `@ff-restaurent/shared` before the API or web build when shared code changes. Both production builds use the compiled package.
 
-### 4. Confirm Docker Builds
+`docker compose up --build` is the local stack only. Its API command migrates, loads demo data when `NODE_ENV` is not `production`, then runs the cuisine seed, badge seed, phone backfill, and root bootstrap. Production never runs the demo seed.
 
-Build both production images before release:
-
-```bash
-docker build -f apps/api/Dockerfile -t ff-restaurent-api:release .
-docker build -f apps/web/Dockerfile --build-arg VITE_API_URL=https://api.example.com -t ff-restaurent-web:release .
-```
-
-For a single-host Compose release, verify the full stack:
+To build the production API image locally:
 
 ```bash
-docker compose up --build
+docker build -f apps/api/Dockerfile --target vps -t ff-api:local .
 ```
+
+Do not build `apps/web/Dockerfile` for a production release. That image is the Compose web container.
 
 ---
 
-## Deployment Stage Checklist
+## Release checklist
 
-### 1. Freeze the Release Version
+### 1. Freeze the SHA
 
-Use a specific Git commit, tag, or image digest for deployment. Avoid deploying from an unpinned local working tree.
-
-Recommended release identifiers:
-
-- Git tag, for example `v0.1.0`
-- Docker image tag, for example `ghcr.io/OWNER/ff-restaurent-api:v0.1.0`
-- Git SHA for traceability
-
-### 2. Provision Infrastructure
-
-Minimum required services:
-
-- PostgreSQL 16-compatible database
-- API runtime with Node.js 22 or the API Docker image
-- Static web host, Nginx container, or CDN for the web build
-- HTTPS termination through a reverse proxy, load balancer, or hosting provider
-
-For a VPS deployment, place a reverse proxy such as Nginx, Caddy, or Traefik in front of:
-
-- Web frontend: public root domain, for example `https://app.example.com`
-- API: public API domain, for example `https://api.example.com`
-
-### 3. Configure Production Secrets
-
-Set secrets in the deployment platform, not in Git:
-
-- `DATABASE_URL`
-- `JWT_SECRET`
-- `API_PORT`
-- `VITE_API_URL` as a build-time value for the web image
-
-Rotate `JWT_SECRET` deliberately. Changing it invalidates existing JWT sessions.
-
-### 4. Build and Publish Artifacts
-
-Build order matters:
-
-```bash
-npm run build -w @ff-restaurent/shared
-npm run build -w @ff-restaurent/api
-npm run build -w @ff-restaurent/web
-```
-
-For container deployment:
-
-```bash
-docker build -f apps/api/Dockerfile -t ff-restaurent-api:VERSION .
-docker build -f apps/web/Dockerfile --build-arg VITE_API_URL=https://api.example.com -t ff-restaurent-web:VERSION .
-docker push ff-restaurent-api:VERSION
-docker push ff-restaurent-web:VERSION
-```
-
-### 5. Apply Database Migrations
-
-Run migrations once per deployment before starting the new API version:
-
-```bash
-npm run prisma:migrate:deploy -w @ff-restaurent/api
-npm run prisma:cuisines:seed -w @ff-restaurent/api
-```
-
-The current `docker-compose.yml` starts the API with:
-
-```bash
-npx prisma migrate deploy && npm run prisma:cuisines:seed && exec node dist/server.js
-```
-
-The local Compose command also runs the development-only demo seed before the
-catalog seed. Production never runs the demo seed. For stricter production
-environments, prefer running migrations and the idempotent catalog seed as a
-separate release job so failures stop the deployment before the API container
-is replaced.
-
-### 6. Start or Update Services
-
-For Docker Compose:
-
-```bash
-docker compose pull
-docker compose up -d
-```
-
-For a managed platform:
-
-1. Deploy the API image or Node bundle.
-2. Deploy the web static build or web image.
-3. Confirm the web app points to the production API URL.
-4. Restart services only after migrations have succeeded.
-
-### 7. Run Smoke Tests
-
-After deployment, verify:
-
-```bash
-curl https://api.example.com/health
-```
-
-Then check manually:
-
-- Web app loads over HTTPS.
-- Login works for a real account.
-- API docs are available if intentionally exposed at `/api/docs`.
-- Bills list loads.
-- A user can view their own bill shares.
-- A SOUS_CHEF or HEAD_CHEF can access manager actions.
-- A payment status update persists after refresh.
-
-### 8. Monitor the Release
-
-Watch these immediately after deployment:
-
-- API process restarts or crashes
-- Prisma migration errors
-- Database connection errors
-- CORS failures from the web app
-- 4xx/5xx API response spikes
-- Web asset loading failures
-
-At minimum, keep `/health` monitored by the hosting platform or an uptime monitor.
-
-### 9. Rollback Plan
-
-Before release, know how to roll back:
-
-1. Re-deploy the previous API and web image tags.
-2. Restore the database backup if the migration changed data destructively.
-3. Re-run smoke tests after rollback.
-4. Record the failed version, migration name, and error logs.
-
-Database rollbacks are not automatic with Prisma. Treat migrations as forward-only unless a tested rollback script exists.
-
----
-
-## CI/CD Pipelines
-
-### Current CI Pipeline
-
-The repository already has `.github/workflows/ci.yml` running on pull requests and pushes to `main`.
-
-Current CI steps:
-
-```yaml
-- npm install
-- npm run build -w @ff-restaurent/shared
-- npm run typecheck
-- npm test
-- npm run build
-```
-
-This is the required minimum gate before deployment. Keep it passing before merging release branches.
-
-> **Prisma tooling scope.** This project uses only the standard Prisma CLI (`prisma generate` and `prisma migrate deploy`) against a self-managed PostgreSQL database (`DATABASE_URL`), with the web app deployed via Render (`render.yaml`). The hosted **Prisma Postgres / Prisma Compute deploy integration** (the "Prisma / Prisma Compute Deploy" GitHub App check, which fails on this monorepo with `Entrypoint is required. Pass --entrypoint or define package.json main`) is **intentionally not used and must not be re-enabled**. If that check reappears, remove the Prisma GitHub App's access to this repo and drop it from the branch protection required-checks list — it is not defined by any workflow in this repository.
-
-### Recommended PR Pipeline
-
-Run on every pull request:
-
-1. Check out code.
-2. Install Node.js 22.
-3. Install dependencies with `npm install` or `npm ci`.
-4. Build `@ff-restaurent/shared`.
-5. Run typecheck across workspaces.
-6. Run tests.
-7. Build all workspaces.
-8. Optionally build API and web Docker images without pushing.
-
-Suggested additions:
-
-```yaml
-- run: docker build -f apps/api/Dockerfile -t ff-restaurent-api:ci .
-- run: docker build -f apps/web/Dockerfile --build-arg VITE_API_URL=http://localhost:4000 -t ff-restaurent-web:ci .
-```
-
-### Recommended Main Branch Pipeline
-
-Run after CI passes on `main`:
-
-1. Build API Docker image.
-2. Build web Docker image with production `VITE_API_URL`.
-3. Tag images with the Git SHA and optionally a release tag.
-4. Push images to a registry.
-5. Trigger the deployment environment.
-
-Recommended image tags:
+Deploy a commit on `main` for production or on `develop` for staging. The API image tag is the 40-character git SHA:
 
 ```text
-ff-restaurent-api:${{ github.sha }}
-ff-restaurent-web:${{ github.sha }}
+ghcr.io/newtc22222/ff-restaurent-api:<sha>
 ```
 
-### Recommended Deployment Pipeline
+There is no production web image.
 
-Use a separate deployment job or environment with manual approval for production.
+### 2. Let the workflows deploy
 
-Deployment job order:
+A push to `main` deploys production. A push to `develop` deploys staging. `VPS_DEPLOY_ENABLED` must be `true`.
 
-1. Pull the exact image tags produced by the build pipeline.
-2. Apply production secrets from the CI/CD secret store.
-3. Run `npm run prisma:migrate:deploy -w @ff-restaurent/api`, then
-   `npm run prisma:cuisines:seed -w @ff-restaurent/api`, as one-time database
-   preparation steps.
-4. Deploy or restart the API service.
-5. Deploy or restart the web service.
-6. Run smoke tests against `/health` and the frontend URL.
-7. Mark the deployment successful only after smoke tests pass.
+`.github/workflows/vps-deploy.yml` verifies the tree, builds the `vps` target, pushes the image, and runs `deploy ff <prod|stg> <sha>` on the VPS. Vercel builds the web app from the same push when the project is connected to that branch.
 
-### Required CI/CD Secrets
+Before the new API process starts, the server runs `npm run release:run`. `apps/api/scripts/run-release-job.sh` does, in order:
 
-Configure these in the CI/CD platform:
+1. `prisma migrate deploy`
+2. popular-cuisine seed
+3. honor-badge seed
+4. phone backfill
+5. root-admin bootstrap
+6. notification pruning
 
-- `DATABASE_URL`
-- `JWT_SECRET`
-- `VITE_API_URL`
-- Container registry credentials, if pushing images
-- Deployment host or provider credentials
+A non-zero SSH status means the deploy failed and the server has already rolled back.
 
-Do not print secret values in logs.
+### 3. Smoke-check
 
-### Deployment Protection Rules
+```bash
+curl https://api.ff-restaurent.com/health
+curl https://api.ff-restaurent.com/ready
+```
 
-For production, use:
+`/health` is liveness. `/ready` checks the database. Then confirm:
 
-- Required passing CI before deploy.
-- Manual approval before production deployment.
-- One deployment at a time.
-- Environment-specific secrets.
-- Release notes or a linked Git commit for traceability.
+- The Vercel app loads over HTTPS.
+- Login works for a real account.
+- The bills list loads.
+- A user can view their own bill shares.
+- A payment status update persists after refresh.
+
+`npm run smoke` runs `scripts/staging-smoke.mjs`. Set `API_URL` and `WEB_URL`. When the script should sign in, also set `SMOKE_USERNAME` and `SMOKE_PASSWORD` for a least-privileged account. The script does not refuse a production URL. Point it at staging unless the check is meant to hit production.
+
+### 4. Watch the release
+
+Watch API restarts, migration errors, database connection errors, CORS failures, 4xx and 5xx spikes, and Vercel asset failures. Keep `/health` on an uptime check.
+
+### 5. Roll back
+
+1. Deploy the previous API image SHA. A failed release job already rolls the VPS deploy back.
+2. Restore the pre-release backup only when the migration changed data in a way the old API cannot read.
+3. Re-run the smoke checks.
+4. Record the SHA, the migration name, and the error. Ship a forward migration. Do not delete production rows from `_prisma_migrations`.
 
 ---
 
-## Production Readiness Notes
+## CI
+
+`.github/workflows/ci.yml` runs on pull requests and on pushes to `main`. The `verify` job uses Node.js 22 and PostgreSQL 16. On both `develop` and `main` the job:
+
+1. `npm ci`
+2. `npm run agents:verify`
+3. Builds `@ff-restaurent/shared`
+4. `npm run prettier:check` and `npm run lint`
+5. `npm run prisma:generate` for the API
+6. `npm run openapi:check`
+7. `npm run typecheck`
+8. `scripts/verify-phase2-contract-migration.sh`
+9. `npm run prisma:migrate:deploy` against the CI database
+10. `scripts/capture-production-baseline.test.sh`
+11. `npm run prisma:phase2:contract:verify` and `npm run prisma:indexes:verify`
+12. `scripts/run-release-job.test.sh`
+13. `npm test` and `npm run build`
+14. Playwright `npm run test:e2e`
+
+`develop` also runs `scripts/rehearse-gcp-migration.test.sh` and `scripts/rehearse-gcp-migration.integration.test.sh`. Those steps and scripts are not on `main`.
+
+> **Prisma tooling scope.** This project uses only the standard Prisma CLI (`prisma generate` and `prisma migrate deploy`) against PostgreSQL (`DATABASE_URL`). The web app is deployed on Vercel. The hosted Prisma Postgres / Prisma Compute GitHub App check is not used and must not be re-enabled. If that check reappears, remove the Prisma GitHub App's access to this repo and drop it from the branch protection required-checks list. It is not defined by any workflow in this repository.
+
+Deploy secrets are the `VPS_HOST`, `VPS_SSH_KEY`, and `VPS_KNOWN_HOSTS` environment secrets, plus `VPS_DEPLOY_ENABLED`. They are not repository secrets. The workflow's `GITHUB_TOKEN` pushes and pulls the API image. Do not print secret values in logs.
+
+The workflow file refuses a production deploy that is not on `main`, and a staging deploy that is not on `develop` or `main`. It selects the `production` or `Staging` GitHub environment. The file does not define an approval job. Required reviewers, if any, are set on those environments in GitHub. The production SSH key is pinned to `deploy ff prod`. See [VPS and Vercel Hosting](../runbooks-operations/vps-and-vercel-hosting.md).
+
+---
+
+## Production readiness
 
 Before handling real user data, confirm:
 
-- HTTPS is enabled for both web and API traffic.
-- CORS only allows trusted frontend origins.
-- Database backups are scheduled and restore-tested.
-- Logs are retained somewhere outside the container filesystem.
-- `JWT_SECRET` is stored in a secret manager or protected environment variable.
-- API docs exposure at `/api/docs` is intentional for the environment.
-- Demo seed data is not inserted into production unless explicitly desired.
+- HTTPS is on for the Vercel app and the API.
+- `CORS_ORIGINS` lists only the real web origins.
+- The VPS nightly backup and the weekly restore drill have a recorded success.
+- Logs are kept off the container filesystem. The API and the release step write only to `/tmp` and `/home/node`, so the container can run with a read-only root when those paths are writable.
+- `JWT_SECRET` is only in the server env file.
+- `/api/docs` is exposed only if that environment should publish the API contract.
+- Demo seed data is not loaded. The release job does not run `prisma/seed/seed-if-empty.ts`.
