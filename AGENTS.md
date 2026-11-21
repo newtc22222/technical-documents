@@ -93,6 +93,23 @@ npm run build                                                                # b
 - A new wiki page needs a `pages` entry with `path` and `frontMatter` (at least `id`, `title`, `sidebar_label`, `sidebar_position`). Existing pages keep their front matter.
 - The script converts GitHub alerts to admonitions, rewrites wiki links to relative `./page.md` links, strips HTML comments, and labels bare code fences `text`. It does not re-apply table alignment or other hand edits, so prefer `--pages` over a full sync and review the diff.
 
+## Syncing LinguFlow docs from the wiki
+
+`docs/lingu-flow/` mirrors the `lingu-flow` GitHub wiki the same way, with the same script and its own config, `scripts/lingu-wiki-sync.config.json`.
+
+```bash
+# Clone or pull the wiki first: git clone https://github.com/newtc22222/lingu-flow.wiki.git
+npm run sync:lingu-wiki -- --wiki ../lingu-flow.wiki --check                # list pages that differ, write nothing
+npm run sync:lingu-wiki -- --wiki ../lingu-flow.wiki --pages Release-v2.2.0 # sync named pages
+npm run build
+```
+
+- The script takes `--config <file>`; `sync:ff-wiki` uses the default (`scripts/ff-wiki-sync.config.json`) and `sync:lingu-wiki` passes the LinguFlow one.
+- Wiki page names that do not match a doc file name are mapped in the config: `DATABASE` to `architecture/database-design.md`, `AI_FEATURE_GUIDE` to `features/ai-feature-guide.md`, `Release-Notes` to `releases/release-v0.1.0.md`.
+- `Home` (`index.md`) and `Spaced-Repetition-SM2` are `manual`. The SM-2 page uses `$...$` math on the wiki, and MDX reads `{prev}` inside it as a JavaScript expression, so the docs copy keeps code spans instead. `index.md` lists two pages the wiki Home does not (Question & Exam Design, AI Feature Implementation Guide); keep them when you copy Home rows across.
+- A config replacement turns `<https://...>` autolinks (fine on GitHub, an MDX error here) into `[url](url)` links.
+- Release pages sort newest first: the newest has `sidebar_position: 1` and the label `vX.Y.Z (Current)`. A new release needs a `pages` entry, and the older entries' positions move down by one.
+
 ## Conventions and known config quirks
 
 - `CLAUDE.md` is this same guide for Claude Code. Apply every edit to both files; only the title and intro line differ.

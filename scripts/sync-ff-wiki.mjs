@@ -1,11 +1,13 @@
 #!/usr/bin/env node
-// Sync FF RESTaurent GitHub wiki pages into docs/ff-restaurent/.
+// Sync a GitHub wiki into its Docusaurus tree. One config file per wiki:
+//   scripts/ff-wiki-sync.config.json     ff-restaurent.wiki -> docs/ff-restaurent/ (default)
+//   scripts/lingu-wiki-sync.config.json  lingu-flow.wiki    -> docs/lingu-flow/
 //
-// The wiki (private repo newtc22222/ff-restaurent.wiki) is the source of truth.
+// The wiki is the source of truth.
 // This script copies its pages into the public Docusaurus tree:
 //   - matches each wiki page to an existing doc by file name
 //     (Release-v2.2.0.md -> releases/release-v2.2.0.md), or to a path set in
-//     scripts/ff-wiki-sync.config.json for new pages,
+//     the config for new pages,
 //   - keeps the doc's existing front matter, overridden by config values,
 //   - rewrites wiki links like [Text](Deployment-Guide) into relative doc links,
 //     and unlinks references to pages that are not published,
@@ -14,6 +16,8 @@
 //
 // Usage:
 //   npm run sync:ff-wiki -- --wiki <path-to-ff-restaurent.wiki> [--pages A,B] [--check]
+//   npm run sync:lingu-wiki -- --wiki <path-to-lingu-flow.wiki> [--pages A,B] [--check]
+//   --config another config file, relative to the repo root (the npm scripts set it)
 //   --pages  only sync these wiki page names (without .md)
 //   --check  report what would change without writing files (exit 1 if anything would)
 // FF_WIKI_DIR can be used instead of --wiki. Run `npm run build` afterwards.
@@ -23,15 +27,15 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const config = JSON.parse(
-  fs.readFileSync(path.join(repoRoot, "scripts", "ff-wiki-sync.config.json"), "utf8"),
-);
 
 const args = process.argv.slice(2);
 const argValue = (name) => {
   const i = args.indexOf(name);
   return i >= 0 ? args[i + 1] : undefined;
 };
+const configFile = argValue("--config") ?? path.join("scripts", "ff-wiki-sync.config.json");
+const configName = path.basename(configFile);
+const config = JSON.parse(fs.readFileSync(path.resolve(repoRoot, configFile), "utf8"));
 const wikiDir = argValue("--wiki") ?? process.env.FF_WIKI_DIR;
 const onlyPages = argValue("--pages")?.split(",").map((s) => s.trim()).filter(Boolean);
 const checkOnly = args.includes("--check");
@@ -73,10 +77,22 @@ const existing = new Map();
 const excludePatterns = (config.exclude ?? []).map((p) => new RegExp(p));
 const isExcluded = (name) => excludePatterns.some((re) => re.test(name));
 
-const wikiPages = fs
-  .readdirSync(wikiDir)
-  .filter((f) => f.endsWith(".md"))
-  .map((f) => f.slice(0, -3));
+// The wiki is organised in topic folders (Development/, Operations/, ...), but pages
+// are identified by file name alone, so a name must be unique across folders.
+const wikiFiles = new Map(); // page name -> file path
+(function walkWiki(dir) {
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    if (entry.name.startsWith(".")) continue;
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) walkWiki(full);
+    else if (entry.name.endsWith(".md")) {
+      const name = entry.name.slice(0, -3);
+      if (wikiFiles.has(name)) console.warn(`warn  duplicate wiki page name ${name}`);
+      wikiFiles.set(name, full);
+    }
+  }
+})(wikiDir);
+const wikiPages = [...wikiFiles.keys()];
 
 // Resolve every wiki page to a doc path (or null if unpublished).
 const targets = new Map();
@@ -139,7 +155,7 @@ function convertLinks(body, fromRel) {
       if (/^\s*(```|~~~)/.test(line)) inFence = !inFence;
       if (inFence) return line;
       return line.replace(
-        /\[([^\]]*)\]\(([A-Za-z0-9][A-Za-z0-9._-]*?)(?:\.md)?(#[^)\s]*)?\)/g,
+        /\[([^\]]*)\]\((?:\.{1,2}\/|[A-Za-z0-9._-]+\/)*([A-Za-z0-9][A-Za-z0-9._-]*?)(?:\.md)?(#[^)\s]*)?\)/g,
         (whole, text, target, anchor = "") => {
           if (!targets.has(target)) return whole; // not a wiki page link
           const rel = targets.get(target);
@@ -165,7 +181,7 @@ for (const name of selected) {
   const pageConfig = config.pages?.[name] ?? {};
   if (pageConfig.manual) {
     // Linked to, but edited by hand in the docs (e.g. the curated landing page).
-    if (onlyPages) console.error(`skip  ${name}: marked manual in ff-wiki-sync.config.json`);
+    if (onlyPages) console.error(`skip  ${name}: marked manual in ${configName}`);
     continue;
   }
   const dest = path.join(docsDir, rel);
@@ -173,11 +189,11 @@ for (const name of selected) {
   const fm = splitFrontMatter(current).fm;
   for (const [k, v] of Object.entries(pageConfig.frontMatter ?? {})) fm.set(k, String(v));
   if (!fm.has("id")) {
-    console.error(`skip  ${name}: new page needs frontMatter in ff-wiki-sync.config.json`);
+    console.error(`skip  ${name}: new page needs frontMatter in ${configName}`);
     continue;
   }
 
-  let body = splitFrontMatter(readText(path.join(wikiDir, `${name}.md`))).body;
+  let body = splitFrontMatter(readText(wikiFiles.get(name))).body;
   for (const r of [...(config.replacements ?? []), ...(pageConfig.replacements ?? [])]) {
     body = r.regex ? body.replace(new RegExp(r.from, "gm"), r.to) : body.split(r.from).join(r.to);
   }
@@ -195,7 +211,7 @@ for (const name of selected) {
 }
 
 for (const name of unmapped) {
-  console.warn(`warn  ${name}.md has no doc path; add it to pages or exclude in ff-wiki-sync.config.json`);
+  console.warn(`warn  ${name}.md has no doc path; add it to pages or exclude in ${configName}`);
 }
 console.log(`${changed} file(s) ${checkOnly ? "would change" : "written"}.`);
 if (checkOnly && changed) process.exit(1);

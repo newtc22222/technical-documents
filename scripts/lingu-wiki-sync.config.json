@@ -1,0 +1,204 @@
+{
+  "docsDir": "docs/lingu-flow",
+  "exclude": [
+    "^_"
+  ],
+  "replacements": [
+    {
+      "regex": true,
+      "from": "<(https?://[^>\\s]+)>",
+      "to": "[$1]($1)"
+    }
+  ],
+  "pages": {
+    "Home": {
+      "path": "index.md",
+      "manual": true
+    },
+    "DATABASE": {
+      "path": "architecture/database-design.md"
+    },
+    "AI_FEATURE_GUIDE": {
+      "path": "features/ai-feature-guide.md"
+    },
+    "Roles-and-Permissions": {
+      "path": "features/roles-and-permissions.md",
+      "frontMatter": {
+        "id": "roles-and-permissions",
+        "title": "\"Roles and Permissions\"",
+        "sidebar_label": "\"Roles and Permissions\"",
+        "sidebar_position": 8,
+        "description": "\"Client, Operator and root admin: permission keys, the admin users API, and how the UI gates AI question generation.\""
+      }
+    },
+    "Notifications-and-Reminders": {
+      "path": "features/notifications-and-reminders.md",
+      "frontMatter": {
+        "id": "notifications-and-reminders",
+        "title": "\"Notifications & Reminders\"",
+        "sidebar_label": "\"Notifications & Reminders\"",
+        "sidebar_position": 9,
+        "description": "\"Inbox, live updates over SSE, Web Push with VAPID, and the hourly study-reminder job.\""
+      }
+    },
+    "Themes-and-Appearance": {
+      "path": "features/themes-and-appearance.md",
+      "frontMatter": {
+        "id": "themes-and-appearance",
+        "title": "\"Themes & Appearance\"",
+        "sidebar_label": "\"Themes & Appearance\"",
+        "sidebar_position": 10,
+        "description": "\"The four presets, per-user theme overrides, derived contrast, and the exam theme lock.\""
+      }
+    },
+    "Deck-Sharing": {
+      "path": "features/deck-sharing.md",
+      "frontMatter": {
+        "id": "deck-sharing",
+        "title": "\"Deck Sharing\"",
+        "sidebar_label": "\"Deck Sharing\"",
+        "sidebar_position": 11,
+        "description": "\"Share links that let a signed-in user preview a deck and copy it into their library, and paged loading for big decks.\""
+      }
+    },
+    "Deployment-Guide": {
+      "path": "operations/deployment-guide.md",
+      "frontMatter": {
+        "id": "deployment-guide",
+        "title": "\"Deployment & DevOps Guide\"",
+        "sidebar_label": "\"Deployment Guide\"",
+        "sidebar_position": 1,
+        "description": "\"How LinguFlow is deployed: the SPA on Vercel, FastAPI and PostgreSQL on a VPS behind Caddy, Cloudflare R2, and the vercel.app proxy.\""
+      }
+    },
+    "VPS-Deploy": {
+      "path": "operations/vps-deploy.md",
+      "frontMatter": {
+        "id": "vps-deploy",
+        "title": "\"VPS Deploy\"",
+        "sidebar_label": "\"VPS Deploy\"",
+        "sidebar_position": 2,
+        "description": "\"The GitHub Actions workflow that builds the API image to GHCR and deploys it to the VPS over SSH.\""
+      }
+    },
+    "Domain-Cutover": {
+      "path": "operations/domain-cutover.md",
+      "frontMatter": {
+        "id": "domain-cutover",
+        "title": "\"Domains and Staging\"",
+        "sidebar_label": "\"Domains and Staging\"",
+        "sidebar_position": 3,
+        "description": "\"The phivo.dev and vercel.app hosts per environment, how a change reaches staging and production, and what a domain move touches.\""
+      }
+    },
+    "Deployment-Plan": {
+      "path": "operations/deployment-plan.md",
+      "frontMatter": {
+        "id": "deployment-plan",
+        "title": "\"Deployment Plan: LinguFlow (Phase 1)\"",
+        "sidebar_label": "\"Deployment Plan (History)\"",
+        "sidebar_position": 4,
+        "description": "\"The earlier Railway deployment plan, kept for history. Not the current runbook.\""
+      }
+    },
+    "Release-Notes": {
+      "path": "releases/release-v0.1.0.md",
+      "frontMatter": {
+        "sidebar_position": 12
+      }
+    },
+    "Release-v2.2.0": {
+      "path": "releases/release-v2.2.0.md",
+      "frontMatter": {
+        "id": "release-v2.2.0",
+        "title": "\"LinguFlow 2.2.0\"",
+        "sidebar_label": "\"v2.2.0 (Current)\"",
+        "sidebar_position": 1,
+        "description": "\"Release notes for LinguFlow v2.2.0: flashcards and decks redesign, full-page bank authoring, admin console redesign, deck share links and the vercel.app proxy.\""
+      }
+    },
+    "Release-v2.1.0": {
+      "path": "releases/release-v2.1.0.md",
+      "frontMatter": {
+        "id": "release-v2.1.0",
+        "title": "\"LinguFlow 2.1.0\"",
+        "sidebar_label": "\"v2.1.0\"",
+        "sidebar_position": 2,
+        "description": "\"Release notes for LinguFlow v2.1.0: notification inbox with live updates, Web Push and study reminders, per-user themes, and performance work.\""
+      }
+    },
+    "Release-v2.0.1": {
+      "path": "releases/release-v2.0.1.md",
+      "frontMatter": {
+        "id": "release-v2.0.1",
+        "title": "\"LinguFlow 2.0.1\"",
+        "sidebar_label": "\"v2.0.1\"",
+        "sidebar_position": 3,
+        "description": "\"Release notes for LinguFlow v2.0.1: server-side section clocks, practice re-sit gates and the bank drill cap.\""
+      }
+    },
+    "Release-v2.0.0": {
+      "path": "releases/release-v2.0.0.md",
+      "frontMatter": {
+        "id": "release-v2.0.0",
+        "title": "\"LinguFlow 2.0.0\"",
+        "sidebar_label": "\"v2.0.0\"",
+        "sidebar_position": 4,
+        "description": "\"Release notes for LinguFlow v2.0.0: practice mode, exam blueprints, RBAC, AI listening and speaking prompts.\""
+      }
+    },
+    "Release-v1.4.0": {
+      "path": "releases/release-v1.4.0.md",
+      "frontMatter": {
+        "sidebar_label": "\"v1.4.0\"",
+        "sidebar_position": 5
+      }
+    },
+    "Release-v1.3.1": {
+      "path": "releases/release-v1.3.1.md",
+      "frontMatter": {
+        "sidebar_label": "\"v1.3.1\"",
+        "sidebar_position": 6
+      }
+    },
+    "Release-v1.3.0": {
+      "path": "releases/release-v1.3.0.md",
+      "frontMatter": {
+        "sidebar_label": "\"v1.3.0\"",
+        "sidebar_position": 7
+      }
+    },
+    "Release-v1.2.1": {
+      "path": "releases/release-v1.2.1.md",
+      "frontMatter": {
+        "sidebar_label": "\"v1.2.1\"",
+        "sidebar_position": 8
+      }
+    },
+    "Release-v1.2.0": {
+      "path": "releases/release-v1.2.0.md",
+      "frontMatter": {
+        "sidebar_label": "\"v1.2.0\"",
+        "sidebar_position": 9
+      }
+    },
+    "Release-v1.1.1": {
+      "path": "releases/release-v1.1.1.md",
+      "frontMatter": {
+        "sidebar_label": "\"v1.1.1\"",
+        "sidebar_position": 10
+      }
+    },
+    "Release-v1.0.0": {
+      "path": "releases/release-v1.0.0.md",
+      "frontMatter": {
+        "sidebar_label": "\"v1.0.0\"",
+        "sidebar_position": 11
+      }
+    },
+    "Spaced-Repetition-SM2": {
+      "path": "architecture/spaced-repetition-sm2.md",
+      "manual": true
+    }
+  }
+}
