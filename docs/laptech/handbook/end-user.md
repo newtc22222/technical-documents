@@ -17,16 +17,16 @@ To use protected features of the platform, you must first register and log in.
 ## Core User Flows
 
 ### Browsing the Catalog
-Users can freely browse products, categories, and brands. The Catalog API is highly optimized (using Redis caching) to deliver lightning-fast search results and product details.
+Users can browse products, categories, and brands with combinable search, price range, brand, category, and tag filters, or use the storefront's **Shop by Need / Laptop Finder** and side-by-side **Compare** tool.
 
 ### Shopping Cart
-* You can add products to your cart via the Order service.
-* The system automatically calculates totals and applies any valid promotions or discounts that you qualify for.
+* Guests can add products to a local cart (`laptech_cart`), which automatically merges with their server cart upon signing in.
+* Totals are calculated from the snapshotted cart unit prices (vouchers and shipping fee calculations are planned for a future release).
 
 ### Checkout & Payment
-1. **Place Order**: Submit your cart. The system will secure the items in inventory for a short period.
-2. **Payment**: You will be provided with payment options (e.g., Credit Card, VNPay, Momo). Proceed with payment via the Payment service.
-3. **Confirmation**: Once payment is successful, your order is finalized, and shipping is arranged.
+1. **Place Order**: Submit your cart (`POST /api/orders`). Checkout verifies that catalog prices still match your cart prices before creating the order.
+2. **Payment**: Supports `COD` today, with live `VNPay` and `Stripe` redirect/callback flows scheduled for Phase 2 of the roadmap.
+3. **Confirmation**: Track order status updates from your account or the admin workbench.
 
 ### Reviews & Feedback
 After receiving a product, you can use the Content service to leave ratings and written reviews, which helps other users make informed decisions.

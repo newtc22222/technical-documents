@@ -397,14 +397,38 @@
   "homepage.linguFlow.releases": {
     "message": "Bản phát hành"
   },
+  "homepage.groceryStore.summary": {
+    "message": "Ứng dụng POS bán hàng tạp hóa và tuân thủ thuế Việt Nam chuẩn WCAG AAA, xây dựng với Go 1.23, Angular 19, PostgreSQL 16 và Redis."
+  },
+  "homepage.groceryStore.architecture": {
+    "message": "Kiến trúc hệ thống"
+  },
+  "homepage.groceryStore.businessLogic": {
+    "message": "Thuế & nghiệp vụ"
+  },
+  "homepage.groceryStore.apiReference": {
+    "message": "Tài liệu API"
+  },
+  "homepage.groceryStore.uiUx": {
+    "message": "Thiết kế UI & UX"
+  },
+  "homepage.groceryStore.operations": {
+    "message": "Vận hành & cài đặt"
+  },
+  "homepage.groceryStore.releases": {
+    "message": "Bản phát hành"
+  },
   "homepage.laptech.summary": {
-    "message": "Module xác thực và phân quyền trên Spring Boot, dùng JWT, xoay vòng refresh token và phân quyền theo vai trò."
+    "message": "Nền tảng thương mại điện tử đa dịch vụ: backend Spring Boot 3.5 (9 module), storefront Next.js 16 và trang quản trị Ant Design 6."
   },
   "homepage.laptech.architecture": {
     "message": "Kiến trúc"
   },
   "homepage.laptech.setup": {
-    "message": "Cài đặt"
+    "message": "Cài đặt cục bộ"
+  },
+  "homepage.laptech.handbook": {
+    "message": "Sổ tay"
   },
   "homepage.laptech.apiReference": {
     "message": "Tài liệu API"
@@ -431,12 +455,12 @@
     "message": "Quản lý Phiên bản"
   },
   "homepage.description": {
-    "message": "Kiến trúc, quy trình vận hành và tài liệu API của FF RESTaurent, LinguFlow và Laptech."
+    "message": "Kiến trúc, quy trình vận hành và tài liệu API của FF RESTaurent, Grocery Store, LinguFlow và Laptech."
   },
   "homepage.title": {
     "message": "Tài liệu dự án"
   },
   "homepage.lead": {
-    "message": "Kiến trúc, quy trình vận hành và tài liệu API của FF RESTaurent, LinguFlow và Laptech, cùng các hướng dẫn kỹ thuật chung."
+    "message": "Kiến trúc, quy trình vận hành và tài liệu API của FF RESTaurent, Grocery Store, LinguFlow và Laptech, cùng các hướng dẫn kỹ thuật chung."
   }
 }

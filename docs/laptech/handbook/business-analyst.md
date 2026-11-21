@@ -10,16 +10,14 @@ This document outlines the domain logic, system interactions, and business rules
 ## Core Business Workflows
 
 ### 1. Order Fulfillment Flow
-The order lifecycle is highly asynchronous, improving performance and user experience.
-1. **Cart & Order Creation (Order Service)**: The user converts their cart into an Order. Product data is denormalized (copied) to ensure historical accuracy of price and details at the time of purchase.
-2. **Event Published**: An `OrderCreated` event is published to RabbitMQ.
-3. **Inventory Allocation (Inventory Service)**: Listens for the order and temporarily reserves stock.
-4. **Payment Processing (Payment Service)**: Handles payment collection. Supports pluggable payment methods.
-5. **Finalization**: Upon successful payment, the order status is updated to `PAID`, and inventory reservations are permanently deducted. If payment fails, inventory is released.
+1. **Cart & Order Creation (Order Service)**: The user converts their server cart into an Order (`POST /api/orders`). Checkout synchronously verifies each cart line's frozen unit price against the current Catalog price (returning `409 PRICE_CHANGED` if it drifted — see [ADR-0002](../adr/0002-order-snapshot-and-checkout-price.md)). Product details are snapshotted onto the order for historical accuracy.
+2. **Event Published**: Order lifecycle events are published to RabbitMQ (`laptech.order` exchange).
+3. **Inventory Allocation (Inventory Service — Planned Phase 3)**: Async RabbitMQ reservation consumer (temporary stock reservation on `OrderCreated`, permanent deduction on `PaymentSucceeded`, release on failure/expiry) is designed in the Phase 3 roadmap and not yet active at checkout.
+4. **Payment Processing (Payment Service)**: Initiates payment via pluggable strategy (`COD`, `MOMO`, `VNPAY`, `STRIPE`). Live VNPay/Stripe sandbox webhook callbacks are scheduled for Phase 2.
 
-### 2. Promotion & Best-Deal Optimization
-* **Promotion Service**: Manages vouchers and automated discounts.
-* **Business Rule**: The system evaluates all applicable promotions for a user's cart and automatically applies the combination that yields the highest savings ("best-deal optimization").
+### 2. Promotion & Best-Deal Optimization _(Planned)_
+* **Promotion Service**: Manages voucher and discount domain rules.
+* **Current checkout behavior**: Per [ADR-0002](../adr/0002-order-snapshot-and-checkout-price.md), checkout does not yet accept voucher codes (`discountTotal` and `shippingFee` are `0`) until promotion evaluation is wired into checkout.
 
 ### 3. Catalog Management
 * **Catalog Service**: The central source of truth for product information.
