@@ -10,7 +10,7 @@ description: Relational PostgreSQL data model, entity relationships, and Alembic
 
 This document details the database model architecture, entity relationships, migration workflows, and schema design for LinguFlow's PostgreSQL database.
 
-**Full column-level reference:** [database-design.md](./database-design.md) (assessment v2, flashcards, sharing).  
+**Full column-level reference:** [DATABASE.md](./database-design.md) (assessment v2, flashcards, sharing).  
 **Authoring / sitting lifecycle:** [Question & Exam Design](./question-and-exam-design.md).
 
 ---
@@ -154,6 +154,7 @@ Stores user accounts (standard email/password, Google OAuth2, and temporary gues
 - `password_hash`: nullable for Google / guest accounts
 - `google_id`: unique, nullable
 - `is_guest`: `BOOLEAN` (default `false`)
+- `role_id`: `UUID` → `roles.id` ON DELETE SET NULL, nullable (`0024`; null for guests)
 - `is_active`: `BOOLEAN` (default `true`; deactivation checked at login — `0007`)
 - `daily_streak`, `last_active`, `last_ip`: activity / guest cleanup
 - `avatar_url`: R2 object key (`0008`)
@@ -198,9 +199,10 @@ Introduced in `0017_assessment_v2_schema`; legacy v1 tables (and
 `ai_generation_jobs`) dropped in `0018_drop_legacy_assessment`. Denormalized bank
 search column in `0019_question_search_text`. Runtime columns (`mode`, pause,
 `attempt_sections`, `question_notes`) in `0020_attempt_runtime`. Blueprint columns
-and `exam_type_blueprints` in `0021_exam_blueprints`. Full design:
+
+- `exam_type_blueprints` in `0021_exam_blueprints`. Full design:
 [Question & Exam Design](./question-and-exam-design.md) · column lists in
-[database-design.md](./database-design.md). Models: `backend/app/models/assessment.py`.
+[DATABASE.md](./database-design.md). Models: `backend/app/models/assessment.py`.
 
 | Table | Role |
 | --- | --- |
@@ -256,7 +258,16 @@ Cache for explain output (`0013_ai_explanations`). Unique `(kind, subject_key, l
 - `subject_key`: card UUID, or attempt/item-scoped key
 - `content`, `provider`, `created_at`
 
-### 8. Sharing tables (`0015`)
+### 8. Roles and permissions (`0024_rbac`)
+
+Product feature access. Not item sharing. See [Roles and Permissions](../features/roles-and-permissions.md).
+
+- `roles`: `key` unique (`client`, `operator`)
+- `permissions`: `key` unique (stage 1: `ai.generate_question`)
+- `role_permissions`: `(role_id, permission_id)`
+- Root admin is **not** a row. It stays `ROOT_ADMIN_EMAILS`.
+
+### 9. Sharing tables (`0015`)
 
 - `item_members`: explicit grantees `(item_type, item_id, user_id)` — used by decks/cards **and** assessment (`question` \| `stimulus` \| `exam`)
 - `item_effective_access` / `item_effective_grantees`: materialized projection for **decks/cards** only (assessment v2 reads visibility off the row; no exam→bank inheritance)
@@ -270,7 +281,7 @@ Cache for explain output (`0013_ai_explanations`). Unique `(kind, subject_key, l
 ## 🛠️ Alembic Database Migration Workflow
 
 Alembic handles version control and schema migrations for PostgreSQL.
-Current head: **`0021_exam_blueprints`**.
+Current head: **`0029_deck_share_links`**. The column-level list for `0025`–`0029` is in [Database design](./database-design.md).
 
 ```bash
 # Generate a new migration script automatically from SQLAlchemy models

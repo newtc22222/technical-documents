@@ -26,14 +26,19 @@ description: High-level technical overview of LinguFlow's architecture, key feat
 3. **Deck & Card Management**:
    - Rich Markdown support for card prompt text and answer explanations (`MarkdownRenderer`).
    - Media upload support (audio clips and flashcard images) powered by object storage.
+   - A deck page has Study, Cards, Preview and Share tabs; big decks load their cards in pages. A share link lets a signed-in user preview a deck and copy it into their library. See [Deck sharing](../features/deck-sharing.md).
 
-4. **Optional AI tutor** (registered users):
-   - Explain a flipped flashcard or a **completed** exam answer.
-   - Generate new bank questions from a topic (async job; never auto-attached to an exam).
-   - Request an opt-in, non-spoiling hint during a live sitting (`H`).
-   - See [AI Features](../features/ai-features.md) and [AI Service Layer](../features/ai-service-layer.md).
+4. **Optional AI tutor**:
+   - Explain a flipped flashcard or a **completed** exam answer (registered users).
+   - Generate bank questions from a topic — **Operator** (or root admin) only; drafts, not auto-attached to an exam. Clients keep listening/TTS.
+   - See [AI Features](../features/ai-features.md) and [Roles and Permissions](../features/roles-and-permissions.md).
 
-5. **Retro-Arcade Pixel Design System**:
+5. **Admin console** (root admins, `ROOT_ADMIN_EMAILS`):
+   - Users as two groups, accounts and guests, with roles and deactivation; the signed-in admin never sees their own row.
+   - Feature flags as state-coloured tiles grouped by status and sorted by last switch; exam-type blueprints as a searchable card grid edited in dialogs.
+   - See [Roles and Permissions](../features/roles-and-permissions.md) and [Exam-Type Feature Flags](../features/exam-type-feature-flags.md).
+
+6. **Retro-Arcade Pixel Design System**:
    - Unique distraction-free aesthetic with custom pixel framing (`PixelFrame`), IBM Plex typography, and 8-color arcade palette tokens.
    - Pure CSS custom properties integrated into Tailwind utilities.
 
@@ -100,7 +105,8 @@ lingu-flow/
 │   │   ├── shared/           # Reusable UI primitives (PixelFrame, MarkdownRenderer, etc.)
 │   │   ├── styles/           # CSS design tokens & Tailwind imports
 │   │   └── utils/            # API client wrapper (`apiFetch`)
-│   └── vercel.json           # Vercel SPA proxy & rewrite configuration
+│   ├── middleware.ts         # vercel.app proxy: adds the proxy secret and client IP
+│   └── vercel.json           # Cache and security headers, /api + /api-staging proxy rewrites, SPA fallback
 └── docker-compose.yml        # Local multi-container development environment
 ```
 
@@ -114,8 +120,8 @@ lingu-flow/
 docker-compose up --build
 ```
 
-- **Frontend**: http://localhost:8080
-- **Backend API Docs**: http://localhost:8000/docs
+- **Frontend**: [http://localhost:8080](http://localhost:8080)
+- **Backend API Docs**: [http://localhost:8000/docs](http://localhost:8000/docs)
 - **PostgreSQL**: localhost:5432
 
 ### Option B: Manual Startup

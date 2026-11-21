@@ -14,14 +14,14 @@ bucket setting that is easy to miss: **R2 CORS**. FastAPI `CORS_ORIGINS` does
 
 Related: [Deployment Guide](../operations/deployment-guide.md) (bucket + tokens),
 [API Documentation](../architecture/api-documentation.md) (`/api/media/*`),
-[Domain cutover](../operations/domain-cutover.md) (staging vs production hosts),
+[Domains and staging](../operations/domain-cutover.md) (staging vs production hosts),
 [TOEIC Listening Items](./toeic-listening.md) (`purpose: "question"`, audio types).
 
 ---
 
 ## 🔄 Upload pipeline
 
-Card images never pass through Railway as file bytes. The backend only **signs**
+Card images never pass through the API as file bytes. The backend only **signs**
 short-lived URLs; the Vue app talks to R2 directly.
 
 ```mermaid
@@ -140,17 +140,17 @@ Chrome console:
 > header is present on the requested resource.
 
 A **Python** PUT with the same credentials succeeds. That proves the keys work;
-only the **browser $\rightarrow$ R2** hop is blocked.
+only the **browser → R2** hop is blocked.
 
-Railway / FastAPI CORS (`CORS_ORIGINS`, `CORS_ORIGIN_REGEX`) applies to
+FastAPI CORS (`CORS_ORIGINS`, `CORS_ORIGIN_REGEX`) applies to
 `/api/*` only. The file never goes through FastAPI.
 
 ---
 
 ## ✅ Fix: bucket CORS policy
 
-Cloudflare Dashboard $\rightarrow$ **R2** $\rightarrow$ the bucket the running process actually signs
-for (`R2_BUCKET_NAME`) $\rightarrow$ **Settings $\rightarrow$ CORS policy**.
+Cloudflare Dashboard → **R2** → the bucket the running process actually signs
+for (`R2_BUCKET_NAME`) → **Settings → CORS policy**.
 
 Apply this on **every** bucket the app uses (`linguflow-media`,
 `linguflow-media-staging` if you split them):
@@ -182,7 +182,7 @@ After saving CORS:
 
 1. Restart the backend if you just changed `.env`.
 2. Retry the card-editor file picker.
-3. Expect: presign **200** $\rightarrow$ R2 PUT **200** $\rightarrow$ confirm **200** $\rightarrow$ image key on the card.
+3. Expect: presign **200** → R2 PUT **200** → confirm **200** → image key on the card.
 
 ---
 

@@ -20,11 +20,15 @@ Ships in [PR #96](https://github.com/newtc22222/lingu-flow/pull/96) (`feature/ai
 
 | Account | Access |
 |---|---|
-| Registered (email / Google) | Explain, generate |
+| **Client** (default for new email / Google accounts) | Explain, hints, listening/TTS. The question-bank **AI** tab is hidden. |
+| **Operator** | Client access, plus AI question generate and regenerate |
+| **Root admin** (`ROOT_ADMIN_EMAILS`) | Operator capabilities, and the admin console (assign roles) |
 | Guest | Core app only — AI buttons return “unavailable” / 403 |
 | Signed out | Must log in |
 
-An admin can turn **all AI** off instantly (kill switch). When that happens, every AI control shows a temporary-unavailable message. Cards, SM-2 review, and exams keep working.
+Role rules: [Roles and Permissions](./roles-and-permissions.md).
+
+An admin can turn **all AI** off instantly (kill switch). When that happens, every AI control shows a temporary-unavailable message — including for operators and root admins. Cards, SM-2 review, and exams keep working.
 
 ---
 
@@ -58,21 +62,16 @@ request **Explain** for an item.
 
 ## 3. Generate questions
 
-In the **Question Bank** (`BANK` in the nav), the compose column has **Generate with AI**.
+**Operators and root admins only.** Clients do not see the AI tab. Calling the API anyway returns 403.
+
+In the **Question Bank**, open a new single question or passage set and choose the **AI** tab.
 
 1. Enter a **topic** (required).
-2. Choose exam type (TOEIC / IELTS / HSK / JLPT / custom), count (1–10), and difficulty.
-3. Click **Generate**. The job is queued immediately — you do not wait on the model in the same click.
-4. Status updates every couple of seconds (`pending` → `running` → `succeeded` or `failed`).
-5. On success, the new questions appear in **your** bank.
+2. Choose exam type, count, and difficulty.
+3. Click **Generate**. The call runs in that request (there is no background job). While it runs, the bank list keeps your filters and shows a placeholder row at the top for each requested question (at least one).
+4. New questions land as **drafts**. They are not published and not attached to an exam until someone does that by hand. The status filter stays where you left it: on **any status** the drafts replace the placeholders and are marked as just generated; a filter that hides drafts does not show them.
 
-Generated questions:
-
-- Belong to **you**.
-- Are **not** attached to any exam (including built-ins). Attach them yourself in the exam composer if you want them in a set.
-- Never overwrite an existing question.
-
-If every candidate fails validation, the job is **failed** (not “success with zero questions”).
+Listening script / TTS generation is separate and stays available to clients. Synthesize has one overall deadline — see [TOEIC Listening](./toeic-listening.md).
 
 ---
 

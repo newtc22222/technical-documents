@@ -1,8 +1,8 @@
 ---
 id: release-v1.3.0
 title: LinguFlow 1.3.0
-sidebar_label: v1.3.0
-sidebar_position: 3
+sidebar_label: "v1.3.0"
+sidebar_position: 7
 description: Release notes for LinguFlow v1.3.0, introducing the optional AI tutor, flashcard TTS, sheet import, and four-grade Review.
 ---
 
@@ -10,7 +10,7 @@ description: Release notes for LinguFlow v1.3.0, introducing the optional AI tut
 
 **Release version:** `v1.3.0`  
 **Status:** Superseded by [v1.3.1](./release-v1.3.1.md)  
-**GitHub Release:** https://github.com/newtc22222/lingu-flow/releases/tag/v1.3.0  
+**GitHub Release:** [https://github.com/newtc22222/lingu-flow/releases/tag/v1.3.0](https://github.com/newtc22222/lingu-flow/releases/tag/v1.3.0)  
 **Previous:** [v1.2.1](./release-v1.2.1.md) · [v1.2.0](./release-v1.2.0.md)
 
 Production cut of staging since v1.2.1. The product gains an optional AI tutor,

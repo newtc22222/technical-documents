@@ -1,8 +1,8 @@
 ---
 id: release-v1.2.1
 title: LinguFlow 1.2.1
-sidebar_label: v1.2.1
-sidebar_position: 4
+sidebar_label: "v1.2.1"
+sidebar_position: 8
 description: Release notes for LinguFlow v1.2.1, including three themes, OMR answer sheet, and accessibility improvements.
 ---
 
@@ -10,7 +10,7 @@ description: Release notes for LinguFlow v1.2.1, including three themes, OMR ans
 
 **Release version:** `v1.2.1`  
 **Status:** Superseded by [v1.3.0](./release-v1.3.0.md)  
-**GitHub Release:** https://github.com/newtc22222/lingu-flow/releases/tag/v1.2.1  
+**GitHub Release:** [https://github.com/newtc22222/lingu-flow/releases/tag/v1.2.1](https://github.com/newtc22222/lingu-flow/releases/tag/v1.2.1)  
 **Previous:** [v1.2.0](./release-v1.2.0.md) · [v1.1.1](./release-v1.1.1.md)
 
 Production cut of staging since v1.2.0. The arcade cabinet gets three palettes,
@@ -32,7 +32,7 @@ arcade footer.
 | Copy | All locale copy is sentence case; arcade chrome re-shouts where the design calls for caps |
 
 Themes are pure token overrides in `styles/tokens.css` — no `if (theme === …)`
-branchance — and the choice persists in user settings, retiring the CRT switch.
+branching — and the choice persists in user settings, retiring the CRT switch.
 Review marks are session-local by design: the sitter's own scratch annotation,
 not part of the graded record.
 
@@ -59,7 +59,10 @@ not part of the graded record.
 - `theme` is constrained to the three supported values (422 otherwise). Reading
   stays lenient: an unrecognised or non-string stored value coerces to the
   default rather than 500ing the settings page
-- Rendered markdown has a typography layer. Preflight resets list markers and heading sizes, so card markdown typography rules are now applied.
+- Rendered markdown has a typography layer. The previous `prose prose-invert`
+  classes were inert — `@tailwindcss/typography` is not a dependency — and
+  preflight resets list markers and heading sizes, so card markdown had been
+  rendering as flat text
 - Answer writes serialize per question, so a slow save can no longer land after a
   later one and persist a stale prefix
 

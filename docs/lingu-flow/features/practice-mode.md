@@ -35,7 +35,7 @@ Practice is the study path for everything the exam runtime refuses:
 
 | | Exam attempt | Practice attempt |
 |---|---|---|
-| Entry | Exam lobby (`blueprint_met` only) $\rightarrow$ `POST /api/attempts` | `/practice` $\rightarrow$ `POST /api/practice/from-exam` or `/from-bank` |
+| Entry | Exam lobby (`blueprint_met` only) → `POST /api/attempts` | `/practice` → `POST /api/practice/from-exam` or `/from-bank` |
 | Paper source | Full published `ExamVersion` | Subset of an exam **or** bank draw |
 | `exam_version_id` | Required | Required for exam-sourced; **null** for bank draws |
 | Navigation | Section-ordered; locks on finish / deadline | Free jump across the paper |
@@ -56,17 +56,17 @@ including those demoted papers.
 
 1. Open **`/practice`** (`PracticeSetupView.vue`).
 2. Choose a tab:
-   - **From an exam** — pick exam $\rightarrow$ tick section/part keys $\rightarrow$ optional count $\rightarrow$
-     time mode $\rightarrow$ feedback mode $\rightarrow$ Start.
+   - **From an exam** — pick exam → tick section/part keys → optional count →
+     time mode → feedback mode → Start.
    - **Custom** — bank filters (`examType`, `section`, `skill`, `difficulty`,
-     `tags`, `locale`) + required count $\rightarrow$ time $\rightarrow$ feedback $\rightarrow$ Start.
+     `tags`, `locale`) + required count → time → feedback → Start.
 3. Backend creates an `Attempt` with `mode=practice`, freezes `attempt_items`
    (version-pinned, same as exams), stores `practice_spec`, returns
    `AttemptPaperOut`.
 4. Router navigates to `/attempts/:attemptId` — the shared `AttemptView` /
    `attemptStore`, mode-aware via practice flags (free nav, pause, notes,
    optional check panel).
-5. Finish $\rightarrow$ `/attempts/:attemptId/results`. Resit the same draw later with
+5. Finish → `/attempts/:attemptId/results`. Resit the same draw later with
    `POST /api/practice/drills/{id}/resit` (identical `questionIds`).
 
 ---
@@ -149,22 +149,22 @@ the shared attempt routes.
 
 | Method | Path | Notes |
 |---|---|---|
-| `POST` | `/api/practice/from-exam` | `{examId, nodeKeys, count?, timeLimitSeconds?, feedbackMode}` $\rightarrow$ `201 AttemptPaperOut` |
-| `POST` | `/api/practice/from-bank` | `{filters, count, timeLimitSeconds?, feedbackMode}` $\rightarrow$ `201 AttemptPaperOut` |
+| `POST` | `/api/practice/from-exam` | `{examId, nodeKeys, count?, timeLimitSeconds?, feedbackMode}` → `201 AttemptPaperOut` |
+| `POST` | `/api/practice/from-bank` | `{filters, count, timeLimitSeconds?, feedbackMode}` → `201 AttemptPaperOut` |
 | `POST` | `/api/practice/drills/{id}/resit` | Owner only; same `practice_spec` / `questionIds` |
 | `PUT` | `/api/practice/notes` | `{questionId, noteText}` upsert; empty deletes |
-| `POST` | `/api/attempts/{id}/pause` · `/resume` | Practice only; exam $\rightarrow$ **409** |
-| `POST` | `/api/attempts/{id}/responses/{position}/check` | Immediate feedback; exam / non-immediate $\rightarrow$ **403** |
+| `POST` | `/api/attempts/{id}/pause` · `/resume` | Practice only; exam → **409** |
+| `POST` | `/api/attempts/{id}/responses/{position}/check` | Immediate feedback; exam / non-immediate → **403** |
 | `POST` | `/api/attempts/{id}/items/{position}/explain` | Allowed for in-progress **practice**; still blocked for in-progress **exam** |
 
 ### Authz & gates (do not weaken)
 
 - **Registered account** — guests get `403` with `Registered account required`
   on practice start / resit.
-- **Exam-type kill switch** — disabled types $\rightarrow$ `403 This exam type is currently unavailable`
+- **Exam-type kill switch** — disabled types → `403 This exam type is currently unavailable`
   (same control as exam start; practice must not bypass it).
-- **Visibility** — unreadables $\rightarrow$ **404**, never 403 (don’t confirm existence).
-- **Another user’s drill / note** $\rightarrow$ **404**.
+- **Visibility** — unreadables → **404**, never 403 (don’t confirm existence).
+- **Another user’s drill / note** → **404**.
 - Bank draws respect `services/assessment/access.py` — practice is not a path
   to private bank items.
 
@@ -178,7 +178,7 @@ the shared attempt routes.
 | `features/assessment/practice/practiceSpec.ts` | Body builders, section options, time/feedback helpers |
 | `features/assessment/runtime/AttemptView.vue` | Shared booth; practice notes + check/explain panels |
 | `features/assessment/runtime/attemptStore.ts` | Pause-aware elapsed; mode flags |
-| `api/client.ts` $\rightarrow$ `practice.*` | Typed wrappers |
+| `api/client.ts` → `practice.*` | Typed wrappers |
 
 Mode differences should stay behind one composable / store getters
 (`canNavigateFreely`, `canPause`, `revealsFeedback`, …) rather than

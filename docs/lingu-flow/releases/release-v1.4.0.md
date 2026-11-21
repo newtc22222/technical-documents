@@ -1,16 +1,16 @@
 ---
 id: release-v1.4.0
 title: LinguFlow 1.4.0
-sidebar_label: v1.4.0 (Current)
-sidebar_position: 1
+sidebar_label: "v1.4.0"
+sidebar_position: 5
 description: Release notes for LinguFlow v1.4.0, introducing Assessment v2 Question DSL, exam composer & booth, Question Bank console, and AI provenance.
 ---
 
 # LinguFlow 1.4.0
 
 **Release version:** `v1.4.0`  
-**Status:** Current production  
-**GitHub Release:** https://github.com/newtc22222/lingu-flow/releases/tag/v1.4.0  
+**Status:** Previous production (superseded by [v2.0.0](./release-v2.0.0.md))  
+**GitHub Release:** [https://github.com/newtc22222/lingu-flow/releases/tag/v1.4.0](https://github.com/newtc22222/lingu-flow/releases/tag/v1.4.0)  
 **Previous:** [v1.3.1](./release-v1.3.1.md) · [v1.3.0](./release-v1.3.0.md)
 
 Production cut of staging since v1.3.1. This major update introduces the comprehensive **Assessment v2 Architecture** built upon a canonical Question Domain-Specific Language (DSL), a redesigned Question Bank operator console, an interactive Exam Composer, the simulated Exam Booth with OMR answer sheet, and an AI generation pipeline backed by human review gates and provenance tracking.

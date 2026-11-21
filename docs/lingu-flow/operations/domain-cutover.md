@@ -1,99 +1,85 @@
 ---
 id: domain-cutover
-title: "Domain Cutover: lingu-flow.com + Staging"
-sidebar_label: Domain Cutover
+title: "Domains and Staging"
+sidebar_label: "Domains and Staging"
 sidebar_position: 3
-description: How LinguFlow is previewed without a custom domain and the checklist to move production onto lingu-flow.com.
+description: "The phivo.dev and vercel.app hosts per environment, how a change reaches staging and production, and what a domain move touches."
 ---
 
-# Domain cutover: `lingu-flow.com` + staging
+# Domains and staging
 
-How LinguFlow is previewed **this week** (no custom domain), and the checklist to move production onto **`lingu-flow.com`** later.
+Which host serves each environment, how a change reaches staging and then production, and what a further domain move (for example to `lingu-flow.com`) would touch.
 
 There is no `lingu-flow.vercel.com`. Vercel’s default host is **`.vercel.app`**.
 
 ---
 
-## This week (no custom domain)
+## Hosts today
 
-| Role | Git | Frontend | API + DB |
-|---|---|---|---|
-| **Production (stable)** | `main` | `https://lingu-flow.vercel.app` | `https://lingu-flow-production.up.railway.app` |
-| **Staging (next version)** | `staging` | Vercel Preview: `https://lingu-flow-git-staging-phi-vos-projects.vercel.app` | `https://lingu-flow-staging.up.railway.app` |
+The web app is on Vercel and the API on the VPS behind Caddy (see the [Deployment & DevOps Guide](./deployment-guide.md)). The phivo.dev domains replaced the Railway origins (`lingu-flow-production.up.railway.app`, `lingu-flow-staging.up.railway.app`), which no longer answer.
 
-### How to ship a preview
+| Role | Git | Web (Vercel) | API + DB (VPS) |
+| --- | --- | --- | --- |
+| **Production** | `main` | `https://lingu.phivo.dev`, `https://lingu-flow.vercel.app` | `https://lingu-api.phivo.dev` |
+| **Staging** | `staging` | `https://lingu-staging.phivo.dev`, Vercel Preview (`https://lingu-flow-git-staging-phi-vos-projects.vercel.app`) | `https://lingu-api-staging.phivo.dev` |
 
-1. Branch from `staging` (or commit on `staging`).
-2. Push. Vercel builds a Preview; Railway `staging` deploys the `staging` branch.
-3. Open the Preview URL. `/api/*` is rewritten to **staging** Railway (host is not a production alias).
-4. When it is stable, merge `staging` → `main`. Production Vercel hosts keep talking to production Railway.
+The staging API answers only requests that carry the right `X-Staging-Key` (Caddy checks it). Staging builds send it from `VITE_STAGING_ACCESS_KEY`, and only to the staging API.
+
+### How to ship a change
+
+1. Branch from `staging` and open a pull request into `staging`.
+2. Merge it. Vercel builds a Preview of `staging`, and the [VPS deploy](./vps-deploy.md) workflow deploys `lf-api-stg` when `backend/**` changed.
+3. Check it on `https://lingu-staging.phivo.dev`.
+4. Release: a `release/x.y.z` branch bumps the version and merges into `main`. Vercel deploys Production and the workflow deploys `lf-api`. Then merge `main` back into `staging` and tag the release.
 
 Do **not** merge `staging` into `main` until you intend to release.
 
-### How the API rewrite works
+### How a page picks its API
 
-`frontend/vercel.json` is host-based:
+`apiUrl` in `frontend/src/utils/api.ts` decides per page:
 
-- `lingu-flow.vercel.app`, `lingu-flow-phi-vos-projects.vercel.app`, and `lingu-flow-git-main-phi-vos-projects.vercel.app` → production Railway
-- every other host (PR previews, `staging` branch) → staging Railway
+- **phivo.dev pages** call the API on the same domain (`lingu.phivo.dev` → `lingu-api.phivo.dev`, `lingu-staging.phivo.dev` → `lingu-api-staging.phivo.dev`). The map is `API_BASE_BY_HOST`.
+- **`*.vercel.app` pages** whose build points `VITE_API_BASE_URL` at the production or staging API call their own origin (`/api`, `/api-staging`), and Vercel forwards the request. Some networks block phivo.dev by host name; this path keeps the app usable there. The environment comes from the build, so a staging page is never proxied to production.
+- **Any other host** calls `VITE_API_BASE_URL` directly.
 
-The SPA still calls relative `/api/...` (same origin). CORS on Railway is a backstop for direct API hits.
+| Vercel environment | `VITE_API_BASE_URL` |
+| --- | --- |
+| Production (`main`) | `https://lingu-api.phivo.dev` |
+| Preview, including the `staging` branch | `https://lingu-api-staging.phivo.dev` |
 
-### Railway staging
+The variable is read at **build** time, so a change needs a redeploy. A feature-branch Preview uses the Preview value, so it talks to staging, never to production.
 
-- Environment: `staging` (duplicate of production; **own Postgres**)
-- Service domain: `https://lingu-flow-staging.up.railway.app`
-- `ENVIRONMENT=staging` (JWT + seed guards treat this like production)
-- Distinct `JWT_SECRET` from production so tokens do not cross environments
-- R2 bucket is currently **shared** with production — do not treat staging media as isolated
+### CORS
 
-Other feature-branch previews still hit the **production** API until those branches include this `vercel.json` (or you merge `staging` → `main`).
+Direct calls from the phivo.dev pages are cross-origin, so the API's CORS settings must list those hosts. Proxied vercel.app calls are same-origin and do not need CORS.
+
+- `CORS_ORIGINS` is a JSON array and **replaces** the built-in list when set. Include the phivo.dev web host of that environment, plus `https://lingu-flow.vercel.app` on production.
+- `CORS_ORIGIN_REGEX` = `https://lingu-flow(?:-[a-z0-9-]+)?-phi-vos-projects\.vercel\.app`. The built-in regex (`https://lingu-flow(?:-[a-z0-9-]+)?\.vercel\.app`) also matches other people's Vercel projects named `lingu-flow-*`.
+- Preflights are cached for 2 hours (`max_age=7200` in `backend/app/main.py`).
 
 ---
 
-## Later: `lingu-flow.com` production, `lingu-flow.vercel.app` staging
+## Moving to another domain
 
-`lingu-flow.com` is available (~$11/year at typical registrars). `linguflow.com` is taken.
+What a move to a new production domain (for example `lingu-flow.com` for the web app and `api.lingu-flow.com` for the API) touches. Hobby Vercel is enough: assign a domain to a Git branch.
 
-Target after cutover:
-
-| Role | Domain | Vercel assignment | Railway |
-|---|---|---|---|
-| Production | `https://lingu-flow.com` (+ `www` if you want it) | Production / `main` | `lingu-flow-production.up.railway.app` |
-| Staging | `https://lingu-flow.vercel.app` | Git branch `staging` | `lingu-flow-staging.up.railway.app` |
-
-### Cutover checklist (do not run until you buy the domain)
-
-1. **Buy** `lingu-flow.com` at [Cloudflare Registrar](https://domains.cloudflare.com) (at-cost renewals) or [Vercel Domains](https://vercel.com/domains/search?q=lingu-flow.com).
-2. **Vercel → lingu-flow → Settings → Domains**
-   - Add `lingu-flow.com` (and `www.lingu-flow.com` → redirect to apex).
-   - Leave it on the **Production** branch (`main`).
-   - Edit `lingu-flow.vercel.app` → assign to Git branch **`staging`**.  
-     Until you do this, `.vercel.app` still serves production.
-3. **`frontend/vercel.json`**
-   - Add a host rule for `lingu-flow.com` (and `www` if it serves the app) → production Railway.
-   - **Remove** the `lingu-flow.vercel.app` host rule so that host falls through to staging Railway.
-   - Keep the `lingu-flow-git-main-…` / team aliases on production only if you still want those URLs to hit prod.
-4. **Railway CORS (both envs)**
-   - Production `CORS_ORIGINS`: add `https://lingu-flow.com`.
-   - Staging `CORS_ORIGINS`: add `https://lingu-flow.vercel.app` (already the default).
-   - Regex that matches every Vercel alias: `https://lingu-flow(?:-[a-z0-9-]+)?\.vercel\.app`
-5. **Auth / OAuth**
-   - If Google OAuth is enabled, add `https://lingu-flow.com` (and keep the Vercel origin) in the Google Cloud authorized origins / redirect URIs.
-6. **Cloudflare R2 CORS**
-   - Allow `https://lingu-flow.com` (and keep `https://lingu-flow.vercel.app`) for `PUT` / `GET`.
-7. **Verify before announcing**
-   - `https://lingu-flow.com/api/health` → production
-   - `https://lingu-flow.vercel.app/api/health` → staging (`environment` in the JSON should be `staging`)
-   - Log in on each host; a production token must **not** work on staging.
-8. **DNS / SEO**
-   - Optional: 308 leftover marketing links to `.com`.
-   - Update [Deployment & DevOps Guide](./deployment-guide.md) and `DEPLOYMENT.md` once `.com` is live.
-
-Hobby Vercel is enough: assign a domain to a Git branch. Pro Custom Environments are optional.
+1. **Vercel:** add the web domain to the project, on the Production branch (`main`).
+2. **Caddy on the VPS:** add a site for the new API host that proxies to `lf-api`, next to the existing one.
+3. **Frontend code:** add the new web host to `API_BASE_BY_HOST` in `frontend/src/utils/api.ts` so its pages call the new API host. To proxy `*.vercel.app` pages to the new API as well, change `PRODUCTION_API_ORIGIN` in `src/utils/apiOrigins.ts`, `frontend/middleware.ts` and the rewrite in `frontend/vercel.json` together (`src/utils/vercelProxy.test.ts` fails if they drift), and add the host to the report-only CSP `connect-src` in `vercel.json`.
+4. **Build variable:** set Production `VITE_API_BASE_URL` to the new API origin and redeploy.
+5. **API CORS:** add the new web origin to `CORS_ORIGINS`, and keep the hosts that still serve the app.
+6. **Auth / OAuth:** if Google sign-in is on, add the new web origin to the Google Cloud authorized origins.
+7. **Cloudflare R2 CORS:** allow the new web origin for `PUT` / `GET`.
+8. **Verify before announcing:**
+   - `GET https://<new-api-host>/api/health` reports `"environment":"production"` and the current version.
+   - Sign in on the new host and on `https://lingu-flow.vercel.app`; upload a card image; open the notification bell.
+   - Confirm a production token does **not** work on staging.
+9. **Docs:** update the [Deployment & DevOps Guide](./deployment-guide.md) and this page.
 
 ---
 
 ## Related
 
 - [Deployment & DevOps Guide](./deployment-guide.md)
+- [VPS deploy](./vps-deploy.md) — the workflow that deploys `lf-api` and `lf-api-stg`
+- Build variables: `frontend/.env.example`. Proxy rewrites and cache headers: `frontend/vercel.json`. Proxy secret: `frontend/middleware.ts`

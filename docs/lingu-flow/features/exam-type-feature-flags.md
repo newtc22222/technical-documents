@@ -111,8 +111,17 @@ exam type no longer means hunting down multiple hardcoded arrays.
 
 ## 🛠️ Operator Guide
 
-There is no admin UI for toggling flags by design (see below) — it's a direct
-database write:
+**From the admin console.** A root admin opens **Admin → Feature flags**. Every
+gated exam type, plus the product-wide `ai` flag, is a tile coloured by its state,
+in two groups: switched off first, then live, each sorted by when the flag was last
+switched (`updatedAt`; a flag that has never been switched sorts last). Each tile
+says what the flag covers and what pressing its switch will do. Switching off asks
+for confirmation, because it hides the type from the exam hub and the composer and
+refuses new attempts (attempts already under way can finish). The switch calls
+`PATCH /api/exam-types/{type}` and stores the returned row, rather than refetching
+the 30 s publicly cached list. The console cannot create a new flag row.
+
+**From the database**, for scripted or emergency changes:
 
 ```sql
 -- Disable an exam type (kill switch)
@@ -141,9 +150,9 @@ UPDATE exam_type_flags SET enabled = true, updated_at = now() WHERE exam_type = 
 
 ## 🚧 Why Not Vercel Feature Flags?
 
-LinguFlow's frontend is a static Vite SPA on Vercel that only rewrites `/api/*` to
-the Railway backend — there's no Vercel-side server component in the request path to
-evaluate flags against, which is the actual value proposition of Vercel's flag
-tooling. The backend also has to be the enforcement authority regardless (the API
+LinguFlow's frontend is a static Vite SPA on Vercel. It calls the API
+cross-origin (`VITE_API_BASE_URL`); there is no Vercel-side server component in
+the request path to evaluate flags against, which is the actual value
+proposition of Vercel's flag tooling. The backend also has to be the enforcement authority regardless (the API
 must reject a disabled type even if the UI is bypassed), so a backend-owned table
 avoids maintaining a second, redundant source of truth across two platforms.

@@ -1,8 +1,8 @@
 ---
 id: release-v1.0.0
 title: LinguFlow 1.0.0 — Official release
-sidebar_label: v1.0.0
-sidebar_position: 7
+sidebar_label: "v1.0.0"
+sidebar_position: 11
 description: Release notes for LinguFlow v1.0.0, the first official production release following Horizon A & B hardening.
 ---
 
@@ -10,7 +10,7 @@ description: Release notes for LinguFlow v1.0.0, the first official production r
 
 **Release version:** `v1.0.0`  
 **Status:** Official (not pre-release)  
-**GitHub Release:** https://github.com/newtc22222/lingu-flow/releases/tag/v1.0.0  
+**GitHub Release:** [https://github.com/newtc22222/lingu-flow/releases/tag/v1.0.0](https://github.com/newtc22222/lingu-flow/releases/tag/v1.0.0)  
 **Previous:** [v0.1.0](./release-v0.1.0.md)
 
 This is the first **official** production release after the Horizon A (secure & correct) and Horizon B (fast & operable) programs. The product brand is **LinguFlow** — the browser title no longer says “MVP”.
