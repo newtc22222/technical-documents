@@ -2,7 +2,7 @@
 id: release-v2.2.2
 title: Release v2.2.2
 sidebar_label: v2.2.2
-sidebar_position: 2
+sidebar_position: 5
 description: FF RESTaurent 2.2.2 release notes, with member cost formulas, mobile responsiveness, and Docker Compose standardization.
 ---
 

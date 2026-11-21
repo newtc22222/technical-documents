@@ -12,13 +12,107 @@
   ],
   "pages": {
     "Home": { "path": "index.md", "manual": true },
+    "Release-v2.4.5": {
+      "path": "releases/release-v2.4.5.md",
+      "frontMatter": {
+        "id": "release-v2.4.5",
+        "title": "Release v2.4.5 (Staging)",
+        "sidebar_label": "v2.4.5 (Staging)",
+        "sidebar_position": 1,
+        "description": "FF RESTaurent 2.4.5 release notes (Staging, production pending), with the 2.4.0 performance follow-up, cuisine pricing, the Catalog, Recipes, restaurant brands, and cuisine type labels."
+      }
+    },
+    "Release-v2.4.0": {
+      "path": "releases/release-v2.4.0.md",
+      "frontMatter": {
+        "id": "release-v2.4.0",
+        "title": "Release v2.4.0",
+        "sidebar_label": "v2.4.0",
+        "sidebar_position": 2,
+        "description": "FF RESTaurent 2.4.0 release notes, with the card redesign across list pages, reworked filters and restaurant form, and the Stats, Profile and Honor Badge redesign."
+      }
+    },
+    "Release-v2.3.0": {
+      "path": "releases/release-v2.3.0.md",
+      "frontMatter": {
+        "id": "release-v2.3.0",
+        "title": "Release v2.3.0",
+        "sidebar_label": "v2.3.0",
+        "sidebar_position": 3,
+        "description": "FF RESTaurent 2.3.0 release notes, with everything from 2.3.0-rc.1 plus pagination totals, per-client rate limiting, and trusted proxies by address."
+      },
+      "replacements": [
+        {
+          "from": " (`ff-restaurent-https-rule`, `34.111.254.90`)",
+          "to": ""
+        },
+        {
+          "from": "`['169.254.0.0/16', '34.111.254.90']` (Cloud Run's link-local front end and the load balancer)",
+          "to": "`169.254.0.0/16` (Cloud Run's link-local front end) plus the load balancer's address"
+        },
+        {
+          "from": "`169.254.0.0/16,34.111.254.90` in production",
+          "to": "`169.254.0.0/16` plus the load balancer's address in production"
+        }
+      ]
+    },
+    "Production-Measurements": {
+      "path": "runbooks-operations/production-measurements.md",
+      "frontMatter": {
+        "id": "production-measurements",
+        "title": "Production Measurements",
+        "sidebar_label": "Production Measurements",
+        "sidebar_position": 7,
+        "description": "Operator checklist for the v2.4 performance follow-up, covering row counts, max_connections, timeouts, pending notifications, cold-start P95, and egress."
+      },
+      "replacements": [
+        {
+          "from": "Production database secret: `ff-database-url`.",
+          "to": "Production database secret: the Secret Manager secret that holds `DATABASE_URL`."
+        },
+        {
+          "from": "--secret=ff-database-url",
+          "to": "--secret=DATABASE_URL_SECRET"
+        }
+      ]
+    },
+    "Public-Image-Object-Sizes": {
+      "path": "runbooks-operations/public-image-object-sizes.md",
+      "frontMatter": {
+        "id": "public-image-object-sizes",
+        "title": "Public Image Object Sizes",
+        "sidebar_label": "Public Image Object Sizes",
+        "sidebar_position": 8,
+        "description": "Operator check for object counts and sizes in the public images Supabase bucket, before and after WebP conversion on upload."
+      }
+    },
+    "Bill-Created-Notification-Risk": {
+      "path": "runbooks-operations/bill-created-notification-risk.md",
+      "frontMatter": {
+        "id": "bill-created-notification-risk",
+        "title": "Bill-Created Notification Risk",
+        "sidebar_label": "Bill-Created Notification Risk",
+        "sidebar_position": 9,
+        "description": "The accepted risk that any active member can be added to a bill, and the rate limits and notification preferences that limit it."
+      }
+    },
+    "Roadmap": {
+      "path": "planning/roadmap.md",
+      "frontMatter": {
+        "id": "roadmap",
+        "title": "Roadmap for Cuisine i18n, Meal Tracking, and AI Features",
+        "sidebar_label": "Roadmap",
+        "sidebar_position": 1,
+        "description": "Draft FF RESTaurent roadmap after 2.4.x, covering cuisine type i18n, private meal tracking, and feature-flagged AI features on the 2.5.x line."
+      }
+    },
     "Release-v2.3.0-rc.1": {
       "path": "releases/release-v2.3.0-rc.1.md",
       "frontMatter": {
         "id": "release-v2.3.0-rc.1",
         "title": "Release v2.3.0-rc.1 (Staging)",
         "sidebar_label": "v2.3.0-rc.1 (Staging)",
-        "sidebar_position": 1,
+        "sidebar_position": 4,
         "description": "FF RESTaurent 2.3.0-rc.1 Staging release candidate, with bill notifications and auto-archive, cuisine images, cookbooks, meal votes, and Honor Badges."
       }
     },
@@ -28,15 +122,15 @@
         "id": "release-v2.2.2",
         "title": "Release v2.2.2",
         "sidebar_label": "v2.2.2",
-        "sidebar_position": 2,
+        "sidebar_position": 5,
         "description": "FF RESTaurent 2.2.2 release notes, with member cost formulas, mobile responsiveness, and Docker Compose standardization."
       }
     },
-    "Release-v2.2.0": { "frontMatter": { "sidebar_position": 3 } },
-    "Release-v2.1.0": { "frontMatter": { "sidebar_position": 4 } },
-    "Release-v2.0.0": { "frontMatter": { "sidebar_position": 5 } },
-    "Release-v1.1.0": { "frontMatter": { "sidebar_position": 6 } },
-    "Release-v1.1.0-RC": { "frontMatter": { "sidebar_position": 7 } },
-    "Release-v1.0.0": { "frontMatter": { "sidebar_position": 8 } }
+    "Release-v2.2.0": { "frontMatter": { "sidebar_position": 6 } },
+    "Release-v2.1.0": { "frontMatter": { "sidebar_position": 7 } },
+    "Release-v2.0.0": { "frontMatter": { "sidebar_position": 8 } },
+    "Release-v1.1.0": { "frontMatter": { "sidebar_position": 9 } },
+    "Release-v1.1.0-RC": { "frontMatter": { "sidebar_position": 10 } },
+    "Release-v1.0.0": { "frontMatter": { "sidebar_position": 11 } }
   }
 }

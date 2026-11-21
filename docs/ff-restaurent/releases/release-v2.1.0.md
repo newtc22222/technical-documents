@@ -2,7 +2,7 @@
 id: release-v2.1.0
 title: Release v2.1.0
 sidebar_label: v2.1.0
-sidebar_position: 4
+sidebar_position: 7
 description: FF RESTaurent 2.1.0 release notes — OpenAPI transport, staging CI/CD, feature architecture, and avatar identity.
 ---
 

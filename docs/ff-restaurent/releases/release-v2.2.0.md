@@ -2,7 +2,7 @@
 id: release-v2.2.0
 title: Release v2.2.0
 sidebar_label: v2.2.0
-sidebar_position: 3
+sidebar_position: 6
 description: FF RESTaurent 2.2.0 release notes — real-time SSE notification stream, FCM push, accent themes, and Cloud Run hardening.
 ---
 

@@ -2,7 +2,7 @@
 id: release-v2.0.0
 title: Release v2.0.0
 sidebar_label: v2.0.0
-sidebar_position: 5
+sidebar_position: 8
 description: FF RESTaurent 2.0.0 release notes — infrastructure migration from Render to Google Cloud Platform and Cloudflare.
 ---
 

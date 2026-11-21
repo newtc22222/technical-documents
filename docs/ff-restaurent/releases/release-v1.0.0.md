@@ -2,7 +2,7 @@
 id: release-v1.0.0
 title: Release v1.0.0
 sidebar_label: v1.0.0
-sidebar_position: 8
+sidebar_position: 11
 description: FF RESTaurent 1.0.0 release notes — Phase 1 launch scope, authentication, role boundaries, and settlement integrity.
 ---
 
