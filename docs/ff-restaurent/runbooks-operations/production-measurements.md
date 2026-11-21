@@ -8,9 +8,21 @@ description: Operator checklist for the v2.4 performance follow-up, covering row
 
 # Production measurements
 
+:::warning
+
+**Superseded for infrastructure.** The `gcloud`, Cloud Run and Cloud SQL steps no longer apply. Use the VPS checks in the repository's `docs/vps-performance-checks.md`; see [VPS and Vercel Hosting](./vps-and-vercel-hosting.md).
+
+:::
+
 :::note
 
 Source: `wiki/Production-Measurements.md` on the [`docs/roadmap-and-wiki`](https://github.com/newtc22222/ff-restaurent/tree/docs/roadmap-and-wiki) branch (snapshot `702f576`). It was moved off `develop` by [#172](https://github.com/newtc22222/ff-restaurent/pull/172) and was written with the [v2.4.5](../releases/release-v2.4.5.md) performance and safety follow-up (#165).
+
+:::
+
+:::warning
+
+These commands target GCP Cloud Run and Cloud SQL. Phase 8 (2026-10-20) deleted the Cloud Run services and stopped Cloud SQL, and `main` removed `gcp-deploy.yml`. Do not run them against production. The checklist stays as the v2.4 measurement sheet. Current hosting is [VPS and Vercel Hosting](./vps-and-vercel-hosting.md).
 
 :::
 

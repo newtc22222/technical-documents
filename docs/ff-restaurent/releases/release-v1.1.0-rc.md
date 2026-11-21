@@ -2,7 +2,7 @@
 id: release-v1.1.0-rc
 title: Release v1.1.0 Release Candidate
 sidebar_label: v1.1.0-RC
-sidebar_position: 10
+sidebar_position: 11
 description: FF RESTaurent 1.1.0 release candidate procedure and candidate controls (superseded by v1.1.0 final).
 ---
 

@@ -19,10 +19,10 @@ and how to run it in production.
 [Production Runbook](./runbooks-operations/production-runbook.md) for operating the live service.
 
 > [!NOTE]
-> **Current state.** Production runs [v2.4.0](./releases/release-v2.4.0.md)
-> (2026-09-29). Staging (`develop`) runs
-> [v2.4.5](./releases/release-v2.4.5.md), verified 2026-10-11; it is not in
-> production yet. Planned work is on the [Roadmap](./planning/roadmap.md).
+> **Current state.** `main` is tagged [v2.5.0](./releases/release-v2.5.0.md) (2026-11-20). The API runs
+> on a VPS behind Caddy and the web app runs on Vercel; it left GCP Cloud Run on 2026-10-17. See
+> [VPS and Vercel Hosting](./runbooks-operations/vps-and-vercel-hosting.md). Planned work is on the
+> [Roadmap](./planning/roadmap.md).
 
 ---
 
@@ -30,8 +30,8 @@ and how to run it in production.
 
 | Document | What it covers |
 | --- | --- |
-| [Backend Development](./development/backend-development.md) | Working on the API in `apps/api` — Fastify 5, Prisma 6, PostgreSQL, request flow, validation, authorization, money rules, local setup, and checklist. |
-| [Frontend Development](./development/frontend-development.md) | Working on the web app in `apps/web` — React 19, React Router 7 loaders/actions, Vite 7, Tailwind, API client, session handling, and checklist. |
+| [Backend Development](./development/backend-development.md) | Working on the API in `apps/api` — Fastify 5, Prisma 7, Zod 4, PostgreSQL, request flow, validation, authorization, money rules, local setup, and checklist. |
+| [Frontend Development](./development/frontend-development.md) | Working on the web app in `apps/web` — React 19, React Router loaders/actions, Vite 8, Tailwind CSS 4, API client, session handling, and checklist. |
 | [OpenAPI Development](./development/openapi-development.md) | Updating and validating the runtime OpenAPI contract, generated web transport types, local Swagger interface, and CI drift gate. |
 | [Folder Structure Review](./development/folder-structure-review.md) | A review of the monorepo layout with a proposed target structure and migration order. |
 
@@ -58,7 +58,8 @@ and how to run it in production.
 | Document | What it covers |
 | --- | --- |
 | [Production Runbook](./runbooks-operations/production-runbook.md) | Release gates, required configuration, session/token policy, deployment, launch telemetry, backups, and rollback rehearsal. |
-| [Push Notifications](./runbooks-operations/push-notifications.md) | Configuring Firebase Cloud Messaging, testing browser delivery, Cloud Run runtime preparation, and troubleshooting. |
+| [VPS and Vercel Hosting](./runbooks-operations/vps-and-vercel-hosting.md) | Current hosting: the API in Docker Compose behind Caddy on a VPS, the web app on Vercel, the deploy workflow and its secrets, trusted proxies, and backups. |
+| [Push Notifications](./runbooks-operations/push-notifications.md) | Configuring Firebase Cloud Messaging, testing browser delivery, VPS runtime preparation, and troubleshooting. |
 | [Real-Time Notification Inbox](./runbooks-operations/real-time-notification-inbox.md) | Operating the authenticated SSE stream that refreshes the in-app notification list and unread badge in real time. |
 | [Root Admin Operations](./runbooks-operations/root-admin-operations.md) | Singleton `ROOT_ADMIN` — bootstrap, in-app ownership transfer, and emergency operator recovery. |
 | [Password Recovery Operations](./runbooks-operations/password-recovery-operations.md) | Root-Admin-assisted password recovery via out-of-band identity checks without SMS/email. |
@@ -83,7 +84,8 @@ and how to run it in production.
 
 | Release | Date | Summary |
 | --- | --- | --- |
-| [v2.4.5 (Staging)](./releases/release-v2.4.5.md) | TBD | Performance and safety follow-up to 2.4.0, cuisine price range and team average spend, province-grouped Catalog, Recipes, restaurant brands and branches, cuisine type labels with a Vietnamese-first form, and red destructive buttons with breadcrumbs. Five additive migrations. Not in production yet. |
+| [v2.5.0](./releases/release-v2.5.0.md) | 2026-11-20 | Design pass over Bills, meal votes, catalog and pagination; meal-vote veto and dietary tags; the `/catalog/map` food map; offset pagination; one seed CLI; GCP replaced by a VPS plus Vercel; Zod 4, Prisma 7, Vite 8. One additive migration. |
+| [v2.4.5](./releases/release-v2.4.5.md) | 2026-10-12 | Performance and safety follow-up to 2.4.0, cuisine price range and team average spend, province-grouped Catalog, Recipes, restaurant brands and branches, cuisine type labels with a Vietnamese-first form, and red destructive buttons with breadcrumbs. Five additive migrations. |
 | [v2.4.0](./releases/release-v2.4.0.md) | 2026-09-29 | Card redesign across all list pages, reworked filters and restaurant form, Stats and Profile / Honor Badge redesign, restaurant counts on cuisines and dining areas, and rate-limit messaging fixes. |
 | [v2.3.0](./releases/release-v2.3.0.md) | 2026-09-28 | Everything in 2.3.0-rc.1 plus pagination with page totals on six lists, web caching and fetch fixes, per-client API rate limiting, and trusted proxies by address. |
 | [v2.3.0-rc.1 (Staging)](./releases/release-v2.3.0-rc.1.md) | 2026-09-19 | Staging release candidate: bill-created notifications and auto-archive, dining area detail editing, cuisine EN/VI names and images, meal-vote surveys and wheels, and Honor Badges. Superseded by v2.3.0. |

@@ -20,10 +20,11 @@ FF RESTaurent will continue using Supabase Storage for application media.
 FF-71, the proposed migration from Supabase Storage to Google Cloud Storage
 (GCS), is deferred and is not part of an active phase or milestone.
 
-This decision applies only to media storage. The completed GCP platform work
-remains in place: the web and API run on Cloud Run, PostgreSQL runs on Cloud
-SQL, and deployment artifacts and runtime secrets use the established GCP
-foundation.
+This decision applies only to media storage. Supabase Storage is still the
+active provider. Application hosting has since left GCP: the API runs on a VPS
+and the web app on Vercel
+([VPS and Vercel Hosting](../runbooks-operations/vps-and-vercel-hosting.md)). Cloud SQL is
+stopped.
 
 ## Active storage contract
 
@@ -50,8 +51,9 @@ API.
   product need.
 - The existing API-only credential boundary, public/private bucket split, image
   validation, and signed-URL behavior remain appropriate for the current scale.
-- Moving the application and database to GCP does not require moving media to
-  GCS.
+- Moving the application and database to GCP, which was the hosting when this
+  decision was made, did not require moving media to GCS. The later move off
+  GCP also left media on Supabase.
 
 ## Historical GCS implementation
 

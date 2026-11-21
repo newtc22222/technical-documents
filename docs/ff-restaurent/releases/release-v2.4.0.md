@@ -2,7 +2,7 @@
 id: release-v2.4.0
 title: Release v2.4.0
 sidebar_label: v2.4.0
-sidebar_position: 2
+sidebar_position: 3
 description: FF RESTaurent 2.4.0 release notes, with the card redesign across list pages, reworked filters and restaurant form, and the Stats, Profile and Honor Badge redesign.
 ---
 

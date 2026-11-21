@@ -39,21 +39,26 @@ step before broad public distribution.
 
 ## Deployment
 
-1. Build immutable API and web images from the verified Git SHA.
-2. Back up the database.
-3. Run `npm run prisma:migrate:deploy -w @ff-restaurent/api`, followed by
-   `npm run prisma:cuisines:seed -w @ff-restaurent/api`, as one-time release
-   jobs when the platform supports them. The cuisine seed is idempotent and
-   never replaces the production catalog. Never run the destructive demo seed
-   in production.
-4. Deploy the API image, then verify `/health` and `/ready`.
-5. Deploy the web image built with the production `VITE_API_URL`.
-6. Run `npm run smoke` with staging URLs and a least-privileged smoke account.
-7. Promote only when smoke checks and launch telemetry are healthy.
+Production and staging API deploys go through `.github/workflows/vps-deploy.yml`.
+The web app deploys on Vercel. Names, secrets and the production `/api` proxy
+are in [VPS and Vercel Hosting](./vps-and-vercel-hosting.md).
 
-On container platforms without a pre-deploy job, the API Docker command runs
-the same migration and cuisine-seed sequence before its existing idempotent
-backfills and then uses `exec` to hand PID 1 to Node.
+1. A push to `main` deploys production. A push to `develop` deploys staging.
+   `VPS_DEPLOY_ENABLED` must be `true`.
+2. The workflow verifies the SHA, builds
+   `ghcr.io/newtc22222/ff-restaurent-api:<sha>` from the Dockerfile `vps`
+   target, then runs `deploy ff <prod|stg> <sha>` on the VPS.
+3. Before the new API starts, the server runs `npm run release:run` in that
+   image. `apps/api/scripts/run-release-job.sh` applies migrations, the cuisine
+   and badge seeds, the phone backfill, the root-admin bootstrap, and
+   notification pruning. Never run the destructive demo seed in production.
+4. A non-zero SSH status means the deploy failed and the server has already
+   rolled back.
+5. Confirm `GET /health` and `GET /ready`, then the Vercel web app.
+6. Run `npm run smoke` with staging URLs and a least-privileged smoke account
+   before treating a staging deploy as promotable.
+
+Do not build a production web image. `VITE_API_URL` is a Vercel build variable.
 
 ## Launch telemetry
 
@@ -65,29 +70,39 @@ Never log credentials, invite codes, JWTs, or request authorization headers.
 
 ## Backups and restore drills
 
-Schedule provider-native encrypted daily backups with retention appropriate for
-the group. The `Backup restore drill` workflow performs a weekly logical dump
-from `PRODUCTION_DATABASE_URL`, restores it into an isolated temporary
-PostgreSQL service, and verifies migration history. Restrict the workflow
-environment and secret to approved operators.
+`main` does not contain `.github/workflows/backup-restore-drill.yml`. That
+workflow read Cloud SQL. The VPS runs its own nightly backup and a weekly
+`restore-drill.sh` that restores the newest R2 dump into scratch databases.
+The drill lives on the server, not in this repository.
 
-Record each successful drill date, source snapshot, restored migration count,
-duration, and operator in the release record. A failed drill blocks promotion.
+Record each successful drill date, source dump, and operator in the release
+record. A failed drill blocks promotion. Do not copy database URLs or dump
+contents into the wiki.
 
 ## Rollback rehearsal
 
-Before promotion, record the current API/web image digests and database backup.
+Before promotion, record the current API image digest and the Vercel
+deployment.
 
 1. Stop promotion and preserve failure logs and request IDs.
-2. If the migration is backward-compatible, redeploy the previous API and web
-   digests and run the staging smoke script.
+2. If the migration is backward-compatible, deploy the previous API image SHA.
+   A failed `release:run` already rolls the VPS deploy back.
 3. If data restoration is required, stop writes, restore the pre-release
-   backup into a new database, verify `_prisma_migrations` and row counts, then
-   switch `DATABASE_URL` atomically.
+   backup, verify `_prisma_migrations` and row counts, then point
+   `DATABASE_URL` at the restored database.
 4. Verify `/ready`, login, bill visibility, payment state, notifications, and
    role administration.
-5. Document the incident and ship a forward migration; do not run `migrate dev`
-   or manually delete production migration records.
+5. Document the incident and ship a forward migration. Do not run
+   `migrate dev` or delete production migration records.
 
-The rollback is considered rehearsed when the prior images and a restored
-database pass the staging smoke workflow without demo data.
+## Hosting
+
+The API runs in Docker Compose behind Caddy on a VPS. The web app runs on
+Vercel, and production proxies `/api` through Vercel. See
+[VPS and Vercel Hosting](./vps-and-vercel-hosting.md).
+
+`main` (`14d09c6`) does not contain `render.yaml`, `gcp-deploy.yml`,
+`gcp-foundation-verify.yml`, `backup-restore-drill.yml`, or the GCP and Render
+operator scripts. `develop` still has some of those files. Do not run them
+against production. The [GCP Foundation](../deployment-infrastructure/gcp-foundation.md) page is the historical
+record of that platform.

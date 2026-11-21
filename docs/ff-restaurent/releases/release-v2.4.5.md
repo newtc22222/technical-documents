@@ -1,19 +1,19 @@
 ---
 id: release-v2.4.5
-title: Release v2.4.5 (Staging)
-sidebar_label: v2.4.5 (Staging)
-sidebar_position: 1
-description: FF RESTaurent 2.4.5 release notes (Staging, production pending), with the 2.4.0 performance follow-up, cuisine pricing, the Catalog, Recipes, restaurant brands, and cuisine type labels.
+title: Release v2.4.5
+sidebar_label: v2.4.5
+sidebar_position: 2
+description: FF RESTaurent 2.4.5 release notes, with the 2.4.0 performance follow-up, cuisine pricing, the Catalog, Recipes, restaurant brands, and cuisine type labels.
 ---
 
 # FF RESTaurent 2.4.5
 
-Release date: TBD (pending production promote)
+Release date: 2026-10-12 (`main`, tag `v2.4.5`)
 
-Release tag: `v2.4.5` (not yet tagged; production release: `develop` promoted to `main`)
+Release tag: `v2.4.5` (`5a34817`, merge of [#175](https://github.com/newtc22222/ff-restaurent/pull/175))
 
-> **Status:** Staging (`develop`) verified at tip `f8c0150` (merge of [#172](https://github.com/newtc22222/ff-restaurent/pull/172)) on 2026-10-11.
-> **Production (`main`):** not yet. Production still runs [v2.4.0](./release-v2.4.0.md). See [Production](#production).
+> **Status:** Tag `v2.4.5` is on `main`. The staging table below is the 2026-10-11 Cloud Run check and is historical.
+> **Hosting after the tag:** `main` continued to `14d09c6` (2026-10-20) without a version bump. The API is on a VPS and the web app is on Vercel. See [VPS and Vercel Hosting](../runbooks-operations/vps-and-vercel-hosting.md) and [Production](#production).
 
 ## Overview
 
@@ -70,6 +70,12 @@ Five, all additive; the release job applies them with `prisma migrate deploy`:
 
 ## Deployment notes
 
+:::note
+
+The Cloud Run steps in this section describe how 2.4.5 was prepared. Production no longer uses `gcp-deploy.yml`. Follow [VPS and Vercel Hosting](../runbooks-operations/vps-and-vercel-hosting.md).
+
+:::
+
 - **Release job order:** `prisma migrate deploy`, then the popular-cuisine seed (this release also **backfills the new type labels** on existing seeded cuisines, only where a label is empty and the cuisine's type is unchanged, so an admin's edits are never overwritten), the honor-badge seed, and the notification-retention step.
 - **Notification retention (behavior change):** the release job now deletes notification rows older than `NOTIFICATION_RETENTION_DAYS` (default 90, `0` disables), including unread ones.
 - **Login limit (behavior change):** `AUTH_RATE_LIMIT_MAX` now counts per client IP and identifier and defaults to 20 (was 5 per IP).
@@ -98,4 +104,6 @@ Five, all additive; the release job applies them with `prisma migrate deploy`:
 
 ## Production
 
-Not yet. The earlier release PR [#171](https://github.com/newtc22222/ff-restaurent/pull/171) ("Release 2.4.1") was closed without merging on 2026-10-11 16:24 ICT, and the version was bumped to 2.4.5 by #172. No `develop` -> `main` pull request for 2.4.5 existed when this page was written. `develop` -> `main` promotion runs CI and the GCP production deploy on merge; production merge SHA, deploy and smoke evidence will be added after the promote.
+`v2.4.5` is on `main`. The promoting merge is [#175](https://github.com/newtc22222/ff-restaurent/pull/175) (`5a34817`, 2026-10-12). The earlier release PR [#171](https://github.com/newtc22222/ff-restaurent/pull/171) ("Release 2.4.1") was closed without merging on 2026-10-11, and #172 bumped the version to 2.4.5. This page does not record a GitHub Actions run id for the production deploy of that merge.
+
+After the tag, `main` took the hosting change and is at `14d09c6` (2026-10-20). The API runs on the VPS, the web app runs on Vercel, and Cloud Run is gone. Those commits did not bump the package version. See [VPS and Vercel Hosting](../runbooks-operations/vps-and-vercel-hosting.md).

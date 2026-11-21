@@ -2,7 +2,7 @@
 id: release-v2.3.0-rc.1
 title: Release v2.3.0-rc.1 (Staging)
 sidebar_label: v2.3.0-rc.1 (Staging)
-sidebar_position: 4
+sidebar_position: 5
 description: FF RESTaurent 2.3.0-rc.1 Staging release candidate, with bill notifications and auto-archive, cuisine images, cookbooks, meal votes, and Honor Badges.
 ---
 

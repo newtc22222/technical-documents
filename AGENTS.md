@@ -88,6 +88,7 @@ npm run build                                                                # b
 ```
 
 - `FF_WIKI_DIR` can replace `--wiki`.
+- The wiki is organised in topic folders (`Development/`, `Operations/`, `Releases/`, ...); the script finds pages by file name across all of them, so names must stay unique.
 - Pages matching `exclude` (`_Sidebar`, `_Footer`, `Pre-release-Checklist-*`) are never published, and links to them become plain text. Keep internal checklists out of this public site.
 - `Home` is marked `manual`, so `docs/ff-restaurent/index.md` is edited by hand. Add new releases to its Releases table and update its "Current state" note yourself.
 - A new wiki page needs a `pages` entry with `path` and `frontMatter` (at least `id`, `title`, `sidebar_label`, `sidebar_position`). Existing pages keep their front matter.

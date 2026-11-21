@@ -2,7 +2,7 @@
 id: release-v2.3.0
 title: Release v2.3.0
 sidebar_label: v2.3.0
-sidebar_position: 3
+sidebar_position: 4
 description: FF RESTaurent 2.3.0 release notes, with everything from 2.3.0-rc.1 plus pagination totals, per-client rate limiting, and trusted proxies by address.
 ---
 
