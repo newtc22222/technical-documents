@@ -361,6 +361,12 @@
     "message": "Không tìm thấy kết quả nào",
     "description": "The paragraph for empty search result"
   },
+  "homepage.status.production": {
+    "message": "Production"
+  },
+  "homepage.status.notInProduction": {
+    "message": "Chưa lên production"
+  },
   "homepage.ffRestaurent.summary": {
     "message": "Ứng dụng chia hóa đơn nhóm và theo dõi nhà hàng. Cách phát triển, triển khai và vận hành trên môi trường production."
   },
@@ -419,7 +425,7 @@
     "message": "Bản phát hành"
   },
   "homepage.bugTracking.summary": {
-    "message": "Hệ thống theo dõi lỗi và phản hồi tự lưu trữ xây dựng với Next.js 16, PostgreSQL 16, Prisma 6, Auth.js v5 và tiện ích Chrome MV3."
+    "message": "Nền tảng theo dõi lỗi và phân loại đa dự án tự lưu trữ xây dựng với Next.js 16, PostgreSQL 16, Prisma 6, Auth.js v5, máy chủ MCP tích hợp và tiện ích Chrome MV3."
   },
   "homepage.bugTracking.architecture": {
     "message": "Kiến trúc & dữ liệu"

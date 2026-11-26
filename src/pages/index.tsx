@@ -7,9 +7,15 @@ import styles from "./index.module.css";
 
 type Section = { label: string; to: string };
 
+type DocSetStatus = {
+  label: string;
+  tone: "production" | "development";
+};
+
 type DocSet = {
   name: string;
   to: string;
+  status?: DocSetStatus;
   summary: string;
   sections: Section[];
 };
@@ -17,10 +23,20 @@ type DocSet = {
 // Section links point at the first doc of each sidebar category (or its
 // generated index). onBrokenLinks: "throw" fails the build if one goes stale.
 function useDocSets(): DocSet[] {
+  const productionStatus: DocSetStatus = {
+    label: translate({ id: "homepage.status.production", message: "Production" }),
+    tone: "production",
+  };
+  const notInProductionStatus: DocSetStatus = {
+    label: translate({ id: "homepage.status.notInProduction", message: "Not in production" }),
+    tone: "development",
+  };
+
   return [
     {
       name: "FF RESTaurent",
       to: "/docs/ff-restaurent/",
+      status: productionStatus,
       summary: translate({
         id: "homepage.ffRestaurent.summary",
         message:
@@ -59,6 +75,7 @@ function useDocSets(): DocSet[] {
     {
       name: "LinguFlow",
       to: "/docs/lingu-flow/",
+      status: productionStatus,
       summary: translate({
         id: "homepage.linguFlow.summary",
         message:
@@ -121,10 +138,11 @@ function useDocSets(): DocSet[] {
     {
       name: "Bug Tracking",
       to: "/docs/bug-tracking/",
+      status: notInProductionStatus,
       summary: translate({
         id: "homepage.bugTracking.summary",
         message:
-          "Self-hosted bug & feedback tracker built with Next.js 16, PostgreSQL 16, Prisma 6, Auth.js v5, and a Chrome MV3 extension.",
+          "Self-hosted multi-project bug tracking workbench built with Next.js 16, PostgreSQL 16, Prisma 6, Auth.js v5, a built-in MCP server, and a Chrome MV3 extension.",
       }),
       sections: [
         {
@@ -152,6 +170,7 @@ function useDocSets(): DocSet[] {
     {
       name: "Laptech",
       to: "/docs/laptech/intro/",
+      status: notInProductionStatus,
       summary: translate({
         id: "homepage.laptech.summary",
         message:
@@ -209,13 +228,24 @@ function useDocSets(): DocSet[] {
   ];
 }
 
-function DocSetRow({ name, to, summary, sections }: DocSet): ReactNode {
+function DocSetRow({ name, to, status, summary, sections }: DocSet): ReactNode {
   return (
     <section className={styles.row}>
       <div>
-        <h2 className={styles.name}>
-          <Link to={to}>{name}</Link>
-        </h2>
+        <div className={styles.nameRow}>
+          <h2 className={styles.name}>
+            <Link to={to}>{name}</Link>
+          </h2>
+          {status && (
+            <span
+              className={
+                status.tone === "production" ? styles.statusProduction : styles.statusDevelopment
+              }
+            >
+              {status.label}
+            </span>
+          )}
+        </div>
         <p className={styles.summary}>{summary}</p>
       </div>
       <ul className={styles.sections}>

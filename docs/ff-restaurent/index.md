@@ -19,7 +19,7 @@ and how to run it in production.
 [Production Runbook](./runbooks-operations/production-runbook.md) for operating the live service.
 
 > [!NOTE]
-> **Current state.** `main` is tagged [v2.5.0](./releases/release-v2.5.0.md) (2026-11-20). The API runs
+> **Current state (Production).** FF RESTaurent is **live in production** and `main` is tagged [v2.5.0](./releases/release-v2.5.0.md) (2026-11-20). The API runs
 > on a VPS behind Caddy and the web app runs on Vercel; it left GCP Cloud Run on 2026-10-17. See
 > [VPS and Vercel Hosting](./runbooks-operations/vps-and-vercel-hosting.md). Planned work is on the
 > [Roadmap](./planning/roadmap.md).

@@ -10,6 +10,10 @@ description: Complete technical documentation for the Laptech Store e-commerce p
 
 **Laptech** is a multi-repository e-commerce platform for laptops and computer hardware, composed of a 9-module Spring Boot backend (`laptech-api`), a customer storefront (`laptech-client-web-ui`), and an operations console (`laptech-admin-web-ui`).
 
+:::note Current state (Not in production)
+Laptech is currently in active development and **not yet deployed to production**. All three repositories run locally via Docker Compose (`laptech-dev`) and local frontend dev servers.
+:::
+
 ## Repositories & Architecture
 
 | Repository | Stack | Default Local Port | Purpose |
