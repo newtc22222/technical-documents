@@ -111,6 +111,12 @@ const config: Config = {
         },
         {
           type: "docSidebar",
+          sidebarId: "bugTracking",
+          position: "left",
+          label: "Bug Tracking",
+        },
+        {
+          type: "docSidebar",
           sidebarId: "laptech",
           position: "left",
           label: "Laptech",

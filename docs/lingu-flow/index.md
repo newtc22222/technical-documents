@@ -12,6 +12,10 @@ Welcome to the **LinguFlow** official technical wiki and documentation hub.
 
 LinguFlow is a modern, high-performance, keyboard-driven language certification platform designed for HSK, JLPT, TOEIC, and IELTS candidates. It combines a distraction-free Vue 3 pixel-art arcade interface with an async Python FastAPI backend, PostgreSQL relational database, SuperMemo-2 (SM-2) spaced repetition engine, and multi-provider AI assistance (Gemini Flash & GPT-4o).
 
+:::note Current state (Production — `v2.2.0`)
+LinguFlow is **live in production** at [v2.2.0](./releases/release-v2.2.0.md): the Vue 3 SPA runs on Vercel, the FastAPI backend and PostgreSQL database run in Docker Compose behind Caddy on a VPS, and media is served via Cloudflare R2.
+:::
+
 ---
 
 ## 📚 Documentation Directory
